@@ -1,0 +1,30 @@
+[
+  {
+    "q": "How quickly can we start?",
+    "a": "Most clients ship their first order about two weeks after signing. Stock arrives in the first week, and we connect your shop and run test orders in the second."
+  },
+  {
+    "q": "Is there a minimum volume or contract length?",
+    "a": "There is no minimum order volume. After a three-month start period, contracts run month to month with 30 days' notice."
+  },
+  {
+    "q": "How does pricing work?",
+    "a": "You pay for storage per pallet, for pick and pack per order, and for shipping at carrier rates. Extras such as kitting or inserts are quoted per job."
+  },
+  {
+    "q": "Which shops and carriers do you connect to?",
+    "a": "We have ready plugins for Shopify, WooCommerce, Shoprenter and UNAS, and an API for custom shops. Carriers include GLS, DPD, Foxpost, MPL and DHL, plus pallet networks."
+  },
+  {
+    "q": "What happens with returns?",
+    "a": "We inspect returned parcels within one working day. Sellable items go back on the shelf and your stock updates. Damaged items are photographed and reported to you."
+  },
+  {
+    "q": "Can you handle pallets and bulky goods?",
+    "a": "Yes. We store pallets and cartons, and we ship parcels, pallets and full loads. For fragile, high-value or temperature-sensitive goods, tell us early so we can plan the handling."
+  },
+  {
+    "q": "Do you ship outside Hungary?",
+    "a": "Yes, across the EU with our carrier partners. We prepare the paperwork for other destinations on request."
+  }
+]

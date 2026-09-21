@@ -1,0 +1,16 @@
+{
+  "name": "Fully Logistics",
+  "url": "",
+  "year": 2026,
+  "email": "hello@fullylogistics.example",
+  "phone": "+36 1 555 0142",
+  "phoneHref": "+3615550142",
+  "address1": "Depó út 14",
+  "address2": "2351 Alsónémedi, Hungary",
+  "hours": "Monday to Friday, 6:00 to 18:00",
+  "blurb": "Fulfillment and contract logistics for webshops and manufacturers.",
+  "cta": {
+    "title": "Tell us what you ship. We reply in one business day.",
+    "text": "Share your monthly order or pallet volume and we send back a clear quote."
+  }
+}

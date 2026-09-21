@@ -1,0 +1,245 @@
+{
+  "hero-aisle": {
+    "unsplash": "workers-walking-through-warehouse-aisle-c_4eaGRDSVU",
+    "variants": [
+      {
+        "w": 640,
+        "h": 427
+      },
+      {
+        "w": 1200,
+        "h": 800
+      },
+      {
+        "w": 1800,
+        "h": 1200
+      }
+    ]
+  },
+  "pick-zone": {
+    "unsplash": "yellow-and-white-plastic-box-lot-sczNLg6rrhQ",
+    "variants": [
+      {
+        "w": 640,
+        "h": 427
+      },
+      {
+        "w": 1200,
+        "h": 800
+      },
+      {
+        "w": 1800,
+        "h": 1200
+      }
+    ]
+  },
+  "racking-forklift": {
+    "unsplash": "a-large-warehouse-filled-with-lots-of-pallets-OnbSOhz0oig",
+    "variants": [
+      {
+        "w": 640,
+        "h": 427
+      },
+      {
+        "w": 1200,
+        "h": 800
+      },
+      {
+        "w": 1800,
+        "h": 1200
+      }
+    ]
+  },
+  "dock-trailers": {
+    "unsplash": "a-row-of-semi-trucks-parked-next-to-each-other-fP4OG67TVes",
+    "variants": [
+      {
+        "w": 640,
+        "h": 427
+      },
+      {
+        "w": 1200,
+        "h": 800
+      },
+      {
+        "w": 1800,
+        "h": 1200
+      }
+    ]
+  },
+  "parcels-team": {
+    "unsplash": "a-couple-of-men-standing-next-to-a-pile-of-boxes-ZwUnAP-NLac",
+    "variants": [
+      {
+        "w": 640,
+        "h": 800
+      },
+      {
+        "w": 1200,
+        "h": 1500
+      }
+    ]
+  },
+  "team-aisle": {
+    "unsplash": "women-walking-through-warehouse-aisle-ZlOlRnWk8zU",
+    "variants": [
+      {
+        "w": 640,
+        "h": 426
+      },
+      {
+        "w": 1200,
+        "h": 798
+      },
+      {
+        "w": 1800,
+        "h": 1198
+      }
+    ]
+  },
+  "pallet-forklift": {
+    "unsplash": "a-forklift-with-a-box-on-it-in-a-warehouse-laEcTC9zXXg",
+    "variants": [
+      {
+        "w": 640,
+        "h": 480
+      },
+      {
+        "w": 1200,
+        "h": 900
+      },
+      {
+        "w": 1800,
+        "h": 1350
+      }
+    ]
+  },
+  "inventory-check": {
+    "unsplash": "woman-with-tablet-checks-inventory-on-shelves-bXgiCqLqZaA",
+    "variants": [
+      {
+        "w": 640,
+        "h": 1138
+      },
+      {
+        "w": 1200,
+        "h": 2134
+      }
+    ]
+  },
+  "scanner-worker": {
+    "unsplash": "a-man-in-a-hard-hat-is-looking-at-a-piece-of-paper-N_nAAwnBDy8",
+    "variants": [
+      {
+        "w": 640,
+        "h": 360
+      },
+      {
+        "w": 1200,
+        "h": 676
+      },
+      {
+        "w": 1800,
+        "h": 1013
+      }
+    ]
+  },
+  "label-package": {
+    "unsplash": "woman-in-pink-hoodie-labeling-a-package-OFCuzLazN3I",
+    "variants": [
+      {
+        "w": 640,
+        "h": 1137
+      },
+      {
+        "w": 1200,
+        "h": 2132
+      }
+    ]
+  },
+  "truck-warehouse": {
+    "unsplash": "red-freight-truck-beside-building-20qcctvyR1Q",
+    "variants": [
+      {
+        "w": 640,
+        "h": 638
+      },
+      {
+        "w": 1200,
+        "h": 1196
+      },
+      {
+        "w": 1800,
+        "h": 1795
+      }
+    ]
+  },
+  "forklift-trailer": {
+    "unsplash": "man-carrying-box-using-fork-liftr-GAdkOpqbTfo",
+    "variants": [
+      {
+        "w": 640,
+        "h": 427
+      },
+      {
+        "w": 1200,
+        "h": 800
+      },
+      {
+        "w": 1800,
+        "h": 1201
+      }
+    ]
+  },
+  "factory-floor": {
+    "unsplash": "man-in-gray-shirt-standing-beside-brown-cardboard-boxes-qqtE2yX7POI",
+    "variants": [
+      {
+        "w": 640,
+        "h": 427
+      },
+      {
+        "w": 1200,
+        "h": 801
+      },
+      {
+        "w": 1800,
+        "h": 1202
+      }
+    ]
+  },
+  "forklift-orange": {
+    "unsplash": "yellow-and-black-fork-lift-6tAIO3pxde4",
+    "variants": [
+      {
+        "w": 640,
+        "h": 427
+      },
+      {
+        "w": 1200,
+        "h": 800
+      },
+      {
+        "w": 1800,
+        "h": 1200
+      }
+    ]
+  },
+  "aerial-trucks": {
+    "unsplash": "parked-trucks-kGoPcmpPT7c",
+    "variants": [
+      {
+        "w": 640,
+        "h": 426
+      },
+      {
+        "w": 1200,
+        "h": 800
+      },
+      {
+        "w": 1800,
+        "h": 1199
+      }
+    ]
+  }
+}

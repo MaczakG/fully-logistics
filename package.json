@@ -1,0 +1,13 @@
+{
+  "name": "fully-logistics-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Marketing site for Fully Logistics: static HTML, CSS and JavaScript.",
+  "scripts": {
+    "build": "node build.mjs",
+    "serve": "python -m http.server 4173"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

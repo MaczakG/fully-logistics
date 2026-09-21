@@ -1,0 +1,11 @@
+# dependencies and logs
+node_modules/
+*.log
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# local review captures (about 23 MB of PNGs, not part of the site)
+screenshots/

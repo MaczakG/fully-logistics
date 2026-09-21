@@ -1,0 +1,54 @@
+<header class="site-header" data-header>
+  <div class="wrap site-header__bar">
+    {{> brand}}
+
+    <nav class="nav" aria-label="Primary">
+      <ul class="nav__list">
+        <li class="nav__item has-menu" data-open="false">
+          <button class="nav__link" type="button" aria-expanded="false" aria-controls="menu-solutions"{{navgroup:solutions}}>
+            Solutions {{icon:caret-down:nav__caret}}
+          </button>
+          <div class="menu" id="menu-solutions">
+            <a class="menu__link" href="{{root}}solutions/fulfillment.html"{{nav:fulfillment}}>
+              <span class="menu__icon">{{icon:package}}</span>
+              <span class="menu__title">Fulfillment</span>
+              <span class="menu__desc">Storage, pick and pack and shipping for webshops.</span>
+            </a>
+            <a class="menu__link" href="{{root}}solutions/manufacturers.html"{{nav:manufacturers}}>
+              <span class="menu__icon">{{icon:factory}}</span>
+              <span class="menu__title">Manufacturers</span>
+              <span class="menu__desc">Pallets and parcels from one stock, line to customer.</span>
+            </a>
+          </div>
+        </li>
+        <li class="nav__item"><a class="nav__link" href="{{root}}about.html"{{nav:about}}>About</a></li>
+        <li class="nav__item"><a class="nav__link" href="{{root}}contact.html"{{nav:contact}}>Contact</a></li>
+      </ul>
+    </nav>
+
+    <div class="site-header__actions">
+      <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark theme">
+        {{icon:moon:icon--moon}}{{icon:sun:icon--sun}}
+      </button>
+      <a class="btn btn--primary btn--sm site-header__cta" href="{{root}}contact.html">Get a quote</a>
+      <button class="icon-btn nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="mobile-nav" aria-label="Open menu">
+        {{icon:list:icon--open}}{{icon:x:icon--close}}
+      </button>
+    </div>
+  </div>
+
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile" hidden>
+    <div class="wrap">
+      <p class="mobile-nav__group">Solutions</p>
+      <ul class="mobile-nav__list">
+        <li><a href="{{root}}solutions/fulfillment.html"{{nav:fulfillment}}>Fulfillment {{icon:arrow-right}}</a></li>
+        <li><a href="{{root}}solutions/manufacturers.html"{{nav:manufacturers}}>Manufacturers {{icon:arrow-right}}</a></li>
+      </ul>
+      <ul class="mobile-nav__list mobile-nav__list--main">
+        <li><a href="{{root}}about.html"{{nav:about}}>About {{icon:arrow-right}}</a></li>
+        <li><a href="{{root}}contact.html"{{nav:contact}}>Contact {{icon:arrow-right}}</a></li>
+      </ul>
+      <a class="btn btn--primary btn--lg mobile-nav__cta" href="{{root}}contact.html">Get a quote {{icon:arrow-right}}</a>
+    </div>
+  </nav>
+</header>

@@ -1,0 +1,132 @@
+---
+{
+  "page": "contact",
+  "nav": "contact",
+  "title": "Contact | Fully Logistics",
+  "description": "Tell us what you ship and get a clear quote from Fully Logistics within one business day."
+}
+---
+<section class="section section--first" aria-labelledby="page-title">
+  <div class="wrap">
+    <div class="contact-head">
+      <h1 id="page-title" class="page-hero__title" data-hero-in style="--i:0">Tell us what you ship.</h1>
+      <p class="lead" data-hero-in style="--i:1">Send a few details and we reply within one business day with questions or a quote.</p>
+    </div>
+
+    <div class="contact">
+      <form class="form" data-form data-endpoint="" data-email="{{site.email}}" novalidate aria-labelledby="form-title">
+        <h2 id="form-title" class="visually-hidden">Quote request</h2>
+
+        <div class="form__row">
+          <div class="field" data-field>
+            <label class="field__label" for="f-name">Your name</label>
+            <input class="input" id="f-name" name="name" type="text" autocomplete="name" required aria-describedby="f-name-err">
+            <p class="field__error" id="f-name-err" hidden>{{icon:warning-circle}}<span></span></p>
+          </div>
+          <div class="field" data-field>
+            <label class="field__label" for="f-email">Work email</label>
+            <input class="input" id="f-email" name="email" type="email" autocomplete="email" required aria-describedby="f-email-err">
+            <p class="field__error" id="f-email-err" hidden>{{icon:warning-circle}}<span></span></p>
+          </div>
+        </div>
+
+        <div class="form__row">
+          <div class="field" data-field>
+            <label class="field__label" for="f-company">Company <span class="field__opt">(optional)</span></label>
+            <input class="input" id="f-company" name="company" type="text" autocomplete="organization">
+          </div>
+          <div class="field" data-field>
+            <label class="field__label" for="f-phone">Phone <span class="field__opt">(optional)</span></label>
+            <input class="input" id="f-phone" name="phone" type="tel" autocomplete="tel">
+          </div>
+        </div>
+
+        <fieldset class="field fieldset">
+          <legend class="field__label">I am a</legend>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="role" value="Webshop owner"><span>Webshop owner</span></label>
+            <label class="choice"><input type="radio" name="role" value="Manufacturer"><span>Manufacturer</span></label>
+            <label class="choice"><input type="radio" name="role" value="Something else"><span>Something else</span></label>
+          </div>
+        </fieldset>
+
+        <div class="field" data-field>
+          <label class="field__label" for="f-volume">Monthly volume <span class="field__opt">(optional)</span></label>
+          <select class="input select" id="f-volume" name="volume">
+            <option value="">Choose one</option>
+            <option>Under 500 orders</option>
+            <option>500 to 2,000 orders</option>
+            <option>2,000 to 10,000 orders</option>
+            <option>Over 10,000 orders</option>
+            <option>Mostly pallets</option>
+          </select>
+        </div>
+
+        <div class="field" data-field>
+          <label class="field__label" for="f-message">What do you ship?</label>
+          <textarea class="input textarea" id="f-message" name="message" rows="5" required aria-describedby="f-message-hint f-message-err"></textarea>
+          <p class="field__hint" id="f-message-hint">Products, sizes, special handling and your current setup.</p>
+          <p class="field__error" id="f-message-err" hidden>{{icon:warning-circle}}<span></span></p>
+        </div>
+
+        <div class="field" data-field>
+          <label class="check">
+            <input type="checkbox" name="consent" required aria-describedby="f-consent-err">
+            <span>I agree that Fully Logistics may contact me about this request.</span>
+          </label>
+          <p class="field__error" id="f-consent-err" hidden>{{icon:warning-circle}}<span></span></p>
+        </div>
+
+        <div class="form__actions">
+          <button class="btn btn--primary btn--lg" type="submit" data-submit>
+            <span class="btn__label">Get a quote</span>{{icon:arrow-right:btn__arrow}}{{icon:circle-notch:btn__spinner}}
+          </button>
+          <p class="form__status" role="status" aria-live="polite" data-status></p>
+        </div>
+
+        <div class="form__success" data-success tabindex="-1" hidden>
+          {{icon:check-circle}}
+          <h2>Thank you. We have your request.</h2>
+          <p>We reply within one business day, usually sooner.</p>
+        </div>
+      </form>
+
+      <aside class="contact__aside" aria-label="Contact details">
+        <div class="aside-block">
+          <h2>Warehouse and office</h2>
+          <ul class="info-list">
+            <li class="info-item">
+              <span class="info-item__icon">{{icon:map-pin}}</span>
+              <p>{{site.address1}}<br>{{site.address2}}</p>
+            </li>
+            <li class="info-item">
+              <span class="info-item__icon">{{icon:envelope-simple}}</span>
+              <p><a href="mailto:{{site.email}}">{{site.email}}</a></p>
+            </li>
+            <li class="info-item">
+              <span class="info-item__icon">{{icon:phone}}</span>
+              <p><a href="tel:{{site.phoneHref}}">{{site.phone}}</a></p>
+            </li>
+            <li class="info-item">
+              <span class="info-item__icon">{{icon:clock}}</span>
+              <p>{{site.hours}}</p>
+            </li>
+          </ul>
+        </div>
+
+        <figure class="contact__media media">
+          {{img name="truck-warehouse" alt="Orange freight truck parked in front of a large white warehouse" sizes="(min-width: 900px) 40vw, 100vw"}}
+        </figure>
+
+        <div class="aside-block">
+          <h2>What happens next</h2>
+          <ol class="next">
+            <li><strong>We reply.</strong> Within one business day, with questions or a first estimate.</li>
+            <li><strong>We talk it through.</strong> A short call to map your products and order flow.</li>
+            <li><strong>You get a written quote.</strong> All three price lines, plus a start date.</li>
+          </ol>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>

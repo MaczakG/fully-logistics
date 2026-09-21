@@ -1,0 +1,36 @@
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div class="footer__brand">
+        {{> brand}}
+        <p>{{site.blurb}}</p>
+      </div>
+      <nav aria-label="Solutions">
+        <h2 class="footer__h">Solutions</h2>
+        <ul class="footer__list">
+          <li><a href="{{root}}solutions/fulfillment.html">Fulfillment</a></li>
+          <li><a href="{{root}}solutions/manufacturers.html">Manufacturers</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Company">
+        <h2 class="footer__h">Company</h2>
+        <ul class="footer__list">
+          <li><a href="{{root}}index.html">Home</a></li>
+          <li><a href="{{root}}about.html">About</a></li>
+          <li><a href="{{root}}contact.html">Contact</a></li>
+        </ul>
+      </nav>
+      <div>
+        <h2 class="footer__h">Warehouse and office</h2>
+        <address class="footer__address">
+          <p>{{site.address1}}<br>{{site.address2}}</p>
+          <p><a href="mailto:{{site.email}}">{{site.email}}</a><br><a href="tel:{{site.phoneHref}}">{{site.phone}}</a></p>
+          <p>{{site.hours}}</p>
+        </address>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p>&copy; {{site.year}} {{site.name}}</p>
+    </div>
+  </div>
+</footer>
