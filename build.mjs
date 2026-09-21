@@ -4,11 +4,14 @@
  *
  *   node build.mjs
  *
- * Reads templates from src/ and writes the finished HTML pages next to assets/,
- * so the project root is the deployable site. Also lints the output:
- *   - every local href / src / srcset target must exist
+ * Reads templates from src/ and writes the finished site to dist/: the generated HTML pages plus a
+ * verbatim copy of assets/ and robots.txt. dist/ is the only folder that gets deployed (see
+ * wrangler.jsonc), so source files, docs and .git can never end up on the web server. It is rebuilt
+ * from scratch on every run and is not committed. Also lints the output:
+ *   - every local href / src / srcset target must exist inside dist/
  *   - no unresolved {{macros}}
  *   - no em dash or en dash characters anywhere in the markup (house style)
+ *   - no deployed file over the 25 MiB Cloudflare limit, and no hidden files in dist/
  *
  * Template syntax (see src/pages/*.html):
  *   {{> partial}}                        include src/partials/partial.html
@@ -20,12 +23,15 @@
  *   {{navgroup:key}}                     data-current="true" when the page's nav group matches
  *   {{some.path}}                        value from the page context (front matter + site.json)
  */
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync, rmSync, copyFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SRC = join(ROOT, 'src');
+const OUT = join(ROOT, 'dist');
+// Files and folders copied verbatim into dist/ (paths relative to the project root).
+const STATIC = ['assets', 'robots.txt'];
 const read = (p) => readFileSync(p, 'utf8');
 const json = (p) => JSON.parse(read(p));
 
@@ -194,6 +200,20 @@ function walk(dir) {
   });
 }
 
+// Start from an empty dist/ so removed images or pages never linger, then copy the static files.
+function copyTree(from, to) {
+  if (statSync(from).isDirectory()) {
+    mkdirSync(to, { recursive: true });
+    for (const name of readdirSync(from)) copyTree(join(from, name), join(to, name));
+  } else {
+    mkdirSync(dirname(to), { recursive: true });
+    copyFileSync(from, to);
+  }
+}
+rmSync(OUT, { recursive: true, force: true });
+mkdirSync(OUT, { recursive: true });
+for (const item of STATIC) copyTree(join(ROOT, item), join(OUT, item));
+
 const built = [];
 for (const file of walk(join(SRC, 'pages'))) {
   const rel = relative(join(SRC, 'pages'), file).split('\\').join('/');
@@ -223,7 +243,7 @@ for (const file of walk(join(SRC, 'pages'))) {
   ctx.preloadTag = preloadTag(ctx);
   const composed = layout.replace('{{content}}', fm[2]);
   const out = expand(composed, ctx).replace(/\n{3,}/g, '\n\n').trim() + '\n';
-  const dest = join(ROOT, rel);
+  const dest = join(OUT, rel);
   mkdirSync(dirname(dest), { recursive: true });
   writeFileSync(dest, out);
   built.push({ rel, dest, out });
@@ -256,7 +276,29 @@ for (const { rel, dest, out } of built) {
   }
 }
 
+// Deployment guardrails (Cloudflare Workers assets: 25 MiB per file, 20,000 files on the free plan).
+const MAX_BYTES = 25 * 1024 * 1024;
+let fileCount = 0;
+let totalBytes = 0;
+(function inspect(dir) {
+  for (const name of readdirSync(dir)) {
+    const full = join(dir, name);
+    const rel = relative(OUT, full).split('\\').join('/');
+    if (name.startsWith('.')) warn(`dist/${rel}: hidden file or folder would be published`);
+    const st = statSync(full);
+    if (st.isDirectory()) {
+      inspect(full);
+      continue;
+    }
+    fileCount++;
+    totalBytes += st.size;
+    if (st.size > MAX_BYTES) warn(`dist/${rel}: ${(st.size / 1048576).toFixed(1)} MiB exceeds the 25 MiB asset limit`);
+  }
+})(OUT);
+if (fileCount > 20000) warn(`dist/ has ${fileCount} files, over the 20,000 file limit`);
+
 console.log(`Built ${built.length} pages: ${built.map((b) => b.rel).join(', ')}`);
+console.log(`dist/ holds ${fileCount} files, ${(totalBytes / 1048576).toFixed(1)} MB in total.`);
 if (warnings.length) {
   console.error(`\n${warnings.length} warning(s):`);
   for (const w of warnings) console.error(`  - ${w}`);

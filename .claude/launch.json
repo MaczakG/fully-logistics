@@ -6,7 +6,7 @@
       "runtimeExecutable": "python",
       "runtimeArgs": [
         "-c",
-        "import os; from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler; ThreadingHTTPServer(('127.0.0.1', int(os.environ.get('PORT', '4173'))), SimpleHTTPRequestHandler).serve_forever()"
+        "import os, functools; from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler; handler = functools.partial(SimpleHTTPRequestHandler, directory='dist'); ThreadingHTTPServer(('127.0.0.1', int(os.environ.get('PORT', '4173'))), handler).serve_forever()"
       ],
       "port": 4173,
       "autoPort": true

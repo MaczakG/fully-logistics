@@ -5,7 +5,7 @@
   "description": "Marketing site for Fully Logistics: static HTML, CSS and JavaScript.",
   "scripts": {
     "build": "node build.mjs",
-    "serve": "python -m http.server 4173"
+    "serve": "python -m http.server 4173 --directory dist"
   },
   "engines": {
     "node": ">=18"

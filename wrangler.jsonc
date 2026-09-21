@@ -1,0 +1,11 @@
+{
+  // Cloudflare Workers static assets deployment, used by `npx wrangler deploy`.
+  // Only the built site in dist/ is uploaded (run `npm run build` first).
+  // Never point this at "." : that would publish src/ and .git, and any node_modules in the
+  // folder would be rejected for containing files over the 25 MiB asset limit.
+  "name": "fully-logistics",
+  "compatibility_date": "2026-09-21",
+  "assets": {
+    "directory": "./dist"
+  }
+}
