@@ -46,7 +46,7 @@ function splitSql(text) {
 
 const LIBS = { stock, orders, orderCreate, inboundCreate, accounts, crypto, snapshot, couriers, webshops, invoicing, cron: { scheduled } };
 // Functions whose first parameter is env rather than ctx.
-const TAKES_ENV = /^(accounts|crypto|snapshot|webshops)\.|^(couriers\.(isConfigured|testConnection)|invoicing\.testConnection|cron\.scheduled)$/;
+const TAKES_ENV = /^(accounts|crypto|snapshot|webshops)\.|^(couriers\.(isConfigured|testConnection|syncDeliveries)|invoicing\.testConnection|cron\.scheduled)$/;
 // Functions whose first parameter is the D1 database.
 const TAKES_DB = /^stock\.(availability|allocate|suggestLocation|location|locationByCode|occupant|assertCanStore)$/;
 

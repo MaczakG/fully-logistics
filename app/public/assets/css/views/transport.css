@@ -1,1 +1,64 @@
-/* transport view styles */
+/* transport view styles (Fuvarszervezés). Same tokens as app.css; prefix tr-. */
+
+/* Day bar: previous / date / next / today */
+.tr-daybar { align-items: flex-end; }
+.tr-daybar .field { min-width: 11rem; }
+.tr-daylabel { align-self: center; margin-left: 0.25rem; font-weight: 700; }
+
+/* Carrier cards */
+.tr-cards { align-items: stretch; }
+.tr-card { align-content: start; }
+.tr-card[data-active="false"] { background: var(--paper); }
+.tr-card[data-active="false"] h2 { color: var(--ink-2); }
+.tr-card h2 { overflow-wrap: anywhere; }
+.tr-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin: 0; }
+.tr-stats > div { display: grid; gap: 0.125rem; align-content: start; padding: 0.5rem 0.625rem; background: var(--paper); border: 1px solid var(--line); min-width: 0; }
+.tr-card[data-active="false"] .tr-stats > div { background: var(--panel); }
+.tr-stats dt { font-size: 0.75rem; color: var(--ink-2); }
+.tr-stats dd { margin: 0; overflow-wrap: anywhere; }
+.tr-stats dd.num { font-size: 1.25rem; font-weight: 700; white-space: normal; }
+.tr-pickups { display: grid; gap: 0.5rem; }
+.tr-pickups li {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem;
+  padding: 0.625rem 0.75rem; border: 1px solid var(--line); border-left: 4px solid var(--hi-vis); background: var(--paper);
+}
+.tr-pickups__main { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; min-width: 0; }
+.tr-pickups__main a { font-weight: 700; }
+.tr-pickups__main .small { flex-basis: 100%; }
+
+/* Pickup: scanning, manifest, signatures (print) */
+.tr-notices { display: grid; gap: 0.75rem; }
+.tr-notices:empty { display: none; }
+.tr-scan { display: grid; gap: 0.5rem; }
+.tr-feedback { min-height: 1.5rem; font-weight: 700; }
+.tr-feedback:empty { min-height: 0; }
+.tr-feedback[data-tone="ok"] { color: var(--ok); }
+.tr-feedback[data-tone="info"] { color: var(--info); }
+.tr-feedback[data-tone="danger"] { padding: 0.5rem 0.75rem; color: var(--danger); background: var(--danger-bg); border: 1px solid var(--danger); }
+.tr-print-head, .tr-sign { display: none; }
+.tr-sign span { display: inline-block; min-width: 10rem; border-bottom: 1px solid #000; }
+
+/* Transports */
+.table td .tr-dir { display: flex; align-items: center; gap: 0.25rem; white-space: nowrap; }
+.tr-dir .icon { width: 0.875rem; height: 0.875rem; }
+.tr-dir[data-dir="in"] .icon { color: var(--info); }
+.tr-dir[data-dir="out"] .icon { color: var(--warn); }
+.table td.tr-route { min-width: 10rem; max-width: 20rem; }
+.tr-route .icon { display: inline-block; width: 0.875rem; height: 0.875rem; margin-right: 0.25rem; vertical-align: -0.125em; color: var(--ink-3); }
+.tr-status-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.75rem; background: var(--panel-alt); border: 1px solid var(--line); }
+.tr-status-bar .actions { margin-left: auto; }
+
+@media (max-width: 639.98px) {
+  .tr-daylabel { flex-basis: 100%; margin-left: 0; }
+  .tr-stats { grid-template-columns: minmax(0, 1fr); }
+  .tr-status-bar .actions { margin-left: 0; }
+}
+
+@media print {
+  .tr-print-head { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+  .tr-print-head h2 { font-size: 16pt; }
+  .tr-sign { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding-top: 1.5rem; break-inside: avoid; }
+  .tr-sign p { margin-top: 0.75rem; }
+  .tr-manifest .table { font-size: 9pt; }
+  .tr-manifest .chip { border: 0; background: none; padding: 0; }
+}

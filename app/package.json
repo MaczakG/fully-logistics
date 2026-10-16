@@ -9,7 +9,7 @@
     "dev": "node build.mjs && wrangler d1 migrations apply DB --local && wrangler dev",
     "migrate:local": "wrangler d1 migrations apply DB --local",
     "migrate:remote": "wrangler d1 migrations apply DB --remote",
-    "deploy": "node build.mjs && wrangler d1 migrations apply DB --remote && wrangler deploy",
+    "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy",
     "test": "node build.mjs && node --test --test-concurrency=4 \"test/**/*.test.mjs\""
   },
   "devDependencies": {

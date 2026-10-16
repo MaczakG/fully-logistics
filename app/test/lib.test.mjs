@@ -41,6 +41,14 @@ test('createOrder: validates, resolves SKUs, de-duplicates imports', async () =>
   assert.ok(missing.fields.customer_name);
 });
 
+test('createOrder: several manual orders without an external id', async () => {
+  const base = { partner_id: fx.clients.kutya, customer_name: 'Kézi Rendelés', lines: [{ sku: 'KB-1003', qty: 1 }] };
+  const a = ok(await srv.call('orderCreate.createOrder', [base], { as: 1 }));
+  const b = ok(await srv.call('orderCreate.createOrder', [base], { as: 1 }));
+  assert.notEqual(a.id, b.id);
+  assert.equal(b.duplicate, false);
+});
+
 test('createInbound', async () => {
   const r = ok(await srv.call('inboundCreate.createInbound', [{
     partner_id: fx.clients.konyha, supplier_id: null, expected_date: '2026-10-20',

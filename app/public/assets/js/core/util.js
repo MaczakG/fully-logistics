@@ -64,6 +64,11 @@ window.FL = window.FL || {};
   FL.addDays = (date, n) => { const d = new Date(`${date}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   FL.thisMonth = () => FL.today().slice(0, 7);
 
+  /* ------------------------------------------------------------ view registry
+     Defined here (the first script) so views/*.js can register while they load. */
+  FL.views = FL.views || {};
+  FL.view = (key, def) => { FL.views[key] = def; };
+
   /* ------------------------------------------------------------ misc */
   FL.debounce = (fn, ms = 250) => {
     let t;
