@@ -21,3 +21,6 @@ screenshots/
 
 # Claude Code agent worktrees
 .claude/worktrees/
+
+# Local data of the Node runtime (npm start)
+app/data/

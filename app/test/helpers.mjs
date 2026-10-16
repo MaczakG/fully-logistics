@@ -1,6 +1,8 @@
-// Test harness: starts `wrangler dev` on a free port with its own empty local D1/R2 state,
-// applies the migrations, and gives tests an HTTP client that keeps the session cookie and sends
-// the CSRF header like the browser app does.
+// Test harness: starts the app on a free port with its own empty database and file store, applies
+// the migrations, and gives tests an HTTP client that keeps the session cookie and sends the CSRF
+// header like the browser app does. FL_RUNTIME picks the runtime:
+//   node (default)  server/index.mjs, the runtime of the AWS server (SQLite file, files in a folder)
+//   workers         `wrangler dev`, the Cloudflare Workers runtime (local D1 and R2)
 //
 //   const srv = await startServer();
 //   const admin = await srv.admin();             // first-run setup, signed in as administrator
@@ -56,17 +58,33 @@ export class Client {
   }
 }
 
+export const RUNTIME = process.env.FL_RUNTIME === 'workers' ? 'workers' : 'node';
+
+function spawnNode(port, state) {
+  return spawn(process.execPath, ['--no-warnings', 'server/index.mjs'], {
+    cwd: APP,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: {
+      ...process.env, PORT: String(port), HOST: '127.0.0.1', DB_PATH: join(state, 'db.sqlite'), FILES_DRIVER: 'disk', FILES_DIR: join(state, 'files'),
+      MIGRATE_ON_START: '1', CRON: '0', BACKUP: '0', WORKER: 'test/test-worker.js', SETUP_TOKEN, ENCRYPTION_KEY,
+    },
+  });
+}
+
+function spawnWrangler(port, inspector, state) {
+  execFileSync(WRANGLER, ['d1', 'migrations', 'apply', 'DB', '--local', '--persist-to', state], { cwd: APP, stdio: 'ignore', env: { ...process.env, CI: '1' } });
+  return spawn(WRANGLER, ['dev', 'test/test-worker.js', '--port', String(port), '--inspector-port', String(inspector), '--ip', '127.0.0.1', '--persist-to', state,
+    '--var', `SETUP_TOKEN:${SETUP_TOKEN}`, '--var', `ENCRYPTION_KEY:${ENCRYPTION_KEY}`, '--show-interactive-dev-session=false'],
+    { cwd: APP, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, CI: '1' } });
+}
+
 export async function startServer() {
   const port = await freePort();
-  const inspector = await freePort();
   mkdirSync(join(APP, '.wrangler'), { recursive: true });
   const state = mkdtempSync(join(APP, '.wrangler', 'test-'));
   // npm test builds once up front; a single test file run builds only if there is no build yet.
   if (!existsSync(join(APP, 'dist', 'index.html'))) execFileSync('node', ['build.mjs'], { cwd: APP, stdio: 'ignore' });
-  execFileSync(WRANGLER, ['d1', 'migrations', 'apply', 'DB', '--local', '--persist-to', state], { cwd: APP, stdio: 'ignore', env: { ...process.env, CI: '1' } });
-  const proc = spawn(WRANGLER, ['dev', 'test/test-worker.js', '--port', String(port), '--inspector-port', String(inspector), '--ip', '127.0.0.1', '--persist-to', state,
-    '--var', `SETUP_TOKEN:${SETUP_TOKEN}`, '--var', `ENCRYPTION_KEY:${ENCRYPTION_KEY}`, '--show-interactive-dev-session=false'],
-    { cwd: APP, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, CI: '1' } });
+  const proc = RUNTIME === 'workers' ? spawnWrangler(port, await freePort(), state) : spawnNode(port, state);
   let log = '';
   proc.stdout.on('data', (d) => { log += d; });
   proc.stderr.on('data', (d) => { log += d; });
@@ -76,9 +94,9 @@ export async function startServer() {
       const r = await fetch(`${base}/api/health`);
       if (r.ok) break;
     } catch { /* not up yet */ }
-    if (proc.exitCode != null) throw new Error(`wrangler dev exited:\n${log}`);
+    if (proc.exitCode != null) throw new Error(`${RUNTIME} server exited:\n${log}`);
     await new Promise((r) => setTimeout(r, 250));
-    if (i === 119) throw new Error(`wrangler dev did not start:\n${log}`);
+    if (i === 119) throw new Error(`${RUNTIME} server did not start:\n${log}`);
   }
   const srv = {
     base,
