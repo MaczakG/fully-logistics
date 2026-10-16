@@ -249,6 +249,35 @@ test('invoicing: provider choice, masked credentials, test needs a provider', as
   await admin.put('/api/settings/invoicing', { provider: '' });
 });
 
+test('undecryptable credentials can be cleared and entered again', async () => {
+  // As if ENCRYPTION_KEY had changed: the stored values are no longer valid ciphertext.
+  await srv.sql("INSERT INTO courier_accounts (carrier_code, credentials, settings, active) VALUES ('dpd', 'nem-titkositott', '{\"customer_id\":\"C1\"}', 1) ON CONFLICT (carrier_code) DO UPDATE SET credentials = excluded.credentials, settings = excluded.settings, active = 1");
+  await srv.sql("INSERT INTO settings (key, value) VALUES ('invoicing_credentials', '\"nem-titkositott\"') ON CONFLICT (key) DO UPDATE SET value = excluded.value");
+
+  const list = await admin.get('/api/settings/couriers');
+  assert.match(list.data.items.find((c) => c.code === 'dpd').error, /nem fejthetők vissza/);
+  assert.equal((await admin.put('/api/settings/couriers/dpd', { credentials: { api_token: 'uj' } })).status, 409);
+  const inv = await admin.get('/api/settings/invoicing');
+  assert.match(inv.data.error, /nem fejthetők vissza/);
+
+  const viewer = await srv.userWithRole('warehouse_operator', 'nezo-titok@example.com');
+  assert.equal((await viewer.del('/api/settings/couriers/dpd/credentials')).status, 403);
+
+  const cleared = await admin.del('/api/settings/couriers/dpd/credentials');
+  assert.equal(cleared.status, 200, JSON.stringify(cleared.data));
+  assert.equal(cleared.data.error, '');
+  assert.equal(cleared.data.active, false);
+  const [row] = await srv.query("SELECT credentials, settings FROM courier_accounts WHERE carrier_code = 'dpd'");
+  assert.equal(row.credentials, '');
+  assert.equal(JSON.parse(row.settings).customer_id, 'C1');
+  assert.equal((await admin.put('/api/settings/couriers/dpd', { credentials: { api_token: 'uj' } })).status, 200);
+
+  const invCleared = await admin.del('/api/settings/invoicing/credentials');
+  assert.equal(invCleared.status, 200, JSON.stringify(invCleared.data));
+  assert.equal(invCleared.data.error, '');
+  assert.equal((await lastAudit('settings')).summary, 'Számlázó hozzáférési adatai törölve');
+});
+
 test('activity log: filters, pagination, export; integration log filters', async () => {
   const all = await admin.get('/api/settings/audit');
   assert.equal(all.status, 200);

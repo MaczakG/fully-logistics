@@ -52,6 +52,11 @@ export async function saveCourierAccount(env, code, { credentials, settings, act
     nowIso());
 }
 
+// Throws the stored secret away without reading it: the way out when it can no longer be decrypted
+// (for example after ENCRYPTION_KEY changed). Settings stay; the account is switched off.
+export const clearCourierCredentials = (env, code) =>
+  run(env.DB, "UPDATE courier_accounts SET credentials = '', active = 0, updated_at = ? WHERE carrier_code = ?", nowIso(), code);
+
 export const setCourierError = (env, code, message) =>
   run(env.DB, 'UPDATE courier_accounts SET last_error = ? WHERE carrier_code = ?', String(message || '').slice(0, 1000), code);
 
@@ -63,6 +68,9 @@ export async function getInvoicingConfig(env) {
   const { provider = '', ...settings } = conf || {};
   return { provider, settings, credentials };
 }
+
+// Same for invoicing: every provider's credentials are one encrypted value, so all of them go.
+export const clearInvoicingCredentials = (env) => setSetting(env.DB, 'invoicing_credentials', '');
 
 // provider: '' | 'szamlazz' | 'billingo' ; settings and credentials keyed by provider code.
 export async function saveInvoicingConfig(env, { provider, settings = {}, credentials = {} }) {

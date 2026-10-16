@@ -848,6 +848,7 @@
         </dl>
         ${featureList(c.features)}
         ${c.error ? ui.notice(c.error, 'danger') : ''}
+        ${c.error && can('edit') ? html`<div class="actions"><button class="btn btn--danger" type="button" data-action="clear-courier" data-code="${c.code}">${FL.icon('trash')}Tárolt hozzáférés törlése</button></div>` : ''}
         ${c.last_error ? ui.notice(html`<b>Utolsó hiba:</b> ${c.last_error}`, 'warn') : ''}
         <div class="actions">
           <button class="btn" type="button" data-action="edit-courier" data-code="${c.code}">${FL.icon(can('edit') ? 'pencil-simple' : 'eye')}${can('edit') ? 'Beállítás' : 'Megtekintés'}</button>
@@ -884,6 +885,13 @@
     paint();
     ui.bind(root, {
       'edit-courier': (el) => courierDialog(data.items.find((c) => c.code === el.dataset.code)),
+      'clear-courier': (el) => ui.run(el, async () => {
+        const c = data.items.find((x) => x.code === el.dataset.code);
+        if (!(await ui.confirm({ title: 'Hozzáférés törlése', text: `A(z) ${c.name} tárolt hozzáférési adatait töröljük és a fiókot kikapcsoljuk. Utána újra meg kell adnod őket. Folytatod?`, confirmLabel: 'Törlés', tone: 'danger' }))) return;
+        Object.assign(c, await api.del(`/api/settings/couriers/${c.code}/credentials`));
+        paint();
+        ui.toast(`${c.name}: a hozzáférési adatok törölve, add meg újra őket.`, 'ok');
+      }),
       'test-courier': (el) => ui.run(el, async () => {
         const c = data.items.find((x) => x.code === el.dataset.code);
         const res = await api.post(`/api/settings/couriers/${c.code}/test`);
@@ -912,6 +920,7 @@
         body: html`
           ${readOnlyNotice()}
           ${data.error ? ui.notice(data.error, 'danger') : ''}
+          ${data.error && !ro ? html`<div class="actions"><button class="btn btn--danger" type="button" data-action="clear-invoicing">${FL.icon('trash')}Tárolt hozzáférés törlése</button></div>` : ''}
           <form class="panel" id="invoicing-form" novalidate>
             <fieldset class="field">
               <legend class="field__label">Számlázó szolgáltatás</legend>
@@ -945,6 +954,13 @@
     };
     paint();
     ui.bind(root, {
+      'clear-invoicing': (el) => ui.run(el, async () => {
+        if (!(await ui.confirm({ title: 'Hozzáférés törlése', text: 'A számlázók tárolt hozzáférési adatait töröljük. Utána újra meg kell adnod őket. Folytatod?', confirmLabel: 'Törlés', tone: 'danger' }))) return;
+        data = await api.del('/api/settings/invoicing/credentials');
+        chosen = data.provider;
+        paint();
+        ui.toast('A számlázó hozzáférési adatai törölve, add meg újra őket.', 'ok');
+      }),
       'test-invoicing': (el) => ui.run(el, async () => {
         if (chosen !== data.provider) { ui.toast('Előbb mentsd a választott számlázót, utána teszteld.', 'info'); return; }
         const res = await api.post('/api/settings/invoicing/test', { provider: chosen });

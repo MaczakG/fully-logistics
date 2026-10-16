@@ -14,6 +14,7 @@
 //   GET  PATCH  DELETE /api/settings/locations/:id
 //   GET         /api/settings/couriers                 PUT /:code, POST /:code/test
 //   GET  PUT    /api/settings/invoicing                POST /api/settings/invoicing/test
+//   DELETE /api/settings/couriers/:code/credentials, /api/settings/invoicing/credentials (undecryptable secrets)
 //   GET         /api/settings/audit                    activity log; /audit/filters, /audit/export
 //   GET         /api/settings/integration-log          calls to and from outside systems
 //
@@ -29,7 +30,9 @@ import { occupant } from '../lib/stock.js';
 import { normalizeHeader, parseCsv, toCsv } from '../lib/csv.js';
 import { readUpload } from '../lib/files.js';
 import { maskCredentials } from '../lib/crypto.js';
-import { getCourierAccount, getInvoicingConfig, saveCourierAccount, saveInvoicingConfig, setCourierError } from '../lib/accounts.js';
+import {
+  clearCourierCredentials, clearInvoicingCredentials, getCourierAccount, getInvoicingConfig, saveCourierAccount, saveInvoicingConfig, setCourierError,
+} from '../lib/accounts.js';
 import { addDays, budapestDate, isDate, TZ } from '../lib/time.js';
 import * as couriers from '../integrations/couriers/index.js';
 import * as invoicing from '../integrations/invoicing/index.js';
@@ -1214,6 +1217,14 @@ export function register(r) {
     return readCourier(ctx.env, def);
   }, { perm: ['settings', 'edit'] });
 
+  r.delete('/api/settings/couriers/:code/credentials', async (ctx) => {
+    const def = courierDefs().find((d) => d.code === ctx.params.code);
+    if (!def) throw notFound('Ismeretlen futárszolgálat.');
+    await clearCourierCredentials(ctx.env, def.code);
+    await audit(ctx, { module: 'settings', action: 'edit', entity: 'courier_account', entityId: def.code, summary: `Futárszolgálat hozzáférési adatai törölve: ${def.name || def.code}` });
+    return readCourier(ctx.env, def);
+  }, { perm: ['settings', 'edit'] });
+
   r.post('/api/settings/couriers/:code/test', async (ctx) => {
     const def = courierDefs().find((d) => d.code === ctx.params.code);
     if (!def) throw notFound('Ismeretlen futárszolgálat.');
@@ -1270,6 +1281,12 @@ export function register(r) {
     };
     const name = provider ? (def && def.name) || PROVIDER_NAMES[provider] || provider : 'nincs';
     await audit(ctx, { module: 'settings', action: 'edit', entity: 'settings', entityId: 'invoicing', summary: `Számlázó beállításai módosítva (${name})`, details });
+    return readInvoicing(ctx.env);
+  }, { perm: ['settings', 'edit'] });
+
+  r.delete('/api/settings/invoicing/credentials', async (ctx) => {
+    await clearInvoicingCredentials(ctx.env);
+    await audit(ctx, { module: 'settings', action: 'edit', entity: 'settings', entityId: 'invoicing', summary: 'Számlázó hozzáférési adatai törölve' });
     return readInvoicing(ctx.env);
   }, { perm: ['settings', 'edit'] });
 
