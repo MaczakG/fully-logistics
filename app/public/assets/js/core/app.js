@@ -241,6 +241,28 @@
     root.querySelector('#sidebar').addEventListener('click', (e) => { if (e.target.closest('a')) setMenu(false); });
     updateThemeIcon();
     tickCutoff();
+    watchScrollRegions(root.querySelector('#content'));
+  }
+
+  // Wide tables scroll sideways inside their wrapper (other scroll boxes carry data-scroll). A box
+  // that actually scrolls gets tabindex="0", so keyboard users can reach it and scroll it with the
+  // arrow keys.
+  const SCROLLERS = '.table-wrap, .matrix-wrap, [data-scroll]';
+  function watchScrollRegions(content) {
+    if (!content) return;
+    // Late layout changes (web fonts, images) resize the table without touching the DOM.
+    let sizes = null;
+    const mark = FL.debounce(() => {
+      for (const el of content.querySelectorAll(SCROLLERS)) {
+        if (sizes && el.firstElementChild) sizes.observe(el.firstElementChild);
+        const scrolls = el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight;
+        if (scrolls && !el.hasAttribute('tabindex')) { el.tabIndex = 0; el.dataset.flScroll = '1'; }
+        else if (!scrolls && el.dataset.flScroll) { el.removeAttribute('tabindex'); delete el.dataset.flScroll; }
+      }
+    }, 150);
+    if (window.ResizeObserver) sizes = new ResizeObserver(mark);
+    new MutationObserver(mark).observe(content, { childList: true, subtree: true });
+    window.addEventListener('resize', mark);
   }
 
   function updateThemeIcon() {

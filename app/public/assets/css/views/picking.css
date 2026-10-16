@@ -14,7 +14,7 @@
 .pk-summary__bar .progress { height: 0.875rem; }
 .pk-summary__picker { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 
-.pk-work { display: grid; gap: 0.75rem; scroll-margin-top: calc(var(--topbar-h) + 0.5rem); }
+.pk-work { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; scroll-margin-top: calc(var(--topbar-h) + 0.5rem); }
 .pk-work[hidden] { display: none; }
 .scan[data-flash="ok"] { border-color: #6FD39B; box-shadow: 0 0 0 3px #6FD39B; }
 .scan[data-flash="danger"] { border-color: #FF9C92; box-shadow: 0 0 0 3px #FF9C92; }
@@ -54,6 +54,7 @@
 .pk-tasklist tr.pk-group td { border-top: 2px solid var(--line-strong); }
 .pk-tasklist tbody tr:first-child td { border-top: 0; }
 .pk-tasklist tr[data-current="true"] td { background: color-mix(in oklab, var(--hi-vis) 22%, var(--panel)); }
+.pk-tasklist tr[data-current="true"] .sub { color: var(--ink-2); }
 
 /* ---------- Packing station ---------- */
 .pk-pack { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }

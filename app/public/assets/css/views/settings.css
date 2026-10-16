@@ -87,6 +87,7 @@ fieldset[disabled] .check, fieldset[disabled] .choice { cursor: not-allowed; opa
 .choice input { width: 1.125rem; height: 1.125rem; accent-color: var(--hi-vis); flex: none; }
 .choice:hover { border-color: var(--ink-2); }
 .choice:has(input:checked) { border-color: var(--ink); background: color-mix(in oklab, var(--hi-vis) 18%, var(--panel)); }
+.choice:has(input:checked) .muted { color: var(--ink-2); } /* the tinted background needs the stronger grey */
 .choice:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 /* ---------- logs ---------- */

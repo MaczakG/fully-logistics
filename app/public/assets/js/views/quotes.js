@@ -265,7 +265,7 @@
       <div class="qc-box" data-draft></div>
       <div class="qc">
         <div class="qc__form" data-form></div>
-        <div class="qc__paperwrap"><div data-paper></div></div>
+        <div class="qc__paperwrap" data-scroll role="region" aria-label="Az ajánlat előnézete"><div data-paper></div></div>
       </div>`);
     const headBox = root.querySelector('[data-head]');
     const formBox = root.querySelector('[data-form]');
@@ -758,7 +758,7 @@
       </div>
 
       <div class="qp__sec">Havi díjak részletezése</div>
-      <div class="qp__tablewrap"><table class="qp__items qp__main">
+      <div class="qp__tablewrap" data-scroll><table class="qp__items qp__main">
         <thead><tr><th scope="col">Tétel</th><th scope="col" class="r">Mennyiség</th><th scope="col" class="r">Egységár</th><th scope="col" class="r">Havi összeg</th></tr></thead>
         <tbody>${r.items.map((i) => (i.grp ? html`<tr class="qp__grp"><td colspan="4">${i.grp}</td></tr>` : html`<tr ${i.disc ? raw('class="qp__disc"') : ''}>
           <td>${i.name}${i.note ? html`<span class="qp__note">${i.note}</span>` : ''}${i.qty != null ? html`<span class="qp__qtyline">${f1(i.qty)} ${i.unit} × ${ftu(i.price)}</span>` : ''}</td>
@@ -782,7 +782,7 @@
         <table class="qp__items"><tbody>${r.oneOff.map((x) => html`<tr class="qp__disc"><td>${x.name}</td><td class="r">${money(-x.value)}</td></tr>`)}</tbody></table>` : ''}
 
       <div class="qp__sec">Egységárak</div>
-      <div class="qp__tablewrap"><table class="qp__items qp__unit"><tbody>${pairs.map(([a, b]) => html`<tr>
+      <div class="qp__tablewrap" data-scroll><table class="qp__items qp__unit"><tbody>${pairs.map(([a, b]) => html`<tr>
         <td>${a[0]}</td><td class="r">${a[1]}</td><td>${b ? b[0] : ''}</td><td class="r">${b ? b[1] : ''}</td></tr>`)}</tbody></table></div>
 
       ${terms.length ? html`<div class="qp__sec">Feltételek</div><ul class="qp__cond">${terms.map((x) => html`<li>${x}</li>`)}</ul>` : ''}
