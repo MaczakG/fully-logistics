@@ -50,7 +50,10 @@ export async function sendDocument(ctx, id, { inline = false } = {}) {
   const obj = await ctx.env.FILES.get(doc.r2_key);
   if (!obj) throw notFound('A fájl nem található a tárhelyen.');
   const res = download(obj.body, doc.filename, doc.content_type);
-  if (inline && /^(application\/pdf|image\/)/.test(doc.content_type)) {
+  // Uploaded files must never run as part of the app: only PDFs and raster images open inline
+  // (SVG can carry script), and the sandbox CSP keeps any file in an opaque origin.
+  res.headers.set('content-security-policy', 'sandbox');
+  if (inline && /^(application\/pdf|image\/(png|jpeg|gif|webp))$/.test(doc.content_type)) {
     res.headers.set('content-disposition', `inline; filename*=UTF-8''${encodeURIComponent(doc.filename)}`);
   }
   return res;

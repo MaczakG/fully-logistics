@@ -225,6 +225,7 @@ code, kbd, .mono { font-family: var(--font-mono); font-size: 0.875em; }
 
 .content { flex: 1; padding: var(--pad); min-width: 0; }
 .content > section { display: grid; gap: 1.25rem; align-content: start; }
+.content > section > * { min-width: 0; }
 
 /* ---------- Page header, toolbar ---------- */
 .page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 0.75rem 1.5rem; }
@@ -491,7 +492,7 @@ dialog.dialog::backdrop { background: rgba(14, 16, 18, 0.55); }
   html, body { background: #fff; color: #000; }
   .sidebar, .topbar, .toasts, .no-print, .page-head .actions, .toolbar { display: none !important; }
   .shell { display: block; }
-  .content { padding: 0; }
+  .content { padding: 0; outline: none; }
   .table-wrap, .panel, .kpi { border-color: #999; background: #fff; }
   .table th { position: static; background: #eee; color: #000; }
   .table tr { break-inside: avoid; }
