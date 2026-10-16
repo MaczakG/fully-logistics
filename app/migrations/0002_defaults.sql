@@ -55,4 +55,4 @@ INSERT INTO settings (key, value) VALUES
   ('warehouse', json('{"cutoff":"14:00","open":"06:00","close":"18:00","workdays":[1,2,3,4,5],"default_carrier_code":""}')),
   ('default_tariffs', json('{"order_base":600,"item_2":80,"item_3":60,"item_extra":50,"packaging":150,"inbound_unit":49,"return_unit":499,"hourly_work":0,"cod_fixed":0,"cod_pct":0,"discount_handling_pct":0,"discount_storage_pct":0,"vat_pct":27,"storage":{"M":780,"L":990,"XL":1350,"PAL":0}}')),
   ('quote_terms', json('["Az árak nettó árak, az ÁFA-t nem tartalmazzák.","A futárszolgálat díja nem része az ajánlatnak, a szerződött futárpartner árai szerint kerül továbbszámlázásra.","A munkanapokon 14:00-ig beérkező rendeléseket még aznap feladjuk.","Hibás kiszállítás esetén a csere költségét mi álljuk.","Számlázás havonta, utólag, 8 napos fizetési határidővel.","A szerződés 30 napos felmondási idővel bármikor felmondható."]')),
-  ('invoicing', json('{"provider":"","szamlazz":{"configured":false},"billingo":{"configured":false}}'));
+  ('invoicing', json('{"provider":""}'));

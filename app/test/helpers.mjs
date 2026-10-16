@@ -8,7 +8,8 @@
 //   await srv.stop();
 
 import { spawn, execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { pbkdf2Sync, randomBytes } from 'node:crypto';
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -57,11 +58,13 @@ export class Client {
 
 export async function startServer() {
   const port = await freePort();
+  const inspector = await freePort();
   mkdirSync(join(APP, '.wrangler'), { recursive: true });
   const state = mkdtempSync(join(APP, '.wrangler', 'test-'));
-  execFileSync('node', ['build.mjs'], { cwd: APP, stdio: 'ignore' });
+  // npm test builds once up front; a single test file run builds only if there is no build yet.
+  if (!existsSync(join(APP, 'dist', 'index.html'))) execFileSync('node', ['build.mjs'], { cwd: APP, stdio: 'ignore' });
   execFileSync(WRANGLER, ['d1', 'migrations', 'apply', 'DB', '--local', '--persist-to', state], { cwd: APP, stdio: 'ignore', env: { ...process.env, CI: '1' } });
-  const proc = spawn(WRANGLER, ['dev', '--port', String(port), '--ip', '127.0.0.1', '--persist-to', state,
+  const proc = spawn(WRANGLER, ['dev', 'test/test-worker.js', '--port', String(port), '--inspector-port', String(inspector), '--ip', '127.0.0.1', '--persist-to', state,
     '--var', `SETUP_TOKEN:${SETUP_TOKEN}`, '--var', `ENCRYPTION_KEY:${ENCRYPTION_KEY}`, '--show-interactive-dev-session=false'],
     { cwd: APP, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, CI: '1' } });
   let log = '';
@@ -90,10 +93,35 @@ export async function startServer() {
       }
       return c;
     },
+    // Creates a user with the given role key and returns a signed-in client.
+    async userWithRole(roleKey, email = `${roleKey}-${Date.now()}@example.com`, password = 'jelszo-12345') {
+      await srv.sql(`INSERT INTO users (email, name, role_id, password_hash) VALUES ('${email}', 'Teszt ${roleKey}', (SELECT id FROM roles WHERE key = '${roleKey}'), '${passwordHash(password)}')`);
+      const c = new Client(base);
+      await c.login(email, password);
+      return c;
+    },
+    // Shared fixture data every module can rely on (ids are fixed, see FIXTURE below).
+    async seedBasics() {
+      await srv.sql(FIXTURE_SQL);
+      return FIXTURE;
+    },
     // Runs SQL against the local database (for test fixtures).
-    sql(command) {
-      return execFileSync(WRANGLER, ['d1', 'execute', 'DB', '--local', '--persist-to', state, '--json', '--command', command],
-        { cwd: APP, env: { ...process.env, CI: '1' } }).toString();
+    // Raw SQL for fixtures, run inside the dev server (test/test-worker.js).
+    async sql(sql) {
+      const r = await fetch(`${base}/api/__test/sql`, { method: 'POST', body: JSON.stringify({ sql }) });
+      const data = await r.json();
+      if (!data.ok) throw new Error(`sql failed: ${data.error}`);
+      return data;
+    },
+    // SELECT helper: rows as objects.
+    async query(sql, ...args) {
+      const r = await fetch(`${base}/api/__test/query`, { method: 'POST', body: JSON.stringify({ sql, args }) });
+      return (await r.json()).results;
+    },
+    // Calls a library function inside the Worker: srv.call('stock.addStock', [{ ... }], { as: userId })
+    async call(fn, args = [], { as = null } = {}) {
+      const r = await fetch(`${base}/api/__test/call`, { method: 'POST', body: JSON.stringify({ fn, args, as }) });
+      return r.json();
     },
     async stop() {
       proc.kill('SIGTERM');
@@ -104,3 +132,49 @@ export async function startServer() {
   };
   return srv;
 }
+
+// Same format as worker/lib/auth.js hashPassword().
+export function passwordHash(password) {
+  const salt = randomBytes(16);
+  const hash = pbkdf2Sync(password, salt, 100000, 32, 'sha256');
+  return `pbkdf2-sha256$100000$${salt.toString('base64')}$${hash.toString('base64')}`;
+}
+
+// Fixture: two clients, a supplier, two carriers, locations in zones A (M), B (L), C (XL), P (pallet),
+// R (receiving), V (returns), Q (quarantine), six products and some stock.
+export const FIXTURE = {
+  clients: { kutya: 101, konyha: 102 },
+  supplier: 201,
+  carriers: { gls: 301, foxpost: 302 },
+  products: { tap: 1001, alom: 1002, csont: 1003, robot: 1101, mixer: 1102, forralo: 1103 },
+  locations: { receiving: 1, returns: 2, quarantine: 3 },
+};
+const loc = [];
+let lid = 10;
+for (const [zone, size, n] of [['A', 1, 8], ['B', 2, 6], ['C', 3, 4], ['P', 4, 4]]) {
+  for (let i = 1; i <= n; i++) loc.push(`(${lid++}, '${zone}-01-${String(i).padStart(2, '0')}', '${zone}', ${size}, 'storage', ${lid})`);
+}
+export const FIXTURE_SQL = `
+INSERT INTO partners (id, type, code, name, tax_number, zip, city, address, billing_email, carrier_code) VALUES
+ (101, 'client', 'KUTYA', 'Kutyabarát Webshop Kft.', '12345678-2-13', '1111', 'Budapest', 'Minta utca 1.', 'szamla@kutyabarat.example', ''),
+ (102, 'client', 'KONYHA', 'Konyhagép Gyártó Zrt.', '87654321-2-13', '6000', 'Kecskemét', 'Ipari út 5.', 'penzugy@konyhagep.example', ''),
+ (201, 'supplier', 'TAPGYAR', 'Tápgyár Kft.', '', '2000', 'Szentendre', 'Gyár utca 2.', '', ''),
+ (301, 'carrier', 'GLS', 'GLS General Logistics Systems Hungary Kft.', '', '', '', '', '', 'gls'),
+ (302, 'carrier', 'FOXPOST', 'FoxPost Zrt.', '', '', '', '', '', 'foxpost');
+INSERT INTO locations (id, code, zone, size_id, kind, pick_sequence) VALUES
+ (1, 'RAMPA-BE', 'R', 4, 'receiving', 0), (2, 'VISSZARU', 'V', 4, 'returns', 0), (3, 'KARANTEN', 'Q', 4, 'quarantine', 0),
+ ${loc.join(',\n ')};
+INSERT INTO products (id, partner_id, sku, name, ean, weight_kg, min_stock, track_lot, track_expiry) VALUES
+ (1001, 101, 'KB-1001', 'Prémium kutyatáp 12 kg', '5990000010015', 12, 20, 1, 1),
+ (1002, 101, 'KB-1002', 'Macskaalom 10 l', '5990000010022', 6, 10, 0, 0),
+ (1003, 101, 'KB-1003', 'Rágócsont, 3 db', '5990000010039', 0.3, 50, 0, 0),
+ (1101, 102, 'KG-2001', 'Konyhai robotgép KR-500', '5990000020014', 7.5, 5, 1, 0),
+ (1102, 102, 'KG-2002', 'Botmixer BM-200', '5990000020021', 1.2, 10, 0, 0),
+ (1103, 102, 'KG-2003', 'Vízforraló VF-17', '5990000020038', 1.4, 10, 0, 0);
+INSERT INTO stock (product_id, location_id, lot, expiry, qty) VALUES
+ (1001, 18, 'L2410', '2027-03-31', 40), (1001, 19, 'L2409', '2027-01-31', 10),
+ (1002, 20, '', '', 25),
+ (1003, 10, '', '', 300),
+ (1101, 26, 'B24-07', '', 12),
+ (1102, 11, '', '', 60), (1103, 12, '', '', 45);
+`;

@@ -10,7 +10,7 @@
     "migrate:local": "wrangler d1 migrations apply DB --local",
     "migrate:remote": "wrangler d1 migrations apply DB --remote",
     "deploy": "node build.mjs && wrangler d1 migrations apply DB --remote && wrangler deploy",
-    "test": "node --test --test-concurrency=4 \"test/**/*.test.mjs\""
+    "test": "node build.mjs && node --test --test-concurrency=4 \"test/**/*.test.mjs\""
   },
   "devDependencies": {
     "wrangler": "4.146.0"
