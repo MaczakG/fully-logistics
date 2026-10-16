@@ -15,3 +15,6 @@ screenshots/
 
 # Wrangler local state
 .wrangler/
+
+# Local Worker secrets (app/.dev.vars)
+.dev.vars

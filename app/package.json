@@ -1,0 +1,21 @@
+{
+  "name": "fully-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Fully Logistics WMS and admin app (app.fully.hu): Cloudflare Worker, D1 database, R2 files.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs && wrangler d1 migrations apply DB --local && wrangler dev",
+    "migrate:local": "wrangler d1 migrations apply DB --local",
+    "migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "deploy": "node build.mjs && wrangler d1 migrations apply DB --remote && wrangler deploy",
+    "test": "node --test --test-concurrency=4 \"test/**/*.test.mjs\""
+  },
+  "devDependencies": {
+    "wrangler": "4.146.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

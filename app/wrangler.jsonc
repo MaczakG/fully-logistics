@@ -1,0 +1,27 @@
+{
+  // Fully Logistics WMS at app.fully.hu: API (worker/), single page app (dist/, built from public/),
+  // D1 database, R2 files and two scheduled jobs. One-time Cloudflare setup: see app/README.md.
+  "name": "fully-app",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-09-21",
+  "workers_dev": true,
+  "routes": [{ "pattern": "app.fully.hu", "custom_domain": true }],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "fully-app",
+      // Replace with the id Cloudflare shows after creating the database (app/README.md, step 1).
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "fully-app-files" }],
+  "triggers": { "crons": ["*/10 * * * *", "5 * * * *"] },
+  "observability": { "enabled": true }
+}
