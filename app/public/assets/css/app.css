@@ -189,7 +189,7 @@ code, kbd, .mono { font-family: var(--font-mono); font-size: 0.875em; }
 }
 .topbar__title { min-width: 0; font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .topbar__spacer { flex: 1; }
-.menu-toggle { display: none; }
+.topbar .menu-toggle { display: none; }
 .cutoff {
   display: inline-flex;
   align-items: center;
@@ -395,7 +395,7 @@ legend { padding: 0; }
 .ac-list .ac-none { color: var(--ink-3); cursor: default; }
 
 /* ---------- Tables ---------- */
-.table-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); scrollbar-width: thin; }
+.table-wrap { position: relative; overflow-x: auto; background: var(--panel); border: 1px solid var(--line); scrollbar-width: thin; }
 .panel--flush .table-wrap { border: 0; }
 .table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 .table th {
@@ -475,7 +475,7 @@ dialog.dialog::backdrop { background: rgba(14, 16, 18, 0.55); }
     transform: translateX(-100%); transition: transform 0.2s var(--ease);
   }
   .app[data-menu="open"] .sidebar { transform: none; box-shadow: 0 0 0 100vmax rgba(14, 16, 18, 0.5); }
-  .menu-toggle { display: inline-flex; }
+  .topbar .menu-toggle { display: inline-flex; }
   .cutoff .cutoff__label { display: none; }
   .user-menu__text { display: none; }
 }

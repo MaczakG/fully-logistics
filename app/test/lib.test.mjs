@@ -57,6 +57,14 @@ test('createInbound', async () => {
   assert.match(r.number, /^BT-\d{4}-\d{5}$/);
   const lines = await srv.query('SELECT product_id, expected_qty FROM inbound_lines WHERE inbound_id = ? ORDER BY id', r.id);
   assert.deepEqual(lines, [{ product_id: fx.products.robot, expected_qty: 10 }, { product_id: fx.products.mixer, expected_qty: 24 }]);
+
+  await srv.sql(`UPDATE products SET active = 0 WHERE id = ${fx.products.forralo}`);
+  const inactive = await srv.call('inboundCreate.createInbound', [{
+    partner_id: fx.clients.konyha, expected_date: '2026-10-20', lines: [{ product_id: fx.products.forralo, expected_qty: 1 }],
+  }], { as: 1 });
+  assert.equal(inactive.ok, false);
+  assert.match(JSON.stringify(inactive), /Inaktív termék/);
+  await srv.sql(`UPDATE products SET active = 1 WHERE id = ${fx.products.forralo}`);
 });
 
 test('stock: add, remove with guard, transfer, set, one partner per location', async () => {

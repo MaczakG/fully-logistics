@@ -45,8 +45,7 @@ const intParam = (v) => {
 const dateParam = (v) => (isDate(v) ? v : null);
 // LIKE pattern for user text; use with ESCAPE '\'.
 const like = (s) => `%${String(s).replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
-// isDate() lets "2027-02-31" through (Date.parse rolls it over), so dates are also checked here.
-const realDate = (s) => !s || (isDate(s) && new Date(`${s}T00:00:00Z`).toISOString().slice(0, 10) === s);
+const realDate = (s) => !s || isDate(s);
 function checkDates(fields) {
   const errors = {};
   for (const [k, v] of Object.entries(fields)) if (v && !realDate(v)) errors[k] = 'Nem létező dátum.';
@@ -380,12 +379,12 @@ function csvDate(s) {
   let m = v.match(/^(\d{4})[-./ ]+(\d{1,2})[-./ ]+(\d{1,2})\.?$/);
   if (m) {
     const d = `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
-    return isDate(d) && new Date(`${d}T00:00:00Z`).toISOString().slice(0, 10) === d ? d : null;
+    return isDate(d) ? d : null;
   }
   m = v.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})\.?$/);
   if (m) {
     const d = `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
-    return isDate(d) && new Date(`${d}T00:00:00Z`).toISOString().slice(0, 10) === d ? d : null;
+    return isDate(d) ? d : null;
   }
   return null;
 }

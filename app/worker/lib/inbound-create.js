@@ -49,14 +49,16 @@ export async function createInbound(ctx, input) {
   const ids = lines.filter((l) => l.product_id).map((l) => l.product_id);
   const skus = lines.filter((l) => !l.product_id && l.sku).map((l) => l.sku);
   const found = [];
-  if (ids.length) found.push(...await all(db, `SELECT id, sku FROM products WHERE partner_id = ? AND id IN (${marks(ids.length)})`, h.partner_id, ...ids));
-  if (skus.length) found.push(...await all(db, `SELECT id, sku FROM products WHERE partner_id = ? AND sku IN (${marks(skus.length)})`, h.partner_id, ...skus));
+  if (ids.length) found.push(...await all(db, `SELECT id, sku, active FROM products WHERE partner_id = ? AND id IN (${marks(ids.length)})`, h.partner_id, ...ids));
+  if (skus.length) found.push(...await all(db, `SELECT id, sku, active FROM products WHERE partner_id = ? AND sku IN (${marks(skus.length)})`, h.partner_id, ...skus));
   const byId = new Map(found.map((p) => [p.id, p]));
   const bySku = new Map(found.map((p) => [p.sku, p]));
   const errors = {};
   const resolved = lines.map((l, i) => {
     const p = l.product_id ? byId.get(l.product_id) : bySku.get(l.sku);
-    if (!p) errors[`lines.${i}.${l.product_id ? 'product_id' : 'sku'}`] = l.sku ? `Ismeretlen cikkszám: ${l.sku}` : 'Ismeretlen termék.';
+    const key = `lines.${i}.${l.product_id ? 'product_id' : 'sku'}`;
+    if (!p) errors[key] = l.sku ? `Ismeretlen cikkszám: ${l.sku}` : 'Ismeretlen termék.';
+    else if (!p.active) errors[key] = `Inaktív termék: ${p.sku}`;
     return p ? { ...l, product_id: p.id } : l;
   });
   if (Object.keys(errors).length) throw badRequest('Ellenőrizd a betárolás tételeit.', errors);

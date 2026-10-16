@@ -31,5 +31,10 @@ export function monthRange(period) {
   return { from: `${period}-01`, to: `${period}-${String(days).padStart(2, '0')}`, days };
 }
 
-export const isDate = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(`${s}T00:00:00Z`));
+// A real calendar day: "2027-02-31" parses (it rolls over to March), so compare the round trip.
+export const isDate = (s) => {
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+};
 export const isTime = (s) => typeof s === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(s);

@@ -414,6 +414,7 @@
         box.innerHTML = String(html`
           ${ui.kpis([{ label: 'Sorok', value: FL.fmt.int(res.rows) }, { label: 'Importálható', value: FL.fmt.int(res.valid), tone: 'ok' }, { label: 'Hibás', value: FL.fmt.int(res.errors.length), tone: res.errors.length ? 'danger' : '' }])}
           ${res.errors.length ? ui.table({ columns: [{ key: 'line', label: 'Sor', align: 'r', cls: 'num' }, { key: 'message', label: 'Hiba' }], rows: res.errors.slice(0, 100) }) : ''}
+          ${res.warnings && res.warnings.length ? ui.table({ caption: 'Figyelmeztetések (ezek a sorok is importálódnak)', columns: [{ key: 'line', label: 'Sor', align: 'r', cls: 'num' }, { key: 'message', label: 'Figyelmeztetés' }], rows: res.warnings.slice(0, 100) }) : ''}
           ${res.valid ? ui.notice(res.errors.length ? 'A hibás sorok kimaradnak. Az importálás a többit rögzíti.' : 'Minden sor rendben. Indíthatod az importálást.', res.errors.length ? 'warn' : 'ok') : ui.notice('Nincs importálható sor.', 'danger')}`);
         if (res.valid) {
           form.dataset.stage = 'commit';
