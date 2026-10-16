@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{lang}}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,13 +18,14 @@
       root.dataset.theme = saved === 'light' || saved === 'dark' ? saved : dark ? 'dark' : 'light';
     })();
   </script>
-  <link rel="preload" href="{{root}}assets/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+  {{fontPreload}}
   {{preloadTag}}
   <link rel="stylesheet" href="{{root}}assets/css/site.css">
   <script src="{{root}}assets/js/site.js" defer></script>
+  {{js_strings}}
 </head>
 <body class="page-{{page}}">
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main">{{t.common.skip}}</a>
   {{> header}}
   <main id="main">
 {{content}}

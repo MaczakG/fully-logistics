@@ -1,0 +1,365 @@
+{
+  "meta": {
+    "name": "Español",
+    "locale": "es_ES"
+  },
+  "common": {
+    "skip": "Saltar al contenido",
+    "homeLabel": "Fully Logistics, inicio",
+    "quote": "Pedir presupuesto",
+    "blurb": "Fulfillment y logística por contrato para tiendas online y fabricantes.",
+    "location": "Almacén y oficina",
+    "country": "Hungría",
+    "hours": "De lunes a viernes, de 6:00 a 18:00",
+    "nav": {
+      "primary": "Principal",
+      "mobile": "Móvil",
+      "solutions": "Soluciones",
+      "company": "Empresa",
+      "fulfillment": "Fulfillment",
+      "fulfillmentDesc": "Almacenaje, preparación de pedidos y envíos para tiendas online.",
+      "manufacturers": "Fabricantes",
+      "manufacturersDesc": "Palés y paquetes desde un único stock, de la línea al cliente.",
+      "home": "Inicio",
+      "about": "Nosotros",
+      "contact": "Contacto",
+      "language": "Idioma"
+    },
+    "cta": {
+      "title": "Cuéntenos qué envía. Le respondemos en un día laborable.",
+      "text": "Indíquenos su volumen mensual de pedidos o de palés y le enviaremos un presupuesto claro."
+    }
+  },
+  "units": {
+    "percent": "\u00a0%",
+    "hours": "\u00a0h"
+  },
+  "img": {
+    "hero-aisle": "Operarios de almacén caminando por un pasillo señalizado entre estanterías altas para palés",
+    "parcels-team": "Dos compañeros sonriendo detrás de una pila de paquetes ya embalados",
+    "inventory-check": "Empleado de almacén revisando el stock en una tableta delante de unas estanterías",
+    "dock-trailers": "Remolques atracados en los muelles de carga de un centro de distribución",
+    "team-aisle": "Dos compañeros con chaleco reflectante conversando mientras recorren un pasillo del almacén",
+    "scanner-worker": "Operario de almacén con casco azul escaneando un código de barras en una estantería",
+    "forklift-orange": "Carretilla elevadora naranja junto a una estantería cargada de tablones de madera mientras pasa un compañero",
+    "truck-warehouse": "Camión de mercancías naranja aparcado delante de una gran nave blanca",
+    "pick-zone": "Zona de picking con estanterías llenas de cubetas amarillas y paquetes embalados",
+    "label-package": "Operario cerrando y etiquetando un paquete en una mesa de embalaje",
+    "racking-forklift": "Carretilla elevadora amarilla en un pasillo de estanterías altas para palés",
+    "forklift-trailer": "Carretillero sacando un palé de un remolque en un muelle de carga",
+    "pallet-forklift": "Carretilla elevadora moviendo un palé con cajas delante de estanterías altas",
+    "factory-floor": "Equipo preparando cajas apiladas en una zona de embalaje con mucha actividad",
+    "aerial-trucks": "Vista aérea de camiones aparcados en fila en un patio logístico"
+  },
+  "faq": [
+    {
+      "q": "¿En cuánto tiempo podemos empezar?",
+      "a": "La mayoría de los clientes envían su primer pedido unas dos semanas después de firmar. La mercancía llega la primera semana, y en la segunda conectamos su tienda y hacemos pedidos de prueba."
+    },
+    {
+      "q": "¿Hay un volumen mínimo o una duración mínima de contrato?",
+      "a": "No hay un volumen mínimo de pedidos. Tras un periodo inicial de tres meses, el contrato se renueva mes a mes con un preaviso de 30\u00a0días."
+    },
+    {
+      "q": "¿Cómo funcionan los precios?",
+      "a": "Usted paga el almacenaje por palé, la preparación y el embalaje por pedido, y el envío a tarifa del transportista. Los extras, como el kitting o los folletos, se presupuestan por encargo."
+    },
+    {
+      "q": "¿Con qué plataformas y transportistas se integran?",
+      "a": "Tenemos plugins listos para Shopify, WooCommerce, Shoprenter y UNAS, y una API para tiendas a medida. Trabajamos con GLS, DPD, Foxpost, MPL y DHL, además de redes de paletería."
+    },
+    {
+      "q": "¿Qué ocurre con las devoluciones?",
+      "a": "Revisamos los paquetes devueltos en un plazo de un día laborable. Los artículos aptos para la venta vuelven a la estantería y su stock se actualiza. Los artículos dañados se fotografían y le enviamos un informe."
+    },
+    {
+      "q": "¿Pueden gestionar palés y mercancía voluminosa?",
+      "a": "Sí. Almacenamos palés y cajas, y enviamos paquetes, palés y cargas completas. Si su mercancía es frágil, de alto valor o sensible a la temperatura, avísenos con antelación para planificar su manipulación."
+    },
+    {
+      "q": "¿Envían fuera de Hungría?",
+      "a": "Sí, a toda la UE con nuestros transportistas colaboradores. Para otros destinos, preparamos la documentación si nos lo solicita."
+    }
+  ],
+  "home": {
+    "title": "Fully Logistics | Fulfillment y logística por contrato",
+    "description": "Fully Logistics almacena, embala y envía para tiendas online y fabricantes. Los pedidos confirmados antes de las 14:00 salen del almacén el mismo día.",
+    "hero": {
+      "eyebrow": "Fulfillment y logística por contrato",
+      "line1": "Antes de las 14\u00a0h,",
+      "line2": "enviado <span class=\"hl\">hoy.</span>",
+      "lead": "Almacenamos, embalamos y enviamos para tiendas online y fabricantes. Así su equipo puede centrarse en vender y fabricar."
+    },
+    "benefits": {
+      "title": "Lo que obtiene desde el primer día",
+      "lead": "Un solo almacén, un solo equipo y una sola tarifa, tanto si envía paquetes como palés.",
+      "dispatch": {
+        "title": "Envío el mismo día",
+        "text": "Los pedidos confirmados antes de las 14:00 salen de nuestro muelle el mismo día laborable. Los que llegan más tarde salen a primera hora de la mañana siguiente."
+      },
+      "prices": {
+        "title": "Una tarifa de tres líneas",
+        "text": "Cada concepto tiene su propia línea en el presupuesto: almacenaje, preparación y embalaje, y envío. Nada se esconde en la letra pequeña.",
+        "rates": [
+          { "name": "Almacenaje", "unit": "por palé y mes" },
+          { "name": "Preparación y embalaje", "unit": "por pedido" },
+          { "name": "Envío", "unit": "a tarifa del transportista" }
+        ]
+      },
+      "stock": {
+        "title": "Stock a la vista",
+        "text": "Niveles de stock en tiempo real, estado de los pedidos y seguimiento en un solo portal, sincronizado con su tienda online mediante un plugin listo para usar o nuestra API."
+      }
+    },
+    "proof": {
+      "title": "Las cifras que enviamos a cada cliente, cada mes",
+      "stats": [
+        "Pedidos enviados el mismo día de su confirmación",
+        "Precisión en la preparación de todos los envíos",
+        "Paquetes enviados el mes pasado",
+        "De la llegada del camión al stock disponible online"
+      ],
+      "cases": [
+        {
+          "tag": "Tienda online",
+          "quote": "«Mandamos nuestro stock un viernes y el lunes ya enviábamos pedidos desde su almacén. Las devoluciones vuelven al stock en dos días como máximo.»",
+          "name": "Dóra Szabadi",
+          "role": "Fundadora, tienda online de productos para mascotas",
+          "link": "Fulfillment para tiendas online"
+        },
+        {
+          "tag": "Fabricante",
+          "quote": "«Los palés para la gran distribución y los paquetes para el consumidor final salen del mismo stock, y ahora planificamos con una única cifra.»",
+          "name": "Balázs Tornai",
+          "role": "Responsable de cadena de suministro, fabricante de electrodomésticos de cocina",
+          "link": "Logística para fabricantes"
+        }
+      ]
+    },
+    "faq": {
+      "title": "Preguntas antes de la primera llamada",
+      "lead": "Si no encuentra la suya, pregúntenos. Le respondemos en un día laborable."
+    }
+  },
+  "fulfillment": {
+    "title": "Fulfillment para tiendas online | Fully Logistics",
+    "description": "Fulfillment para tiendas online: recepción, almacenaje, preparación de pedidos, envíos y devoluciones en un solo almacén, con stock y seguimiento en tiempo real.",
+    "cta": {
+      "title": "Cuéntenos qué envía su tienda online. Le respondemos en un día laborable.",
+      "text": "Indíquenos su volumen mensual de pedidos y su catálogo, y le enviaremos un presupuesto claro."
+    },
+    "hero": {
+      "title": "Fulfillment al ritmo de su tienda online.",
+      "lead": "Envíenos su stock. Lo recepcionamos, lo almacenamos, embalamos cada pedido y lo entregamos a su transportista."
+    },
+    "route": {
+      "title": "De su proveedor a la puerta de su cliente",
+      "lead": "Seis etapas, todas a cargo del mismo equipo.",
+      "steps": [
+        { "title": "Envíe su stock", "text": "Haga llegar la mercancía a nuestro muelle con aviso previo. Aceptamos paquetes, cajas y palés completos." },
+        { "title": "Recepcionamos la mercancía", "text": "Cada entrega se cuenta, se escanea y se revisa. Si hay alguna diferencia, se lo comunicamos el mismo día." },
+        { "title": "Los pedidos se sincronizan", "text": "Los pedidos llegan automáticamente desde su tienda, y los niveles de stock se actualizan en cuanto algo se mueve." },
+        { "title": "Preparamos y embalamos", "text": "Los pedidos se preparan por oleadas, se embalan según sus especificaciones y se revisan antes de cerrar la caja." },
+        { "title": "El transportista recoge", "text": "Imprimimos las etiquetas del transportista que usted elija, y sus clientes reciben los enlaces de seguimiento." },
+        { "title": "Las devoluciones vuelven", "text": "Los paquetes devueltos se revisan en un plazo de un día laborable, y su stock se actualiza ese mismo día." }
+      ]
+    },
+    "included": {
+      "title": "Qué incluye el servicio",
+      "groups": [
+        {
+          "title": "Recepción y almacenaje",
+          "items": ["Control y recuento de cada entrega", "Etiquetado con código de barras de cada producto", "Almacenaje en palé, estantería y cubeta", "Inventarios cíclicos e informes de stock"]
+        },
+        {
+          "title": "Preparación y embalaje",
+          "items": ["Picking por oleadas para una expedición rápida", "Sus propias cajas o las nuestras", "Material promocional, folletos y muestras", "Envoltorio de regalo y notas personalizadas"]
+        },
+        {
+          "title": "Envío",
+          "items": ["Etiquetas y manifiestos de transportista", "Enlaces de seguimiento para sus clientes", "Contra reembolso, si el transportista lo ofrece", "Envíos a toda la UE"]
+        },
+        {
+          "title": "Devoluciones y extras",
+          "items": ["Revisión de devoluciones y reposición en stock", "Informes fotográficos de la mercancía dañada", "Kitting y formación de packs", "Reetiquetado y controles de calidad"]
+        }
+      ]
+    },
+    "pricing": {
+      "title": "Una tarifa que se entiende en un minuto",
+      "lead": "Cada cliente recibe su propio presupuesto, pero la estructura nunca cambia.",
+      "lines": [
+        { "name": "Almacenaje", "text": "Se factura por palé o posición de estantería y mes. Usted paga solo por el espacio que realmente utiliza." },
+        { "name": "Preparación y embalaje", "text": "Se factura por pedido, con un pequeño cargo por cada artículo adicional. Los materiales de embalaje se detallan aparte." },
+        { "name": "Envío", "text": "Se factura a tarifa del transportista, con los descuentos por volumen que hemos negociado." }
+      ],
+      "note": "Los extras, como el kitting, los folletos o el reetiquetado, se presupuestan por encargo antes de empezar."
+    },
+    "stack": {
+      "title": "Se integra con las herramientas que ya utiliza",
+      "lead": "Plugins listos para las principales plataformas y una API para todo lo demás.",
+      "platforms": "Plataformas de e-commerce",
+      "customApi": "API a medida",
+      "carriers": "Transportistas",
+      "palletNetworks": "Redes de paletería"
+    }
+  },
+  "manufacturers": {
+    "title": "Logística por contrato para fabricantes | Fully Logistics",
+    "description": "Logística por contrato para fabricantes: recepción, almacenaje, servicios de valor añadido y expedición de palés y paquetes desde un único stock.",
+    "cta": {
+      "title": "Cuéntenos qué fabrica. Le respondemos en un día laborable.",
+      "text": "Indíquenos sus volúmenes de palés y paquetes y los sistemas que utiliza, y le enviaremos un presupuesto claro."
+    },
+    "hero": {
+      "title": "Un solo stock para palés y paquetes.",
+      "lead": "De su línea de producción a la gran distribución y al consumidor final: recepción, almacenaje, servicios de valor añadido y expedición bajo un mismo techo."
+    },
+    "stages": {
+      "title": "De la línea de producción al cliente",
+      "lead": "Elija una etapa para ver de qué nos encargamos.",
+      "label": "Etapas logísticas",
+      "inbound": {
+        "tab": "Recepción",
+        "title": "Entrada de mercancía desde su línea",
+        "text": "Recibimos palés y cargas completas en 11 muelles de carga, los cotejamos con su aviso previo de envío y los damos de alta en stock en un plazo de 12\u00a0horas.",
+        "items": ["Avisos previos de envío (ASN) y citas de muelle", "Descarga de remolques y contenedores", "Recuento, control de calidad e informe fotográfico", "Etiquetado de palés con datos de lote y partida"]
+      },
+      "storage": {
+        "tab": "Almacenaje",
+        "title": "Un almacén siempre ordenado",
+        "text": "Estanterías para palés, almacenaje en bloque sobre suelo y baldas para cajas, con cada ubicación registrada en nuestro sistema de gestión de almacenes (SGA).",
+        "items": ["Trazabilidad por lote, partida y número de serie", "Control de caducidad con picking FEFO", "Espacio adicional para los picos de temporada", "Inventarios cíclicos periódicos, con informe incluido"]
+      },
+      "value": {
+        "tab": "Valor añadido",
+        "title": "Trabajos que completan el producto",
+        "text": "Nos encargamos de los últimos pasos entre su fábrica y el cliente, para que el producto terminado salga listo para la venta.",
+        "items": ["Kitting, formación de packs y montaje de expositores", "Reetiquetado, pegatinas y folletos", "Reembalaje en cajas de venta o de envío", "Controles de calidad y reacondicionamiento de devoluciones"]
+      },
+      "outbound": {
+        "tab": "Expedición",
+        "title": "Palés y paquetes, un solo stock",
+        "text": "La reposición a la gran distribución, los pedidos de distribuidores y los paquetes individuales para consumidores salen del mismo inventario.",
+        "items": ["Envíos de palés completos y mixtos", "Etiquetado para la gran distribución y citas de entrega", "Paquetes con nuestra red de transportistas", "Envío el mismo día para pedidos recibidos antes de las 14:00"]
+      }
+    },
+    "channels": {
+      "title": "Un stock, dos salidas",
+      "lead": "Atienda a la gran distribución y al consumidor final desde el mismo inventario, sin contar el stock dos veces.",
+      "retail": {
+        "title": "Palés para grandes cadenas y distribuidores",
+        "items": ["Palés completos y mixtos, montados según las normas de cada cadena", "Etiquetas de ruta y citas de entrega", "Mensajes EDI o carga en portales", "Prueba de entrega enviada a su correo"]
+      },
+      "parcel": {
+        "title": "Paquetes para el consumidor final",
+        "items": ["Pedidos de su propia tienda online y de marketplaces", "Envío el mismo día si se confirma antes de las 14:00", "Embalaje con su marca y folletos", "Devoluciones gestionadas y repuestas en stock"]
+      }
+    },
+    "systems": {
+      "title": "Sus sistemas siguen al mando",
+      "lead": "Nos conectamos a su ERP para que el stock, los pedidos y los envíos estén siempre sincronizados, sin introducir los datos dos veces.",
+      "features": [
+        { "title": "EDI y API", "text": "Mensajes de pedidos, stock y envíos en ambos sentidos." },
+        { "title": "SFTP y CSV", "text": "Un intercambio de archivos sencillo cuando no hace falta una integración completa." },
+        { "title": "Trazabilidad por lote", "text": "Rastree cualquier palé hasta la orden de fabricación de la que procede." },
+        { "title": "Control de caducidad", "text": "Picking FEFO y avisos antes de que venzan las fechas." },
+        { "title": "Números de serie", "text": "Se registran en la recepción y de nuevo en la expedición." },
+        { "title": "Informes mensuales", "text": "Cifras de stock, expedición y precisión que le enviamos cada mes." }
+      ]
+    }
+  },
+  "about": {
+    "title": "Sobre nosotros | Fully Logistics",
+    "description": "Conozca al equipo de almacén de Fully Logistics y cómo es una jornada de trabajo, desde la llegada de los camiones hasta el corte de las 14:00.",
+    "hero": {
+      "title1": "Nosotros llevamos el almacén.",
+      "title2": "Usted lleva su negocio.",
+      "lead": "Somos un equipo de profesionales del almacén. Almacenamos, embalamos y enviamos para tiendas online y fabricantes, y le informamos de cada paso."
+    },
+    "story": {
+      "title": "Por qué lo creamos",
+      "paragraphs": [
+        "Fully Logistics nació de una observación sencilla: muchas buenas empresas pierden tardes y fines de semana entre cinta de embalar y film estirable. Creamos un almacén en el que ese trabajo es nuestra dedicación a tiempo completo.",
+        "Hoy enviamos para tiendas online que abrieron el mes pasado y para fabricantes que abastecen a grandes cadenas de ámbito nacional. La rutina es la misma para todos: recibir, almacenar, embalar, enviar e informar."
+      ]
+    },
+    "principles": [
+      { "title": "Enviamos lo que prometemos", "text": "Las horas de corte y las ventanas de expedición figuran en su contrato, y le informamos de cómo las cumplimos." },
+      { "title": "Mostramos nuestras cifras", "text": "Cada mes le enviamos la precisión, la velocidad de expedición y los recuentos de stock, fallos incluidos." },
+      { "title": "Avisamos a tiempo", "text": "Si un camión se retrasa, un palé llega dañado o hay una diferencia de stock, lo sabrá el mismo día, junto con una propuesta de solución." },
+      { "title": "Lo hacemos sencillo", "text": "Un solo interlocutor, un solo portal y una sola tarifa: nunca tendrá que ir detrás de tres departamentos." }
+    ],
+    "day": {
+      "title": "Una jornada, hora a hora",
+      "lead": "El ritmo que hay detrás del corte de las 14:00.",
+      "steps": [
+        "Llegan los camiones. La mercancía se descarga, se revisa y se da de alta en stock.",
+        "Empiezan las oleadas de picking de todo lo confirmado durante la noche.",
+        "El embalaje está a pleno rendimiento, con un control de calidad antes de cerrar cada paquete.",
+        "<strong>Hora de corte.</strong> Los pedidos confirmados hasta ahora salen hoy.",
+        "Los transportistas recogen paquetes y palés, y el seguimiento se activa.",
+        "Se revisan las devoluciones y se cuadran los recuentos de stock del día."
+      ]
+    },
+    "facility": {
+      "title": "Donde se guarda su stock",
+      "lead": "Unas instalaciones modernas en el cinturón logístico de Budapest, pensadas tanto para palés como para paquetes.",
+      "stats": ["Metros cuadrados de superficie", "Posiciones de palé", "Muelles de carga", "Personas en planta"]
+    }
+  },
+  "contact": {
+    "title": "Contacto | Fully Logistics",
+    "description": "Cuéntenos qué envía y reciba un presupuesto claro de Fully Logistics en un día laborable.",
+    "heading": "Cuéntenos qué envía.",
+    "lead": "Envíenos algunos datos y le responderemos en un día laborable con preguntas o un presupuesto.",
+    "form": {
+      "title": "Solicitud de presupuesto",
+      "name": "Su nombre",
+      "email": "Correo profesional",
+      "company": "Empresa",
+      "phone": "Teléfono",
+      "optional": "(opcional)",
+      "role": "Su perfil",
+      "roles": ["Tienda online", "Fabricante", "Otro"],
+      "volume": "Volumen mensual",
+      "volumeChoose": "Elija una opción",
+      "volumes": ["Menos de 500 pedidos", "De 500 a 2000 pedidos", "De 2000 a 10.000 pedidos", "Más de 10.000 pedidos", "Principalmente palés"],
+      "message": "¿Qué envía?",
+      "messageHint": "Productos, tamaños, manipulación especial y su operativa actual.",
+      "consent": "Acepto que Fully Logistics se ponga en contacto conmigo en relación con esta solicitud.",
+      "successTitle": "Gracias. Hemos recibido su solicitud.",
+      "successText": "Le respondemos en un día laborable como máximo, normalmente antes."
+    },
+    "aside": {
+      "label": "Datos de contacto",
+      "nextTitle": "Próximos pasos",
+      "next": [
+        { "title": "Le respondemos.", "text": "En un día laborable, con preguntas o una primera estimación." },
+        { "title": "Lo hablamos.", "text": "Una breve llamada para conocer sus productos y su flujo de pedidos." },
+        { "title": "Recibe un presupuesto por escrito.", "text": "Las tres líneas de precio y una fecha de inicio." }
+      ]
+    }
+  },
+  "js": {
+    "themeToDark": "Cambiar al tema oscuro",
+    "themeToLight": "Cambiar al tema claro",
+    "menuOpen": "Abrir menú",
+    "menuClose": "Cerrar menú",
+    "errName": "Introduzca su nombre.",
+    "errEmail": "Introduzca un correo electrónico válido.",
+    "errMessage": "Cuéntenos brevemente qué envía.",
+    "errConsent": "Marque la casilla para que podamos ponernos en contacto con usted.",
+    "errField": "Revise este campo.",
+    "errSummary": "Corrija los campos marcados e inténtelo de nuevo.",
+    "sendFailed": "Algo ha fallado y su solicitud no se ha enviado. Inténtelo de nuevo o escríbanos a {email}.",
+    "mailOpened": "Su aplicación de correo debería abrirse con la solicitud lista para enviar. Si no es así, escriba a {email}.",
+    "mailSubject": "Solicitud de presupuesto de {from}",
+    "mailName": "Nombre",
+    "mailEmail": "Correo electrónico",
+    "mailCompany": "Empresa",
+    "mailPhone": "Teléfono",
+    "mailRole": "Perfil",
+    "mailVolume": "Volumen mensual"
+  }
+}

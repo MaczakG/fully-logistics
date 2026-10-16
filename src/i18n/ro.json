@@ -1,0 +1,365 @@
+{
+  "meta": {
+    "name": "Română",
+    "locale": "ro_RO"
+  },
+  "common": {
+    "skip": "Salt la conținut",
+    "homeLabel": "Fully Logistics, pagina principală",
+    "quote": "Cereți o ofertă",
+    "blurb": "Fulfillment și logistică contractuală pentru magazine online și producători.",
+    "location": "Depozit și birou",
+    "country": "Ungaria",
+    "hours": "De luni până vineri, între 6:00 și 18:00",
+    "nav": {
+      "primary": "Meniu principal",
+      "mobile": "Meniu mobil",
+      "solutions": "Soluții",
+      "company": "Companie",
+      "fulfillment": "Fulfillment",
+      "fulfillmentDesc": "Depozitare, pregătirea comenzilor, ambalare și expediere pentru magazine online.",
+      "manufacturers": "Producători",
+      "manufacturersDesc": "Paleți și colete din același stoc, de la linia de producție la client.",
+      "home": "Acasă",
+      "about": "Despre noi",
+      "contact": "Contact",
+      "language": "Limbă"
+    },
+    "cta": {
+      "title": "Spuneți-ne ce expediați. Vă răspundem într-o zi lucrătoare.",
+      "text": "Indicați volumul lunar de comenzi sau de paleți și vă trimitem o ofertă clară."
+    }
+  },
+  "units": {
+    "percent": "\u00a0%",
+    "hours": "\u00a0ore"
+  },
+  "img": {
+    "hero-aisle": "Angajați ai depozitului care merg pe un culoar marcat, între rafturi înalte pentru paleți",
+    "parcels-team": "Doi colegi care zâmbesc în spatele unui teanc de colete ambalate",
+    "inventory-check": "Angajat al depozitului care verifică stocul pe o tabletă, în fața rafturilor de depozitare",
+    "dock-trailers": "Semiremorci trase cu spatele la rampele de încărcare ale unui centru de distribuție",
+    "team-aisle": "Doi colegi în veste reflectorizante care discută în timp ce merg pe un culoar al depozitului",
+    "scanner-worker": "Lucrător de depozit cu cască albastră care scanează un cod de bare de pe un raft",
+    "forklift-orange": "Stivuitor portocaliu lângă rafturi încărcate cu scânduri de lemn, pe lângă care trece un coleg",
+    "truck-warehouse": "Camion portocaliu de marfă parcat în fața unui depozit mare, alb",
+    "pick-zone": "Zonă de picking cu rafturi pline de lăzi galbene și colete ambalate",
+    "label-package": "Ambalator care sigilează și etichetează un colet la o masă de ambalare",
+    "racking-forklift": "Stivuitor galben pe un culoar înalt, între rafturi pentru paleți",
+    "forklift-trailer": "Stivuitorist care scoate un palet dintr-o semiremorcă, la o rampă de încărcare",
+    "pallet-forklift": "Stivuitor care mută un palet cu cutii în fața unor rafturi înalte",
+    "factory-floor": "Echipă care pregătește cutii stivuite într-o zonă de ambalare plină de activitate",
+    "aerial-trucks": "Vedere aeriană cu camioane parcate în rânduri în curtea unui centru logistic"
+  },
+  "faq": [
+    {
+      "q": "Cât de repede putem începe?",
+      "a": "Majoritatea clienților expediază prima comandă la aproximativ două săptămâni după semnarea contractului. Stocul sosește în prima săptămână, iar în a doua conectăm magazinul dumneavoastră și plasăm comenzi de test."
+    },
+    {
+      "q": "Există un volum minim sau o durată minimă a contractului?",
+      "a": "Nu există un volum minim de comenzi. După o perioadă inițială de trei luni, contractul se prelungește lunar, cu un preaviz de 30\u00a0de zile."
+    },
+    {
+      "q": "Cum se stabilesc prețurile?",
+      "a": "Plătiți depozitarea pe palet, pregătirea și ambalarea pe comandă, iar transportul la tarifele curierului. Serviciile suplimentare, precum kitting-ul sau inserturile, se ofertează separat, pentru fiecare lucrare."
+    },
+    {
+      "q": "Cu ce platforme și curieri sunteți integrați?",
+      "a": "Avem pluginuri gata de instalat pentru Shopify, WooCommerce, Shoprenter și UNAS, plus un API pentru magazinele dezvoltate la comandă. Printre curieri se numără GLS, DPD, Foxpost, MPL și DHL, la care se adaugă rețelele de transport paletizat."
+    },
+    {
+      "q": "Ce se întâmplă cu retururile?",
+      "a": "Verificăm coletele returnate în cel mult o zi lucrătoare. Produsele vandabile revin pe raft, iar stocul dumneavoastră se actualizează. Produsele deteriorate sunt fotografiate și vă sunt raportate."
+    },
+    {
+      "q": "Puteți gestiona paleți și mărfuri voluminoase?",
+      "a": "Da. Depozităm paleți și cutii și expediem colete, paleți și încărcături complete. Pentru mărfuri fragile, de valoare mare sau sensibile la temperatură, spuneți-ne din timp, ca să putem planifica manipularea."
+    },
+    {
+      "q": "Expediați și în afara Ungariei?",
+      "a": "Da, în toată UE, prin partenerii noștri de transport. Pentru alte destinații pregătim documentele la cerere."
+    }
+  ],
+  "home": {
+    "title": "Fully Logistics | Fulfillment și logistică contractuală",
+    "description": "Fully Logistics depozitează, ambalează și expediază pentru magazine online și producători. Comenzile confirmate până la ora\u00a014:00 pleacă în aceeași zi.",
+    "hero": {
+      "eyebrow": "Fulfillment și logistică contractuală",
+      "line1": "Până la ora\u00a014:00,",
+      "line2": "expediat <span class=\"hl\">azi.</span>",
+      "lead": "Depozităm, ambalăm și expediem pentru magazine online și producători, ca echipa dumneavoastră să se poată concentra pe vânzări și producție."
+    },
+    "benefits": {
+      "title": "Ce primiți din prima zi",
+      "lead": "Un singur depozit, o singură echipă și o singură listă de prețuri, fie că expediați colete, fie paleți.",
+      "dispatch": {
+        "title": "Expediere în aceeași zi",
+        "text": "Comenzile confirmate până la ora\u00a014:00 pleacă de la rampa noastră în aceeași zi lucrătoare. Cele primite mai târziu sunt expediate a doua zi, la prima oră."
+      },
+      "prices": {
+        "title": "O listă de prețuri în trei rânduri",
+        "text": "Depozitarea, pregătirea și ambalarea comenzilor și transportul au fiecare propriul rând în ofertă. Nimic nu e ascuns în scrisul mărunt.",
+        "rates": [
+          { "name": "Depozitare", "unit": "pe palet, pe lună" },
+          { "name": "Pregătire și ambalare", "unit": "pe comandă" },
+          { "name": "Transport", "unit": "la tarifele curierului" }
+        ]
+      },
+      "stock": {
+        "title": "Stocul, mereu la vedere",
+        "text": "Stocuri în timp real, starea comenzilor și urmărirea coletelor într-un singur portal, sincronizat cu magazinul dumneavoastră online printr-un plugin gata de instalat sau prin API-ul nostru."
+      }
+    },
+    "proof": {
+      "title": "Cifrele pe care le raportăm fiecărui client, în fiecare lună",
+      "stats": [
+        "Comenzi expediate în ziua confirmării",
+        "Acuratețea pregătirii comenzilor, pe toate expedierile",
+        "Colete expediate luna trecută",
+        "De la sosirea camionului până la stocul disponibil online"
+      ],
+      "cases": [
+        {
+          "tag": "Magazin online",
+          "quote": "„Ne-am trimis stocul într-o vineri și luni expediam deja din depozitul lor. Retururile reintră în stoc în cel mult două zile.”",
+          "name": "Dóra Szabadi",
+          "role": "Fondatoare, magazin online de produse pentru animale de companie",
+          "link": "Fulfillment pentru magazine online"
+        },
+        {
+          "tag": "Producător",
+          "quote": "„Paleții pentru retail și coletele pentru consumatori pleacă din același stoc, iar planificarea pornește acum de la o singură cifră.”",
+          "name": "Balázs Tornai",
+          "role": "Manager lanț de aprovizionare, producător de electrocasnice pentru bucătărie",
+          "link": "Logistică pentru producători"
+        }
+      ]
+    },
+    "faq": {
+      "title": "Întrebări înainte de prima discuție",
+      "lead": "Nu găsiți întrebarea dumneavoastră? Scrieți-ne. Răspundem în cel mult o zi lucrătoare."
+    }
+  },
+  "fulfillment": {
+    "title": "Fulfillment pentru magazine online | Fully Logistics",
+    "description": "Fulfillment pentru magazine online: recepție, depozitare, picking și ambalare, expediere și retururi dintr-un singur depozit, cu stoc și urmărire în timp real.",
+    "cta": {
+      "title": "Spuneți-ne ce expediază magazinul dumneavoastră. Vă răspundem într-o zi lucrătoare.",
+      "text": "Indicați volumul lunar de comenzi și gama de produse, iar noi vă trimitem o ofertă clară."
+    },
+    "hero": {
+      "title": "Fulfillment care ține pasul cu magazinul dumneavoastră.",
+      "lead": "Trimiteți-ne stocul. Noi îl recepționăm, îl depozităm, ambalăm fiecare comandă și o predăm curierului ales de dumneavoastră."
+    },
+    "route": {
+      "title": "De la furnizorul dumneavoastră până la ușa clientului",
+      "lead": "Șase etape, toate gestionate de aceeași echipă.",
+      "steps": [
+        { "title": "Trimiteți stocul", "text": "Trimiteți marfa la rampa noastră, însoțită de un aviz de expediție (ASN). Acceptăm colete, cutii și paleți întregi." },
+        { "title": "Îl recepționăm", "text": "Fiecare livrare este numărată, scanată și verificată. Orice diferență vă este raportată în aceeași zi." },
+        { "title": "Comenzile se sincronizează", "text": "Comenzile intră automat din magazinul dumneavoastră, iar stocul se actualizează acolo imediat ce se mișcă ceva." },
+        { "title": "Pregătim și ambalăm", "text": "Comenzile sunt pregătite în valuri, ambalate după specificațiile dumneavoastră și verificate înainte de sigilare." },
+        { "title": "Curierul preia coletele", "text": "Etichetele se tipăresc pentru curierul ales de dumneavoastră, iar clienții primesc linkurile de urmărire." },
+        { "title": "Retururile revin", "text": "Coletele returnate sunt verificate în cel mult o zi lucrătoare, iar stocul se actualizează în aceeași zi." }
+      ]
+    },
+    "included": {
+      "title": "Ce include serviciul",
+      "groups": [
+        {
+          "title": "Recepție și depozitare",
+          "items": ["Verificarea și numărarea livrărilor", "Etichetarea cu cod de bare a fiecărui produs", "Depozitare pe paleți, pe rafturi și în lăzi", "Inventariere ciclică și rapoarte de stoc"]
+        },
+        {
+          "title": "Pregătire și ambalare",
+          "items": ["Picking în valuri, pentru expediere rapidă", "Cutiile dumneavoastră sau ale noastre", "Inserturi, fluturași și mostre", "Ambalare cadou și mesaje personalizate"]
+        },
+        {
+          "title": "Expediere",
+          "items": ["Etichete de curier și borderouri", "Linkuri de urmărire pentru clienții dumneavoastră", "Ramburs, acolo unde curierul oferă serviciul", "Expedieri în toată UE"]
+        },
+        {
+          "title": "Retururi și servicii suplimentare",
+          "items": ["Verificarea retururilor și repunerea în stoc", "Rapoarte foto pentru mărfurile deteriorate", "Kitting și pachete de produse", "Reetichetare și controale de calitate"]
+        }
+      ]
+    },
+    "pricing": {
+      "title": "O listă de prețuri pe care o citiți într-un minut",
+      "lead": "Facem oferta pentru fiecare client, dar structura rămâne mereu aceeași.",
+      "lines": [
+        { "name": "Depozitare", "text": "Se facturează lunar, pe poziție de palet sau de raft. Plătiți doar spațiul pe care îl folosiți efectiv." },
+        { "name": "Pregătire și ambalare", "text": "Se facturează pe comandă, cu un cost mic pentru fiecare articol suplimentar. Materialele de ambalare apar pe rânduri separate." },
+        { "name": "Transport", "text": "Se facturează la tarifele curierului, cu reducerile de volum pe care le-am negociat." }
+      ],
+      "note": "Pentru servicii suplimentare, precum kitting, inserturi sau reetichetare, primiți o ofertă separată pe lucrare, înainte să începem."
+    },
+    "stack": {
+      "title": "Integrare cu instrumentele pe care le folosiți deja",
+      "lead": "Pluginuri gata de instalat pentru principalele platforme și un API pentru tot restul.",
+      "platforms": "Platforme de magazin online",
+      "customApi": "API personalizat",
+      "carriers": "Curieri",
+      "palletNetworks": "Transport paletizat"
+    }
+  },
+  "manufacturers": {
+    "title": "Logistică contractuală pentru producători | Fully Logistics",
+    "description": "Logistică contractuală pentru producători: recepție, depozitare, servicii cu valoare adăugată și expediere pentru paleți și colete din același stoc.",
+    "cta": {
+      "title": "Spuneți-ne ce produceți. Vă răspundem într-o zi lucrătoare.",
+      "text": "Indicați volumele de paleți și de colete și sistemele pe care le folosiți, iar noi vă trimitem o ofertă clară."
+    },
+    "hero": {
+      "title": "Un singur stoc pentru paleți și colete.",
+      "lead": "De la linia de producție la retaileri și consumatori: recepție, depozitare, servicii cu valoare adăugată și expediere sub același acoperiș."
+    },
+    "stages": {
+      "title": "De la linia de producție la client",
+      "lead": "Alegeți o etapă ca să vedeți de ce ne ocupăm.",
+      "label": "Etapele logistice",
+      "inbound": {
+        "tab": "Recepție",
+        "title": "Marfa sosește de pe linia de producție",
+        "text": "Recepționăm paleți și încărcături complete la cele 11\u00a0rampe ale noastre, verificăm marfa pe baza avizului de expediție și o introducem în stoc în cel mult 12\u00a0ore.",
+        "items": ["Avize de expediție (ASN) și programări la rampă", "Descărcarea semiremorcilor și a containerelor", "Numărare, control de calitate și raport foto", "Etichetarea paleților cu datele de șarjă și de lot"]
+      },
+      "storage": {
+        "tab": "Depozitare",
+        "title": "Depozitare mereu în ordine",
+        "text": "Rafturi pentru paleți, suprafețe pentru stivuire la sol și rafturi pentru cutii, cu fiecare poziție urmărită în sistemul nostru de gestiune a depozitului (WMS).",
+        "items": ["Trasabilitate pe șarjă, lot și număr de serie", "Gestionarea datelor de expirare, cu picking FEFO", "Spațiu suplimentar în perioadele de vârf sezoniere", "Inventariere ciclică regulată, cu rapoarte trimise dumneavoastră"]
+      },
+      "value": {
+        "tab": "Valoare adăugată",
+        "title": "Lucrările care finalizează produsul",
+        "text": "Ne ocupăm de ultimii pași dintre fabrica dumneavoastră și client, ca produsele finite să plece gata de vânzare.",
+        "items": ["Kitting, formare de pachete și montare de standuri de prezentare", "Reetichetare, stickere și inserturi", "Reambalare în cutii pentru retail sau pentru expediere", "Controale de calitate și recondiționarea retururilor"]
+      },
+      "outbound": {
+        "tab": "Expediere",
+        "title": "Paleți și colete, un singur stoc",
+        "text": "Reaprovizionarea magazinelor, comenzile distribuitorilor și coletele individuale pentru consumatori pleacă toate din același stoc.",
+        "items": ["Expedieri de paleți întregi și de paleți micști", "Etichete pentru retail și programări de livrare", "Colete prin rețeaua noastră de curieri", "Expediere în aceeași zi pentru comenzile primite până la ora\u00a014:00"]
+      }
+    },
+    "channels": {
+      "title": "Un singur stoc, două canale de livrare",
+      "lead": "Aprovizionați retailul și consumatorii din același stoc, fără să numărați de două ori.",
+      "retail": {
+        "title": "Paleți pentru retaileri și distribuitori",
+        "items": ["Paleți întregi și micști, formați după regulile retailerului", "Etichete de rutare și programări de livrare", "Mesaje EDI sau încărcare în portal", "Dovada livrării, trimisă direct pe e-mail"]
+      },
+      "parcel": {
+        "title": "Colete pentru consumatori",
+        "items": ["Comenzi din propriul magazin online și din marketplace-uri", "Expediere în aceeași zi pentru comenzile confirmate până la ora\u00a014:00", "Ambalaje cu brandul dumneavoastră și inserturi", "Retururi gestionate și repuse în stoc"]
+      }
+    },
+    "systems": {
+      "title": "Controlul rămâne la sistemele dumneavoastră",
+      "lead": "Ne conectăm la ERP-ul dumneavoastră, ca stocul, comenzile și expedierile să rămână sincronizate, fără date introduse de două ori.",
+      "features": [
+        { "title": "EDI și API", "text": "Mesaje pentru comenzi, stoc și expedieri, în ambele sensuri." },
+        { "title": "SFTP și CSV", "text": "Un schimb simplu de fișiere, când nu este nevoie de o integrare completă." },
+        { "title": "Trasabilitate pe șarjă și lot", "text": "Orice palet poate fi urmărit până la lotul de producție din care provine." },
+        { "title": "Controlul expirării", "text": "Picking FEFO și alerte înainte să expire termenele." },
+        { "title": "Numere de serie", "text": "Înregistrate la recepție și din nou la expediere." },
+        { "title": "Raportare lunară", "text": "Cifre despre stoc, expedieri și acuratețe, trimise în fiecare lună." }
+      ]
+    }
+  },
+  "about": {
+    "title": "Despre noi | Fully Logistics",
+    "description": "Cunoașteți echipa de depozit din spatele Fully Logistics și vedeți cum decurge o zi de lucru, de la primele camioane până la ora-limită de 14:00.",
+    "hero": {
+      "title1": "Noi ne ocupăm de depozit.",
+      "title2": "Dumneavoastră, de afacere.",
+      "lead": "Suntem o echipă de operatori de depozit: stocăm, ambalăm și expediem pentru magazine online și producători și raportăm fiecare pas."
+    },
+    "story": {
+      "title": "De ce am pornit",
+      "paragraphs": [
+        "Fully Logistics a pornit de la o observație simplă: afacerile bune își pierd serile și weekendurile cu bandă adezivă și folie stretch. Am construit un depozit în care această muncă este meseria noastră, cu normă întreagă.",
+        "Astăzi expediem pentru magazine online lansate luna trecută și pentru producători care aprovizionează lanțuri naționale de retail. Rutina este aceeași în ambele cazuri: recepționăm, depozităm, ambalăm, expediem, raportăm."
+      ]
+    },
+    "principles": [
+      { "title": "Expediem ce promitem", "text": "Orele-limită și intervalele de expediere sunt trecute în contract, iar rapoartele noastre arată cum le respectăm." },
+      { "title": "Ne arătăm cifrele", "text": "Acuratețea, viteza de expediere și situația stocurilor ajung la dumneavoastră în fiecare lună, inclusiv atunci când ratăm ținta." },
+      { "title": "Vă anunțăm din timp", "text": "Un camion întârziat, un palet deteriorat sau o diferență de stoc: aflați în aceeași zi, împreună cu o soluție propusă." },
+      { "title": "Păstrăm lucrurile simple", "text": "O singură persoană de contact, un singur portal și o singură listă de prețuri, ca să nu alergați niciodată după trei departamente." }
+    ],
+    "day": {
+      "title": "O zi de lucru, oră cu oră",
+      "lead": "Ritmul din spatele orei-limită de 14:00.",
+      "steps": [
+        "Sosesc camioanele. Marfa primită este descărcată, verificată și introdusă în stoc.",
+        "Încep valurile de picking pentru tot ce s-a confirmat peste noapte.",
+        "Ambalarea este în plină desfășurare, cu un control de calitate înainte de sigilarea fiecărui colet.",
+        "<strong>Ora-limită.</strong> Comenzile confirmate până acum pleacă azi.",
+        "Curierii preiau coletele și paleții, iar urmărirea devine activă.",
+        "Retururile sunt verificate, iar inventarul zilei este reconciliat."
+      ]
+    },
+    "facility": {
+      "title": "Unde stă stocul dumneavoastră",
+      "lead": "Un depozit modern în centura logistică a Budapestei, construit deopotrivă pentru paleți și colete.",
+      "stats": ["Metri pătrați de suprafață", "Poziții de palet", "Rampe de încărcare", "Angajați în depozit"]
+    }
+  },
+  "contact": {
+    "title": "Contact | Fully Logistics",
+    "description": "Spuneți-ne ce expediați și primiți de la Fully Logistics o ofertă clară în cel mult o zi lucrătoare.",
+    "heading": "Spuneți-ne ce expediați.",
+    "lead": "Trimiteți-ne câteva detalii și vă răspundem într-o zi lucrătoare cu întrebări sau cu o ofertă.",
+    "form": {
+      "title": "Cerere de ofertă",
+      "name": "Nume și prenume",
+      "email": "E-mail de serviciu",
+      "company": "Companie",
+      "phone": "Telefon",
+      "optional": "(opțional)",
+      "role": "Sunt",
+      "roles": ["Proprietar de magazin online", "Producător", "Altceva"],
+      "volume": "Volum lunar",
+      "volumeChoose": "Alegeți o opțiune",
+      "volumes": ["Sub 500\u00a0de comenzi", "Între 500 și 2.000\u00a0de comenzi", "Între 2.000 și 10.000\u00a0de comenzi", "Peste 10.000\u00a0de comenzi", "În principal paleți"],
+      "message": "Ce expediați?",
+      "messageHint": "Produse, dimensiuni, cerințe speciale de manipulare și soluția pe care o folosiți acum.",
+      "consent": "Sunt de acord ca Fully Logistics să mă contacteze în legătură cu această solicitare.",
+      "successTitle": "Vă mulțumim. Am primit solicitarea dumneavoastră.",
+      "successText": "Vă răspundem în cel mult o zi lucrătoare, de obicei mai repede."
+    },
+    "aside": {
+      "label": "Date de contact",
+      "nextTitle": "Ce urmează",
+      "next": [
+        { "title": "Vă răspundem.", "text": "În cel mult o zi lucrătoare, cu întrebări sau cu o primă estimare." },
+        { "title": "Discutăm detaliile.", "text": "Un apel scurt în care trecem prin produsele și fluxul dumneavoastră de comenzi." },
+        { "title": "Primiți o ofertă scrisă.", "text": "Toate cele trei rânduri de preț, plus o dată de începere." }
+      ]
+    }
+  },
+  "js": {
+    "themeToDark": "Treceți la tema întunecată",
+    "themeToLight": "Treceți la tema luminoasă",
+    "menuOpen": "Deschideți meniul",
+    "menuClose": "Închideți meniul",
+    "errName": "Vă rugăm să introduceți numele.",
+    "errEmail": "Vă rugăm să introduceți o adresă de e-mail validă.",
+    "errMessage": "Vă rugăm să ne spuneți pe scurt ce expediați.",
+    "errConsent": "Vă rugăm să bifați caseta, ca să vă putem contacta.",
+    "errField": "Vă rugăm să verificați acest câmp.",
+    "errSummary": "Vă rugăm să corectați câmpurile evidențiate și să încercați din nou.",
+    "sendFailed": "A apărut o eroare și solicitarea nu a fost trimisă. Vă rugăm să încercați din nou sau să ne scrieți la {email}.",
+    "mailOpened": "Aplicația de e-mail ar trebui să se deschidă cu solicitarea gata de trimis. Dacă nu se deschide, scrieți-ne la {email}.",
+    "mailSubject": "Cerere de ofertă de la {from}",
+    "mailName": "Nume",
+    "mailEmail": "E-mail",
+    "mailCompany": "Companie",
+    "mailPhone": "Telefon",
+    "mailRole": "Sunt",
+    "mailVolume": "Volum lunar"
+  }
+}

@@ -1,26 +1,24 @@
 ---
 {
   "page": "home",
-  "nav": "home",
-  "title": "Fully Logistics | Fulfillment and contract logistics",
-  "description": "Fully Logistics stores, packs and ships for webshops and manufacturers. Orders confirmed by 2 pm leave our warehouse the same day."
+  "nav": "home"
 }
 ---
 <section class="hero" aria-labelledby="hero-title">
   <div class="hero__grid">
     <div class="hero__copy">
-      <p class="eyebrow" data-hero-in style="--i:0">Fulfillment and contract logistics</p>
+      <p class="eyebrow" data-hero-in style="--i:0">{{t.home.hero.eyebrow}}</p>
       <h1 class="hero__title" id="hero-title">
-        <span class="line" style="--i:0"><span>Ordered by 2&nbsp;pm.</span></span>
-        <span class="line" style="--i:1"><span>Shipped <span class="hl">today.</span></span></span>
+        <span class="line" style="--i:0"><span>{{t.home.hero.line1}}</span></span>
+        <span class="line" style="--i:1"><span>{{t.home.hero.line2}}</span></span>
       </h1>
-      <p class="lead" data-hero-in style="--i:2">We store, pack and ship for webshops and manufacturers, so your team can focus on selling and making.</p>
+      <p class="lead" data-hero-in style="--i:2">{{t.home.hero.lead}}</p>
       <div class="hero__actions" data-hero-in style="--i:3">
-        <a class="btn btn--primary btn--lg" href="{{root}}contact.html">Get a quote {{icon:arrow-right}}</a>
+        <a class="btn btn--primary btn--lg" href="{{base}}contact.html">{{t.common.quote}} {{icon:arrow-right}}</a>
       </div>
     </div>
     <figure class="hero__media">
-      {{img name="hero-aisle" alt="Warehouse staff walking along a marked aisle between tall pallet racking" sizes="(min-width: 900px) 52vw, 100vw" priority}}
+      {{img name="hero-aisle" sizes="(min-width: 900px) 52vw, 100vw" priority}}
     </figure>
   </div>
 </section>
@@ -28,38 +26,38 @@
 <section class="section" id="benefits" aria-labelledby="benefits-title">
   <div class="wrap">
     <div class="section__head" data-reveal>
-      <h2 id="benefits-title">What you get from day one</h2>
-      <p class="lead">One warehouse, one team and one price list, whether you ship parcels or pallets.</p>
+      <h2 id="benefits-title">{{t.home.benefits.title}}</h2>
+      <p class="lead">{{t.home.benefits.lead}}</p>
     </div>
 
     <div class="bento">
       <article class="tile tile--a" data-reveal>
         <figure class="tile__media media">
-          {{img name="parcels-team" alt="Two colleagues smiling behind a stack of packed parcels" sizes="(min-width: 900px) 58vw, 100vw"}}
+          {{img name="parcels-team" sizes="(min-width: 900px) 58vw, 100vw"}}
         </figure>
         <div class="tile__body">
-          <h3>Same-day dispatch</h3>
-          <p>Orders confirmed by 2&nbsp;pm leave our dock the same working day. Later orders go out first thing the next morning.</p>
+          <h3>{{t.home.benefits.dispatch.title}}</h3>
+          <p>{{t.home.benefits.dispatch.text}}</p>
         </div>
       </article>
 
       <article class="tile tile--b" data-reveal style="--d:1">
-        <h3>A price list with three lines</h3>
-        <p>Storage, pick and pack, and shipping each get their own line on the quote. Nothing hides in the fine print.</p>
+        <h3>{{t.home.benefits.prices.title}}</h3>
+        <p>{{t.home.benefits.prices.text}}</p>
         <dl class="rates">
-          <div class="rates__row"><dt>Storage</dt><dd>per pallet, per month</dd></div>
-          <div class="rates__row"><dt>Pick and pack</dt><dd>per order</dd></div>
-          <div class="rates__row"><dt>Shipping</dt><dd>at carrier rates</dd></div>
+          <div class="rates__row"><dt>{{t.home.benefits.prices.rates.0.name}}</dt><dd>{{t.home.benefits.prices.rates.0.unit}}</dd></div>
+          <div class="rates__row"><dt>{{t.home.benefits.prices.rates.1.name}}</dt><dd>{{t.home.benefits.prices.rates.1.unit}}</dd></div>
+          <div class="rates__row"><dt>{{t.home.benefits.prices.rates.2.name}}</dt><dd>{{t.home.benefits.prices.rates.2.unit}}</dd></div>
         </dl>
       </article>
 
       <article class="tile tile--c" data-reveal style="--d:2">
         <figure class="tile__media media">
-          {{img name="inventory-check" alt="Warehouse employee checking stock on a tablet in front of storage shelves" sizes="(min-width: 900px) 40vw, 100vw"}}
+          {{img name="inventory-check" sizes="(min-width: 900px) 40vw, 100vw"}}
         </figure>
         <div class="tile__body">
-          <h3>Stock you can see</h3>
-          <p>Live stock levels, order status and tracking in one portal, synced with your webshop through a ready plugin or our API.</p>
+          <h3>{{t.home.benefits.stock.title}}</h3>
+          <p>{{t.home.benefits.stock.text}}</p>
         </div>
       </article>
     </div>
@@ -69,49 +67,49 @@
 <section class="section section--tint" id="proof" aria-labelledby="proof-title">
   <div class="wrap">
     <div class="section__head" data-reveal>
-      <h2 id="proof-title">Numbers we report to every client, every month</h2>
+      <h2 id="proof-title">{{t.home.proof.title}}</h2>
     </div>
 
     <!-- SAMPLE CONTENT: the figures and quotes below are placeholders. Replace them with real KPIs and real client quotes before launch. -->
     <dl class="stats">
       <div class="stat ruled" data-reveal>
-        <dt>Orders dispatched the day they were confirmed</dt>
-        <dd data-count="98.7" data-decimals="1" data-suffix="%">98.7%</dd>
+        <dt>{{t.home.proof.stats.0}}</dt>
+        {{stat:98.7:1:percent}}
       </div>
       <div class="stat ruled" data-reveal style="--d:1">
-        <dt>Pick accuracy across all shipments</dt>
-        <dd data-count="99.8" data-decimals="1" data-suffix="%">99.8%</dd>
+        <dt>{{t.home.proof.stats.1}}</dt>
+        {{stat:99.8:1:percent}}
       </div>
       <div class="stat ruled" data-reveal style="--d:2">
-        <dt>Parcels shipped last month</dt>
-        <dd data-count="41860">41,860</dd>
+        <dt>{{t.home.proof.stats.2}}</dt>
+        {{stat:41860}}
       </div>
       <div class="stat ruled" data-reveal style="--d:3">
-        <dt>From truck arrival to stock available online</dt>
-        <dd data-count="12" data-suffix=" h">12 h</dd>
+        <dt>{{t.home.proof.stats.3}}</dt>
+        {{stat:12:0:hours}}
       </div>
     </dl>
 
     <div class="cases">
       <article class="case" data-reveal>
-        <p class="case__tag">Webshop</p>
+        <p class="case__tag">{{t.home.proof.cases.0.tag}}</p>
         <blockquote class="case__quote">
-          <p>&ldquo;We sent our stock on a Friday and shipped from their warehouse on Monday. Returns are booked back in within two days.&rdquo;</p>
+          <p>{{t.home.proof.cases.0.quote}}</p>
         </blockquote>
         <div class="case__foot">
-          <p class="case__by"><strong>D&oacute;ra Szabadi</strong><span>Founder, pet supplies webshop</span></p>
-          <a class="link" href="{{root}}solutions/fulfillment.html">Fulfillment for webshops {{icon:arrow-right}}</a>
+          <p class="case__by"><strong>{{t.home.proof.cases.0.name}}</strong><span>{{t.home.proof.cases.0.role}}</span></p>
+          <a class="link" href="{{base}}solutions/fulfillment.html">{{t.home.proof.cases.0.link}} {{icon:arrow-right}}</a>
         </div>
       </article>
 
       <article class="case" data-reveal style="--d:1">
-        <p class="case__tag">Manufacturer</p>
+        <p class="case__tag">{{t.home.proof.cases.1.tag}}</p>
         <blockquote class="case__quote">
-          <p>&ldquo;Retail pallets and consumer parcels ship from the same stock, and planning now works from a single figure.&rdquo;</p>
+          <p>{{t.home.proof.cases.1.quote}}</p>
         </blockquote>
         <div class="case__foot">
-          <p class="case__by"><strong>Bal&aacute;zs Tornai</strong><span>Supply chain manager, kitchen appliance maker</span></p>
-          <a class="link" href="{{root}}solutions/manufacturers.html">Logistics for manufacturers {{icon:arrow-right}}</a>
+          <p class="case__by"><strong>{{t.home.proof.cases.1.name}}</strong><span>{{t.home.proof.cases.1.role}}</span></p>
+          <a class="link" href="{{base}}solutions/manufacturers.html">{{t.home.proof.cases.1.link}} {{icon:arrow-right}}</a>
         </div>
       </article>
     </div>
@@ -121,8 +119,8 @@
 <section class="section" id="faq" aria-labelledby="faq-title">
   <div class="wrap faq">
     <div class="faq__intro" data-reveal>
-      <h2 id="faq-title">Questions before the first call</h2>
-      <p class="lead">If yours is missing, ask us. We answer within one business day.</p>
+      <h2 id="faq-title">{{t.home.faq.title}}</h2>
+      <p class="lead">{{t.home.faq.lead}}</p>
     </div>
     <div class="faq__list" data-reveal style="--d:1">
       {{faq_items}}

@@ -1,0 +1,365 @@
+{
+  "meta": {
+    "name": "Magyar",
+    "locale": "hu_HU"
+  },
+  "common": {
+    "skip": "Ugrás a tartalomhoz",
+    "homeLabel": "Fully Logistics, kezdőlap",
+    "quote": "Ajánlatkérés",
+    "blurb": "Fulfillment és szerződéses logisztika webshopoknak és gyártóknak.",
+    "location": "Raktár és iroda",
+    "country": "Magyarország",
+    "hours": "Hétfőtől péntekig 6:00 és 18:00 között",
+    "nav": {
+      "primary": "Fő",
+      "mobile": "Mobil",
+      "solutions": "Megoldások",
+      "company": "Cégünk",
+      "fulfillment": "Fulfillment",
+      "fulfillmentDesc": "Raktározás, komissiózás, csomagolás és kiszállítás webshopoknak.",
+      "manufacturers": "Gyártóknak",
+      "manufacturersDesc": "Raklapok és csomagok egy készletből, a gyártósortól a vevőig.",
+      "home": "Kezdőlap",
+      "about": "Rólunk",
+      "contact": "Kapcsolat",
+      "language": "Nyelv"
+    },
+    "cta": {
+      "title": "Mondja el, mit szállítana. Egy munkanapon belül válaszolunk.",
+      "text": "Írja meg a havi rendelés- vagy raklapmennyiséget, és átlátható árajánlatot küldünk."
+    }
+  },
+  "units": {
+    "percent": "%",
+    "hours": "\u00a0óra"
+  },
+  "img": {
+    "hero-aisle": "Raktári dolgozók sétálnak egy felfestett közlekedőfolyosón a magas raklapállványok között",
+    "parcels-team": "Két mosolygó kolléga egy halom becsomagolt doboz mögött",
+    "inventory-check": "Raktári munkatárs tableten ellenőrzi a készletet a polcok előtt",
+    "dock-trailers": "Egy elosztóközpont rakodórámpáihoz beállt pótkocsik",
+    "team-aisle": "Két láthatósági mellényes kolléga beszélget, miközben a raktár egyik folyosóján sétálnak",
+    "scanner-worker": "Kék védősisakos raktári dolgozó vonalkódot olvas be egy polcon",
+    "forklift-orange": "Narancssárga targonca faanyaggal megrakott állvány mellett, egy kolléga éppen elhalad mellette",
+    "truck-warehouse": "Narancssárga teherautó egy nagy, fehér raktárépület előtt",
+    "pick-zone": "Komissiózási zóna sárga ládákkal teli polcokkal és becsomagolt csomagokkal",
+    "label-package": "Csomagoló munkatárs lezár és felcímkéz egy csomagot a csomagolóasztalnál",
+    "racking-forklift": "Sárga targonca egy magas raklapállványsor folyosóján",
+    "forklift-trailer": "Targoncás raklapot hoz ki egy pótkocsiból a rakodórámpánál",
+    "pallet-forklift": "Targonca egy dobozokkal megrakott raklapot mozgat a magas állványok előtt",
+    "factory-floor": "Csapat egymásra rakott kartondobozokat készít elő egy forgalmas csomagolótérben",
+    "aerial-trucks": "Logisztikai udvaron sorokban parkoló kamionok felülnézetből"
+  },
+  "faq": [
+    {
+      "q": "Milyen gyorsan tudunk kezdeni?",
+      "a": "A legtöbb ügyfelünknél az első rendelés nagyjából két héttel a szerződéskötés után indul útnak. Az első héten beérkezik a készlet, a másodikon összekötjük a webshopot a rendszerünkkel, és tesztrendeléseket futtatunk."
+    },
+    {
+      "q": "Van minimális mennyiség vagy kötelező szerződéses időtartam?",
+      "a": "Minimális rendelésszám nincs. A háromhónapos indulási időszak után a szerződés havonta megújul, 30 napos felmondási idővel."
+    },
+    {
+      "q": "Hogyan épül fel az ár?",
+      "a": "A raktározásért raklaponként, a komissiózásért és csomagolásért rendelésenként, a szállításért a futárszolgálat díjszabása szerint fizet. Az extra feladatokra, például a szettképzésre vagy a mellékletekre, feladatonként adunk árat."
+    },
+    {
+      "q": "Milyen webshopokhoz és futárszolgálatokhoz kapcsolódnak?",
+      "a": "Kész bővítményünk van Shopifyhoz, WooCommerce-hez, Shoprenterhez és UNAS-hoz, egyedi webshopokhoz pedig API-t biztosítunk. A futárszolgálatok közül a GLS-sel, a DPD-vel, a Foxposttal, az MPL-lel és a DHL-lel dolgozunk, emellett raklaphálózatokkal is."
+    },
+    {
+      "q": "Mi történik a visszárukkal?",
+      "a": "A visszaküldött csomagokat egy munkanapon belül átvizsgáljuk. Az eladható termékek visszakerülnek a polcra, és a készlete frissül. A sérült termékekről fotót készítünk, és jelezzük Önnek."
+    },
+    {
+      "q": "Raklapos és terjedelmes árut is kezelnek?",
+      "a": "Igen. Raklapokat és kartonokat tárolunk, és csomagot, raklapot, valamint teljes rakományt is szállítunk. Törékeny, nagy értékű vagy hőmérséklet-érzékeny áru esetén jelezze előre, hogy meg tudjuk tervezni a kezelését."
+    },
+    {
+      "q": "Magyarországon kívülre is szállítanak?",
+      "a": "Igen, futárpartnereinkkel az egész EU-ba. Más célországokba kérésre elkészítjük a szükséges dokumentumokat."
+    }
+  ],
+  "home": {
+    "title": "Fully Logistics | Fulfillment és szerződéses logisztika",
+    "description": "A Fully Logistics raktároz, csomagol és szállít webshopoknak és gyártóknak. A 14\u00a0óráig visszaigazolt rendelések még aznap elhagyják a raktárunkat.",
+    "hero": {
+      "eyebrow": "Fulfillment és szerződéses logisztika",
+      "line1": "Rendelés 14\u00a0óráig.",
+      "line2": "Feladás <span class=\"hl\">még ma.</span>",
+      "lead": "Raktározunk, csomagolunk és szállítunk webshopoknak és gyártóknak, hogy Ön és csapata az értékesítésre és a gyártásra koncentrálhasson."
+    },
+    "benefits": {
+      "title": "Amit az első naptól kap",
+      "lead": "Egy raktár, egy csapat és egy árlista, akár csomagot, akár raklapot szállít.",
+      "dispatch": {
+        "title": "Aznapi feladás",
+        "text": "A 14\u00a0óráig visszaigazolt rendelések még aznap elhagyják a rámpánkat. A később érkezők másnap reggel elsőként indulnak."
+      },
+      "prices": {
+        "title": "Árlista három sorban",
+        "text": "A raktározás, a komissiózás és csomagolás, valamint a szállítás külön sort kap az ajánlatban. Semmi sem rejtőzik az apró betűs részben.",
+        "rates": [
+          { "name": "Raktározás", "unit": "raklaponként, havonta" },
+          { "name": "Komissiózás és csomagolás", "unit": "rendelésenként" },
+          { "name": "Szállítás", "unit": "a futárszolgálat díjszabása szerint" }
+        ]
+      },
+      "stock": {
+        "title": "Látható készlet",
+        "text": "Élő készletszintek, rendelésállapot és csomagkövetés egy portálon, kész bővítménnyel vagy API-n keresztül szinkronban a webshopjával."
+      }
+    },
+    "proof": {
+      "title": "Számok, amelyekről minden ügyfelünknek havonta beszámolunk",
+      "stats": [
+        "A visszaigazolás napján feladott rendelések",
+        "Komissiózási pontosság az összes szállítmányon",
+        "Az elmúlt hónapban feladott csomagok",
+        "A kamion érkezésétől az online elérhető készletig"
+      ],
+      "cases": [
+        {
+          "tag": "Webshop",
+          "quote": "„Pénteken küldtük el a készletet, és hétfőn már az ő raktárukból szállítottunk. A visszárukat két napon belül visszavezetik a készletbe.”",
+          "name": "Szabadi Dóra",
+          "role": "Alapító, kisállatfelszerelés-webshop",
+          "link": "Fulfillment webshopoknak"
+        },
+        {
+          "tag": "Gyártó",
+          "quote": "„A kereskedelmi raklapok és a vásárlói csomagok ugyanabból a készletből indulnak, így a tervezés ma már egyetlen számra épül.”",
+          "name": "Tornai Balázs",
+          "role": "Ellátásilánc-menedzser, konyhai gépeket gyártó vállalat",
+          "link": "Logisztika gyártóknak"
+        }
+      ]
+    },
+    "faq": {
+      "title": "Kérdések az első beszélgetés előtt",
+      "lead": "Ha az Önét nem találja, kérdezzen bátran. Egy munkanapon belül válaszolunk."
+    }
+  },
+  "fulfillment": {
+    "title": "Fulfillment webshopoknak | Fully Logistics",
+    "description": "Fulfillment webshopoknak: áruátvétel, raktározás, komissiózás, csomagolás, kiszállítás és visszáru egy raktárból, élő készlettel és csomagkövetéssel.",
+    "cta": {
+      "title": "Mondja el, mit árul a webshopja. Egy munkanapon belül válaszolunk.",
+      "text": "Írja meg a havi rendelésszámot és a termékkört, és átlátható árajánlatot küldünk."
+    },
+    "hero": {
+      "title": "Fulfillment, amely lépést tart a webshopjával.",
+      "lead": "Küldje el nekünk a készletét. Átvesszük, betároljuk, minden rendelést becsomagolunk, és átadjuk a futárnak."
+    },
+    "route": {
+      "title": "A beszállítótól a vásárló ajtajáig",
+      "lead": "Hat állomás, mindegyiket ugyanaz a csapat viszi.",
+      "steps": [
+        { "title": "Küldje el a készletet", "text": "Előzetes értesítéssel szállítsa az árut a rámpánkra. Csomagot, kartont és teljes raklapot is átveszünk." },
+        { "title": "Átvesszük", "text": "Minden szállítmányt megszámolunk, beszkennelünk és átvizsgálunk. Az eltérésekről még aznap értesítjük." },
+        { "title": "Beérkeznek a rendelések", "text": "A rendelések automatikusan érkeznek a webshopjából, a készletszintek pedig minden mozgás után azonnal visszaíródnak." },
+        { "title": "Komissiózunk és csomagolunk", "text": "A rendeléseket hullámokban szedjük össze, az Ön előírásai szerint csomagoljuk, és lezárás előtt ellenőrizzük." },
+        { "title": "Jön a futár", "text": "A címkéket az Ön által választott futárszolgálathoz nyomtatjuk, a vásárlói pedig megkapják a nyomkövetési linket." },
+        { "title": "Visszaérkeznek a visszáruk", "text": "A visszaküldött csomagokat egy munkanapon belül átvizsgáljuk, és a készlete még aznap frissül." }
+      ]
+    },
+    "included": {
+      "title": "Mit tartalmaz a szolgáltatás",
+      "groups": [
+        {
+          "title": "Áruátvétel és raktározás",
+          "items": ["Szállítmányellenőrzés és darabszámlálás", "Minden termék vonalkódos címkézése", "Raklapos, polcos és ládás tárolás", "Ciklikus leltár és készletjelentések"]
+        },
+        {
+          "title": "Komissiózás és csomagolás",
+          "items": ["Komissiózási hullámok a gyors feladásért", "Az Ön dobozaiban vagy a mieinkben", "Mellékletek, szórólapok és minták", "Ajándékcsomagolás és személyes üzenetek"]
+        },
+        {
+          "title": "Szállítás",
+          "items": ["Futárcímkék és szállítási jegyzékek", "Nyomkövetési linkek a vásárlóinak", "Utánvét, ahol a futárszolgálat kínálja", "Szállítás az egész EU-ba"]
+        },
+        {
+          "title": "Visszáru és extrák",
+          "items": ["Visszáruk átvizsgálása és visszatárolása", "Fotós jelentés a sérült árukról", "Szettképzés és termékcsomagok", "Átcímkézés és minőségellenőrzés"]
+        }
+      ]
+    },
+    "pricing": {
+      "title": "Árlista, amelyet egy perc alatt átlát",
+      "lead": "Ügyfelenként adunk ajánlatot, de a felépítés mindig ugyanaz.",
+      "lines": [
+        { "name": "Raktározás", "text": "Raklap- vagy polchelyenként, havonta számlázzuk. Csak a ténylegesen használt helyért fizet." },
+        { "name": "Komissiózás és csomagolás", "text": "Rendelésenként számlázzuk, minden további tételért kis felárral. A csomagolóanyagok tételesen szerepelnek." },
+        { "name": "Szállítás", "text": "A futárszolgálatok díjszabása szerint, az általunk kialkudott mennyiségi kedvezményekkel." }
+      ],
+      "note": "Az extra feladatokra, például a szettképzésre, a mellékletekre vagy az átcímkézésre, a munka megkezdése előtt, feladatonként adunk árat."
+    },
+    "stack": {
+      "title": "Kapcsolódik a már használt eszközeihez",
+      "lead": "Kész bővítmények a nagy platformokhoz, és API minden máshoz.",
+      "platforms": "Webshopmotorok",
+      "customApi": "Egyedi API",
+      "carriers": "Futárszolgálatok",
+      "palletNetworks": "Raklaphálózatok"
+    }
+  },
+  "manufacturers": {
+    "title": "Szerződéses logisztika gyártóknak | Fully Logistics",
+    "description": "Szerződéses logisztika gyártóknak: áruátvétel, raktározás, értéknövelt szolgáltatások és kiszállítás raklapon és csomagban, egyetlen készletből.",
+    "cta": {
+      "title": "Mondja el, mit gyárt. Egy munkanapon belül válaszolunk.",
+      "text": "Írja meg a raklap- és csomagmennyiségeit, valamint a használt rendszereit, és átlátható árajánlatot küldünk."
+    },
+    "hero": {
+      "title": "Egy készlet raklapra és csomagra.",
+      "lead": "A gyártósortól a kereskedőkig és a vásárlókig: áruátvétel, raktározás, értéknövelt szolgáltatások és szállítás egy fedél alatt."
+    },
+    "stages": {
+      "title": "A gyártósortól a vevőig",
+      "lead": "Válasszon egy szakaszt, és megmutatjuk, mit vállalunk benne.",
+      "label": "Logisztikai szakaszok",
+      "inbound": {
+        "tab": "Beérkezés",
+        "title": "Áruátvétel a gyártósorról",
+        "text": "Raklapokat és teljes rakományokat 11 rakodórámpán fogadunk, összevetjük őket az előzetes szállítási értesítővel, és 12 órán belül készletre vesszük.",
+        "items": ["Előzetes szállítási értesítők és rámpaidőpontok", "Pótkocsik és konténerek kirakodása", "Darabszám- és minőségellenőrzés, fotós jelentéssel", "Raklapcímkézés sarzs- és tételadatokkal"]
+      },
+      "storage": {
+        "tab": "Raktározás",
+        "title": "Rendezett raktározás",
+        "text": "Raklapállványok, blokktárolási terület és polcok a kartonoknak, minden tárhelyet nyomon követ a raktárirányítási rendszerünk.",
+        "items": ["Sarzs-, tétel- és sorozatszám-követés", "Lejárati idők kezelése FEFO-elvű komissiózással", "Szezonális többletterület a csúcsidőszakokra", "Rendszeres ciklikus leltár, jelentéssel"]
+      },
+      "value": {
+        "tab": "Értéknövelt munkák",
+        "title": "Munka, amitől a termék eladásra kész",
+        "text": "Elvégezzük az utolsó lépéseket a gyár és a vevő között, így a késztermék eladásra készen indul útnak.",
+        "items": ["Szettképzés, kötegelés és displayépítés", "Átcímkézés, matricázás és mellékletek", "Átcsomagolás kereskedelmi vagy szállítási kartonokba", "Minőségellenőrzés és visszáruk felújítása"]
+      },
+      "outbound": {
+        "tab": "Kiszállítás",
+        "title": "Raklap és csomag, egy készletből",
+        "text": "A kereskedelmi utántöltés, a disztribútori rendelések és az egyedi vásárlói csomagok mind ugyanabból a készletből indulnak.",
+        "items": ["Raklapos és vegyes raklapos szállítmányok", "Kereskedelmi címkék és kiszállítási időpontok", "Csomagok a futárpartnereinken keresztül", "Aznapi feladás a 14\u00a0óráig beérkező rendeléseknél"]
+      }
+    },
+    "channels": {
+      "title": "Egy készlet, két kimenet",
+      "lead": "Kiszolgálhatja a kereskedelmet és a vásárlókat ugyanabból a készletből, kettős nyilvántartás nélkül.",
+      "retail": {
+        "title": "Raklapok kereskedőknek és disztribútoroknak",
+        "items": ["Teljes és vegyes raklapok a kereskedők előírásai szerint", "Irányítócímkék és kiszállítási időpontok", "EDI-üzenetek vagy portálos feltöltés", "Kiszállítási igazolás egyenesen az e-mail-fiókjába"]
+      },
+      "parcel": {
+        "title": "Csomagok a vásárlóknak",
+        "items": ["Rendelések a saját webshopjából és piacterekről", "Aznapi feladás a 14\u00a0óráig visszaigazolt rendeléseknél", "Márkázott csomagolás és mellékletek", "Visszáruk kezelése és visszatárolása"]
+      }
+    },
+    "systems": {
+      "title": "Az Ön rendszerei irányítanak",
+      "lead": "Összekapcsolódunk a vállalatirányítási (ERP) rendszerével, így a készlet, a rendelések és a szállítmányok kettős adatrögzítés nélkül maradnak szinkronban.",
+      "features": [
+        { "title": "EDI és API", "text": "Rendelés-, készlet- és szállítási üzenetek mindkét irányban." },
+        { "title": "SFTP és CSV", "text": "Egyszerű fájlcsere, ha nincs szükség teljes integrációra." },
+        { "title": "Sarzs- és tételkövetés", "text": "Bármely raklap visszakövethető ahhoz a gyártási sorozathoz, amelyből származik." },
+        { "title": "Lejáratkezelés", "text": "FEFO-elvű komissiózás és figyelmeztetés, mielőtt a lejárati idők lejárnak." },
+        { "title": "Sorozatszámok", "text": "Rögzítjük az áruátvételkor, majd újra a feladáskor." },
+        { "title": "Havi jelentés", "text": "Készlet-, feladási és pontossági adatok, minden hónapban elküldve." }
+      ]
+    }
+  },
+  "about": {
+    "title": "Rólunk | Fully Logistics",
+    "description": "Ismerje meg a Fully Logistics raktári csapatát, és nézze meg, hogyan telik egy munkanap a beérkező kamionoktól a 14\u00a0órai rendelési határidőig.",
+    "hero": {
+      "title1": "Mi visszük a raktárat.",
+      "title2": "Ön viszi a vállalkozást.",
+      "lead": "Raktári szakemberekből álló csapat vagyunk: raktározunk, csomagolunk és szállítunk webshopoknak és gyártóknak, és minden lépésről beszámolunk."
+    },
+    "story": {
+      "title": "Miért hoztuk létre",
+      "paragraphs": [
+        "A Fully Logistics egy egyszerű megfigyelésből született: a jó vállalkozások estéket és hétvégéket veszítenek el a ragasztószalag és a raklapfólia miatt. Olyan raktárat építettünk, ahol ez a munka a mi főállásunk.",
+        "Ma a múlt hónapban indult webshopoknak és az országos kereskedelmi láncokat ellátó gyártóknak egyaránt szállítunk. A rutin mindkettőnél ugyanaz: átvétel, raktározás, csomagolás, szállítás, jelentés."
+      ]
+    },
+    "principles": [
+      { "title": "Azt szállítjuk, amit vállalunk", "text": "A rendelési határidők és a feladási időablakok bekerülnek a szerződésébe, és ezekhez mérten számolunk be." },
+      { "title": "Megmutatjuk a számainkat", "text": "A pontossági, feladási és készletadatokat minden hónapban megkapja, a hibákkal együtt." },
+      { "title": "Időben szólunk", "text": "Egy késő kamionról, egy sérült raklapról vagy egy készleteltérésről még aznap értesítjük, javasolt megoldással együtt." },
+      { "title": "Nem bonyolítjuk túl", "text": "Egy kapcsolattartó, egy portál és egy árlista, hogy soha ne kelljen három osztályt hajkurásznia." }
+    ],
+    "day": {
+      "title": "Egy munkanap óráról órára",
+      "lead": "A 14\u00a0órai határidő mögötti ritmus.",
+      "steps": [
+        "Megérkeznek a kamionok. A beérkező árut kirakodjuk, ellenőrizzük és készletre vesszük.",
+        "Elindulnak a komissiózási hullámok az éjszaka visszaigazolt rendelésekre.",
+        "Teljes gőzzel folyik a csomagolás, minden csomag lezárása előtt minőségellenőrzéssel.",
+        "<strong>Határidő.</strong> Az eddig visszaigazolt rendelések még ma útnak indulnak.",
+        "A futárok elviszik a csomagokat és a raklapokat, és élesedik a csomagkövetés.",
+        "Átvizsgáljuk a visszárukat, és egyeztetjük a napi készletadatokat."
+      ]
+    },
+    "facility": {
+      "title": "Itt lakik a készlete",
+      "lead": "Modern létesítmény a budapesti logisztikai övezetben, raklapokra és csomagokra egyaránt felkészítve.",
+      "stats": ["Négyzetméter alapterület", "Raklaphely", "Rakodórámpa", "Munkatárs a raktárban"]
+    }
+  },
+  "contact": {
+    "title": "Kapcsolat | Fully Logistics",
+    "description": "Mondja el, mit szállítana, és egy munkanapon belül átlátható árajánlatot küldünk Önnek.",
+    "heading": "Mondja el, mit szállítana.",
+    "lead": "Küldjön néhány adatot, és egy munkanapon belül válaszolunk kérdésekkel vagy ajánlattal.",
+    "form": {
+      "title": "Ajánlatkérés",
+      "name": "Az Ön neve",
+      "email": "Céges e-mail-cím",
+      "company": "Cég",
+      "phone": "Telefonszám",
+      "optional": "(nem kötelező)",
+      "role": "Vállalkozás típusa",
+      "roles": ["Webshop", "Gyártó", "Egyéb"],
+      "volume": "Havi mennyiség",
+      "volumeChoose": "Válasszon",
+      "volumes": ["500 rendelés alatt", "500 és 2000 rendelés között", "2000 és 10\u00a0000 rendelés között", "10\u00a0000 rendelés felett", "Főleg raklapos áru"],
+      "message": "Mit szállítana?",
+      "messageHint": "Termékek, méretek, különleges kezelési igények és a jelenlegi megoldása.",
+      "consent": "Hozzájárulok, hogy a Fully Logistics ezzel a megkereséssel kapcsolatban felvegye velem a kapcsolatot.",
+      "successTitle": "Köszönjük, megkaptuk a kérését.",
+      "successText": "Egy munkanapon belül válaszolunk, általában hamarabb."
+    },
+    "aside": {
+      "label": "Elérhetőségek",
+      "nextTitle": "Mi történik ezután?",
+      "next": [
+        { "title": "Válaszolunk.", "text": "Egy munkanapon belül, kérdésekkel vagy egy első becsléssel." },
+        { "title": "Átbeszéljük.", "text": "Egy rövid hívásban feltérképezzük a termékeit és a rendelési folyamatát." },
+        { "title": "Írásos ajánlatot kap.", "text": "Mindhárom ársorral és egy kezdési időponttal." }
+      ]
+    }
+  },
+  "js": {
+    "themeToDark": "Váltás sötét témára",
+    "themeToLight": "Váltás világos témára",
+    "menuOpen": "Menü megnyitása",
+    "menuClose": "Menü bezárása",
+    "errName": "Kérjük, adja meg a nevét.",
+    "errEmail": "Kérjük, érvényes e-mail-címet adjon meg.",
+    "errMessage": "Kérjük, írja meg röviden, mit szállítana.",
+    "errConsent": "Kérjük, jelölje be a négyzetet, hogy felvehessük Önnel a kapcsolatot.",
+    "errField": "Kérjük, ellenőrizze ezt a mezőt.",
+    "errSummary": "Kérjük, javítsa a megjelölt mezőket, és próbálja újra.",
+    "sendFailed": "Valami hiba történt, a kérését nem sikerült elküldeni. Kérjük, próbálja újra, vagy írjon nekünk ide: {email}.",
+    "mailOpened": "Hamarosan megnyílik a levelezőprogramja az elküldésre kész kéréssel. Ha nem nyílik meg, írjon nekünk ide: {email}.",
+    "mailSubject": "Ajánlatkérés: {from}",
+    "mailName": "Név",
+    "mailEmail": "E-mail",
+    "mailCompany": "Cég",
+    "mailPhone": "Telefon",
+    "mailRole": "Vállalkozás típusa",
+    "mailVolume": "Havi mennyiség"
+  }
+}

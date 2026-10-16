@@ -3,34 +3,39 @@
     <div class="footer__grid">
       <div class="footer__brand">
         {{> brand}}
-        <p>{{site.blurb}}</p>
+        <p>{{t.common.blurb}}</p>
       </div>
-      <nav aria-label="Solutions">
-        <h2 class="footer__h">Solutions</h2>
+      <nav aria-label="{{t.common.nav.solutions}}">
+        <h2 class="footer__h">{{t.common.nav.solutions}}</h2>
         <ul class="footer__list">
-          <li><a href="{{root}}solutions/fulfillment.html">Fulfillment</a></li>
-          <li><a href="{{root}}solutions/manufacturers.html">Manufacturers</a></li>
+          <li><a href="{{base}}solutions/fulfillment.html">{{t.common.nav.fulfillment}}</a></li>
+          <li><a href="{{base}}solutions/manufacturers.html">{{t.common.nav.manufacturers}}</a></li>
         </ul>
       </nav>
-      <nav aria-label="Company">
-        <h2 class="footer__h">Company</h2>
+      <nav aria-label="{{t.common.nav.company}}">
+        <h2 class="footer__h">{{t.common.nav.company}}</h2>
         <ul class="footer__list">
-          <li><a href="{{root}}index.html">Home</a></li>
-          <li><a href="{{root}}about.html">About</a></li>
-          <li><a href="{{root}}contact.html">Contact</a></li>
+          <li><a href="{{base}}index.html">{{t.common.nav.home}}</a></li>
+          <li><a href="{{base}}about.html">{{t.common.nav.about}}</a></li>
+          <li><a href="{{base}}contact.html">{{t.common.nav.contact}}</a></li>
         </ul>
       </nav>
       <div>
-        <h2 class="footer__h">Warehouse and office</h2>
+        <h2 class="footer__h">{{t.common.location}}</h2>
         <address class="footer__address">
-          <p>{{site.address1}}<br>{{site.address2}}</p>
+          <p>{{site.address1}}<br>{{site.address2}}, {{t.common.country}}</p>
           <p><a href="mailto:{{site.email}}">{{site.email}}</a><br><a href="tel:{{site.phoneHref}}">{{site.phone}}</a></p>
-          <p>{{site.hours}}</p>
+          <p>{{t.common.hours}}</p>
         </address>
       </div>
     </div>
     <div class="footer__bottom">
       <p>&copy; {{site.year}} {{site.name}}</p>
+      <nav class="footer__langs" aria-label="{{t.common.nav.language}}">
+        <ul class="lang-list lang-list--inline">
+          {{languages}}
+        </ul>
+      </nav>
     </div>
   </div>
 </footer>

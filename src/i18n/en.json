@@ -1,0 +1,365 @@
+{
+  "meta": {
+    "name": "English",
+    "locale": "en_GB"
+  },
+  "common": {
+    "skip": "Skip to content",
+    "homeLabel": "Fully Logistics, home",
+    "quote": "Get a quote",
+    "blurb": "Fulfillment and contract logistics for webshops and manufacturers.",
+    "location": "Warehouse and office",
+    "country": "Hungary",
+    "hours": "Monday to Friday, 6:00 to 18:00",
+    "nav": {
+      "primary": "Primary",
+      "mobile": "Mobile",
+      "solutions": "Solutions",
+      "company": "Company",
+      "fulfillment": "Fulfillment",
+      "fulfillmentDesc": "Storage, pick and pack and shipping for webshops.",
+      "manufacturers": "Manufacturers",
+      "manufacturersDesc": "Pallets and parcels from one stock, line to customer.",
+      "home": "Home",
+      "about": "About",
+      "contact": "Contact",
+      "language": "Language"
+    },
+    "cta": {
+      "title": "Tell us what you ship. We reply in one business day.",
+      "text": "Share your monthly order or pallet volume and we send back a clear quote."
+    }
+  },
+  "units": {
+    "percent": "%",
+    "hours": "\u00a0h"
+  },
+  "img": {
+    "hero-aisle": "Warehouse staff walking along a marked aisle between tall pallet racking",
+    "parcels-team": "Two colleagues smiling behind a stack of packed parcels",
+    "inventory-check": "Warehouse employee checking stock on a tablet in front of storage shelves",
+    "dock-trailers": "Trailers backed up to the loading bays of a distribution centre",
+    "team-aisle": "Two colleagues in hi-vis vests talking while walking through a warehouse aisle",
+    "scanner-worker": "Warehouse worker in a blue hard hat scanning a barcode on a shelf",
+    "forklift-orange": "Orange forklift beside racking loaded with timber boards while a colleague walks past",
+    "truck-warehouse": "Orange freight truck parked in front of a large white warehouse",
+    "pick-zone": "Picking zone with shelving full of yellow bins and packed parcels",
+    "label-package": "Packer sealing and labelling a parcel at a packing table",
+    "racking-forklift": "Yellow forklift in a tall aisle of pallet racking",
+    "forklift-trailer": "Forklift driver carrying a pallet out of a trailer at a loading dock",
+    "pallet-forklift": "Forklift moving a boxed pallet in front of tall racking",
+    "factory-floor": "Team preparing stacked cartons on a busy packing floor",
+    "aerial-trucks": "Aerial view of trucks parked in rows in a logistics yard"
+  },
+  "faq": [
+    {
+      "q": "How quickly can we start?",
+      "a": "Most clients ship their first order about two weeks after signing. Stock arrives in the first week, and we connect your shop and run test orders in the second."
+    },
+    {
+      "q": "Is there a minimum volume or contract length?",
+      "a": "There is no minimum order volume. After a three-month start period, contracts run month to month with 30 days’ notice."
+    },
+    {
+      "q": "How does pricing work?",
+      "a": "You pay for storage per pallet, for pick and pack per order, and for shipping at carrier rates. Extras such as kitting or inserts are quoted per job."
+    },
+    {
+      "q": "Which shops and carriers do you connect to?",
+      "a": "We have ready plugins for Shopify, WooCommerce, Shoprenter and UNAS, and an API for custom shops. Carriers include GLS, DPD, Foxpost, MPL and DHL, plus pallet networks."
+    },
+    {
+      "q": "What happens with returns?",
+      "a": "We inspect returned parcels within one working day. Sellable items go back on the shelf and your stock updates. Damaged items are photographed and reported to you."
+    },
+    {
+      "q": "Can you handle pallets and bulky goods?",
+      "a": "Yes. We store pallets and cartons, and we ship parcels, pallets and full loads. For fragile, high-value or temperature-sensitive goods, tell us early so we can plan the handling."
+    },
+    {
+      "q": "Do you ship outside Hungary?",
+      "a": "Yes, across the EU with our carrier partners. We prepare the paperwork for other destinations on request."
+    }
+  ],
+  "home": {
+    "title": "Fully Logistics | Fulfillment and contract logistics",
+    "description": "Fully Logistics stores, packs and ships for webshops and manufacturers. Orders confirmed by 2\u00a0pm leave our warehouse the same day.",
+    "hero": {
+      "eyebrow": "Fulfillment and contract logistics",
+      "line1": "Ordered by 2\u00a0pm.",
+      "line2": "Shipped <span class=\"hl\">today.</span>",
+      "lead": "We store, pack and ship for webshops and manufacturers, so your team can focus on selling and making."
+    },
+    "benefits": {
+      "title": "What you get from day one",
+      "lead": "One warehouse, one team and one price list, whether you ship parcels or pallets.",
+      "dispatch": {
+        "title": "Same-day dispatch",
+        "text": "Orders confirmed by 2\u00a0pm leave our dock the same working day. Later orders go out first thing the next morning."
+      },
+      "prices": {
+        "title": "A price list with three lines",
+        "text": "Storage, pick and pack, and shipping each get their own line on the quote. Nothing hides in the fine print.",
+        "rates": [
+          { "name": "Storage", "unit": "per pallet, per month" },
+          { "name": "Pick and pack", "unit": "per order" },
+          { "name": "Shipping", "unit": "at carrier rates" }
+        ]
+      },
+      "stock": {
+        "title": "Stock you can see",
+        "text": "Live stock levels, order status and tracking in one portal, synced with your webshop through a ready plugin or our API."
+      }
+    },
+    "proof": {
+      "title": "Numbers we report to every client, every month",
+      "stats": [
+        "Orders dispatched the day they were confirmed",
+        "Pick accuracy across all shipments",
+        "Parcels shipped last month",
+        "From truck arrival to stock available online"
+      ],
+      "cases": [
+        {
+          "tag": "Webshop",
+          "quote": "“We sent our stock on a Friday and shipped from their warehouse on Monday. Returns are booked back in within two days.”",
+          "name": "Dóra Szabadi",
+          "role": "Founder, pet supplies webshop",
+          "link": "Fulfillment for webshops"
+        },
+        {
+          "tag": "Manufacturer",
+          "quote": "“Retail pallets and consumer parcels ship from the same stock, and planning now works from a single figure.”",
+          "name": "Balázs Tornai",
+          "role": "Supply chain manager, kitchen appliance maker",
+          "link": "Logistics for manufacturers"
+        }
+      ]
+    },
+    "faq": {
+      "title": "Questions before the first call",
+      "lead": "If yours is missing, ask us. We answer within one business day."
+    }
+  },
+  "fulfillment": {
+    "title": "Fulfillment for webshops | Fully Logistics",
+    "description": "Fulfillment for webshops: receiving, storage, pick and pack, shipping and returns from one warehouse, with live stock and tracking.",
+    "cta": {
+      "title": "Tell us what your webshop ships. We reply in one business day.",
+      "text": "Share your monthly order volume and product range, and we send back a clear quote."
+    },
+    "hero": {
+      "title": "Fulfillment that keeps up with your webshop.",
+      "lead": "Send us your stock. We check it in, store it, pack every order and hand it to your carrier."
+    },
+    "route": {
+      "title": "From your supplier to your customer’s door",
+      "lead": "Six stops, all run by one team.",
+      "steps": [
+        { "title": "Send your stock", "text": "Ship goods to our dock with an advance notice. We accept parcels, cartons and full pallets." },
+        { "title": "We check it in", "text": "Every delivery is counted, scanned and inspected. Any difference is reported to you the same day." },
+        { "title": "Orders sync in", "text": "Orders flow in from your shop automatically, and stock levels flow back the moment something moves." },
+        { "title": "We pick and pack", "text": "Orders are picked in waves, packed to your specification and checked before sealing." },
+        { "title": "The carrier collects", "text": "Labels are printed for the carrier you choose, and tracking links go out to your customers." },
+        { "title": "Returns come back", "text": "Returned parcels are inspected within one working day, and your stock updates the same day." }
+      ]
+    },
+    "included": {
+      "title": "What the service covers",
+      "groups": [
+        {
+          "title": "Inbound and storage",
+          "items": ["Delivery check and counting", "Barcode labelling of every product", "Pallet, shelf and bin storage", "Cycle counts and stock reports"]
+        },
+        {
+          "title": "Pick and pack",
+          "items": ["Pick waves for fast dispatch", "Your own boxes or ours", "Inserts, flyers and samples", "Gift wrap and personal notes"]
+        },
+        {
+          "title": "Shipping",
+          "items": ["Carrier labels and manifests", "Tracking links for your customers", "Cash on delivery where the carrier offers it", "Shipments across the EU"]
+        },
+        {
+          "title": "Returns and extras",
+          "items": ["Return inspection and restocking", "Photo reports for damaged goods", "Kitting and product bundles", "Relabelling and quality checks"]
+        }
+      ]
+    },
+    "pricing": {
+      "title": "A price list you can read in a minute",
+      "lead": "We quote per client, but the structure never changes.",
+      "lines": [
+        { "name": "Storage", "text": "Charged per pallet or shelf position, per month. You pay for the space you actually use." },
+        { "name": "Pick and pack", "text": "Charged per order, with a small charge for each extra item. Packaging materials are itemised." },
+        { "name": "Shipping", "text": "Charged at carrier rates, using the volume discounts we have negotiated." }
+      ],
+      "note": "Extras such as kitting, inserts or relabelling are quoted per job, before we start."
+    },
+    "stack": {
+      "title": "Connects to the tools you already use",
+      "lead": "Ready plugins for the major platforms, and an API for everything else.",
+      "platforms": "Webshop platforms",
+      "customApi": "Custom API",
+      "carriers": "Carriers",
+      "palletNetworks": "Pallet networks"
+    }
+  },
+  "manufacturers": {
+    "title": "Contract logistics for manufacturers | Fully Logistics",
+    "description": "Contract logistics for manufacturers: inbound, storage, value-added work and outbound for pallets and parcels from one stock.",
+    "cta": {
+      "title": "Tell us what you produce. We reply in one business day.",
+      "text": "Share your pallet and parcel volumes and the systems you use, and we send back a clear quote."
+    },
+    "hero": {
+      "title": "One stock for pallets and parcels.",
+      "lead": "From your production line to retailers and consumers: receiving, storage, value-added work and shipping under one roof."
+    },
+    "stages": {
+      "title": "From production line to customer",
+      "lead": "Choose a stage to see what we handle.",
+      "label": "Logistics stages",
+      "inbound": {
+        "tab": "Inbound",
+        "title": "Goods in from your line",
+        "text": "We receive pallets and full loads at 11 dock doors, check them against your advance notice and book them into stock within 12 hours.",
+        "items": ["Advance shipping notices and dock appointments", "Unloading of trailers and containers", "Count, quality check and photo report", "Pallet labelling with batch and lot data"]
+      },
+      "storage": {
+        "tab": "Storage",
+        "title": "Storage that stays organised",
+        "text": "Pallet racking, bulk floor space and shelving for cartons, with every position tracked in our warehouse system.",
+        "items": ["Batch, lot and serial number tracking", "Expiry dates with first-expired, first-out picking", "Seasonal overflow space when volumes peak", "Regular cycle counts, reported to you"]
+      },
+      "value": {
+        "tab": "Value-added work",
+        "title": "Work that finishes the product",
+        "text": "We do the last steps between your factory and the customer, so finished goods leave ready to sell.",
+        "items": ["Kitting, bundling and display building", "Relabelling, stickering and inserts", "Repacking into retail or shipping cartons", "Quality checks and return refurbishment"]
+      },
+      "outbound": {
+        "tab": "Outbound",
+        "title": "Pallets and parcels, one stock",
+        "text": "Retail replenishment, distributor orders and single consumer parcels all ship from the same inventory.",
+        "items": ["Pallet and mixed-pallet shipments", "Retail labels and delivery appointments", "Parcels through our carrier network", "Same-day dispatch for orders in by 2\u00a0pm"]
+      }
+    },
+    "channels": {
+      "title": "One stock, two ways out",
+      "lead": "Serve retail and consumers from the same inventory, without counting twice.",
+      "retail": {
+        "title": "Pallets to retailers and distributors",
+        "items": ["Full and mixed pallets, built to retailer rules", "Routing labels and delivery appointments", "EDI messages or portal uploads", "Proof of delivery sent to your inbox"]
+      },
+      "parcel": {
+        "title": "Parcels to consumers",
+        "items": ["Orders from your own webshop and marketplaces", "Same-day dispatch when confirmed by 2\u00a0pm", "Branded packaging and inserts", "Returns handled and restocked"]
+      }
+    },
+    "systems": {
+      "title": "Your systems stay in charge",
+      "lead": "We connect to your ERP so stock, orders and shipments stay in sync, with no double entry.",
+      "features": [
+        { "title": "EDI and API", "text": "Orders, stock and shipment messages in both directions." },
+        { "title": "SFTP and CSV", "text": "A simple file exchange when a full integration is not needed." },
+        { "title": "Batch and lot tracking", "text": "Trace any pallet back to the production run it came from." },
+        { "title": "Expiry control", "text": "First-expired, first-out picking and alerts before dates run out." },
+        { "title": "Serial numbers", "text": "Recorded at goods in and again at dispatch." },
+        { "title": "Monthly reporting", "text": "Stock, dispatch and accuracy figures, sent to you every month." }
+      ]
+    }
+  },
+  "about": {
+    "title": "About | Fully Logistics",
+    "description": "Meet the warehouse team behind Fully Logistics and see how a working day runs, from inbound trucks to the 2\u00a0pm cut-off.",
+    "hero": {
+      "title1": "We run the warehouse.",
+      "title2": "You run the business.",
+      "lead": "We are a team of warehouse operators who store, pack and ship for webshops and manufacturers, and we report on every step."
+    },
+    "story": {
+      "title": "Why we built it",
+      "paragraphs": [
+        "Fully Logistics grew out of a simple observation: good businesses lose evenings and weekends to packing tape and pallet wrap. We built a warehouse where that work is our full-time job.",
+        "Today we ship for webshops that launched last month and for manufacturers that supply national retail chains. The routine is the same for both: receive, store, pack, ship, report."
+      ]
+    },
+    "principles": [
+      { "title": "We ship what we promise", "text": "Cut-off times and dispatch windows are written into your agreement, and we report against them." },
+      { "title": "We show our numbers", "text": "Accuracy, dispatch speed and stock counts reach you every month, including the misses." },
+      { "title": "We tell you early", "text": "A late truck, a damaged pallet or a stock difference reaches you the same day, with a proposed fix." },
+      { "title": "We keep it simple", "text": "One contact person, one portal and one price list, so you never chase three departments." }
+    ],
+    "day": {
+      "title": "A working day, hour by hour",
+      "lead": "The rhythm behind the 2\u00a0pm cut-off.",
+      "steps": [
+        "Trucks arrive. Inbound goods are unloaded, checked and booked into stock.",
+        "Pick waves start for everything confirmed overnight.",
+        "Packing is in full swing, with a quality check before every parcel is sealed.",
+        "<strong>Cut-off.</strong> Orders confirmed by now ship today.",
+        "Carriers collect parcels and pallets, and tracking goes live.",
+        "Returns are inspected and the day’s stock counts are reconciled."
+      ]
+    },
+    "facility": {
+      "title": "Where your stock lives",
+      "lead": "A modern site on the Budapest logistics belt, built for pallets and parcels alike.",
+      "stats": ["Square metres of floor space", "Pallet positions", "Dock doors", "People on the floor"]
+    }
+  },
+  "contact": {
+    "title": "Contact | Fully Logistics",
+    "description": "Tell us what you ship and get a clear quote from Fully Logistics within one business day.",
+    "heading": "Tell us what you ship.",
+    "lead": "Send a few details and we reply within one business day with questions or a quote.",
+    "form": {
+      "title": "Quote request",
+      "name": "Your name",
+      "email": "Work email",
+      "company": "Company",
+      "phone": "Phone",
+      "optional": "(optional)",
+      "role": "I am a",
+      "roles": ["Webshop owner", "Manufacturer", "Something else"],
+      "volume": "Monthly volume",
+      "volumeChoose": "Choose one",
+      "volumes": ["Under 500 orders", "500 to 2,000 orders", "2,000 to 10,000 orders", "Over 10,000 orders", "Mostly pallets"],
+      "message": "What do you ship?",
+      "messageHint": "Products, sizes, special handling and your current setup.",
+      "consent": "I agree that Fully Logistics may contact me about this request.",
+      "successTitle": "Thank you. We have your request.",
+      "successText": "We reply within one business day, usually sooner."
+    },
+    "aside": {
+      "label": "Contact details",
+      "nextTitle": "What happens next",
+      "next": [
+        { "title": "We reply.", "text": "Within one business day, with questions or a first estimate." },
+        { "title": "We talk it through.", "text": "A short call to map your products and order flow." },
+        { "title": "You get a written quote.", "text": "All three price lines, plus a start date." }
+      ]
+    }
+  },
+  "js": {
+    "themeToDark": "Switch to dark theme",
+    "themeToLight": "Switch to light theme",
+    "menuOpen": "Open menu",
+    "menuClose": "Close menu",
+    "errName": "Please enter your name.",
+    "errEmail": "Please enter a valid email address.",
+    "errMessage": "Please tell us a little about what you ship.",
+    "errConsent": "Please tick the box so we can contact you.",
+    "errField": "Please check this field.",
+    "errSummary": "Please fix the highlighted fields and try again.",
+    "sendFailed": "Something went wrong and your request was not sent. Please try again, or email us at {email}.",
+    "mailOpened": "Your email app should open with the request ready to send. If it does not, write to {email}.",
+    "mailSubject": "Quote request from {from}",
+    "mailName": "Name",
+    "mailEmail": "Email",
+    "mailCompany": "Company",
+    "mailPhone": "Phone",
+    "mailRole": "I am a",
+    "mailVolume": "Monthly volume"
+  }
+}

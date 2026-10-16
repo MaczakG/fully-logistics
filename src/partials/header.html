@@ -2,53 +2,65 @@
   <div class="wrap site-header__bar">
     {{> brand}}
 
-    <nav class="nav" aria-label="Primary">
+    <nav class="nav" aria-label="{{t.common.nav.primary}}">
       <ul class="nav__list">
         <li class="nav__item has-menu" data-open="false">
           <button class="nav__link" type="button" aria-expanded="false" aria-controls="menu-solutions"{{navgroup:solutions}}>
-            Solutions {{icon:caret-down:nav__caret}}
+            {{t.common.nav.solutions}} {{icon:caret-down:nav__caret}}
           </button>
           <div class="menu" id="menu-solutions">
-            <a class="menu__link" href="{{root}}solutions/fulfillment.html"{{nav:fulfillment}}>
+            <a class="menu__link" href="{{base}}solutions/fulfillment.html"{{nav:fulfillment}}>
               <span class="menu__icon">{{icon:package}}</span>
-              <span class="menu__title">Fulfillment</span>
-              <span class="menu__desc">Storage, pick and pack and shipping for webshops.</span>
+              <span class="menu__title">{{t.common.nav.fulfillment}}</span>
+              <span class="menu__desc">{{t.common.nav.fulfillmentDesc}}</span>
             </a>
-            <a class="menu__link" href="{{root}}solutions/manufacturers.html"{{nav:manufacturers}}>
+            <a class="menu__link" href="{{base}}solutions/manufacturers.html"{{nav:manufacturers}}>
               <span class="menu__icon">{{icon:factory}}</span>
-              <span class="menu__title">Manufacturers</span>
-              <span class="menu__desc">Pallets and parcels from one stock, line to customer.</span>
+              <span class="menu__title">{{t.common.nav.manufacturers}}</span>
+              <span class="menu__desc">{{t.common.nav.manufacturersDesc}}</span>
             </a>
           </div>
         </li>
-        <li class="nav__item"><a class="nav__link" href="{{root}}about.html"{{nav:about}}>About</a></li>
-        <li class="nav__item"><a class="nav__link" href="{{root}}contact.html"{{nav:contact}}>Contact</a></li>
+        <li class="nav__item"><a class="nav__link" href="{{base}}about.html"{{nav:about}}>{{t.common.nav.about}}</a></li>
+        <li class="nav__item"><a class="nav__link" href="{{base}}contact.html"{{nav:contact}}>{{t.common.nav.contact}}</a></li>
       </ul>
     </nav>
 
     <div class="site-header__actions">
-      <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark theme">
+      <div class="nav__item has-menu lang-switch" data-open="false">
+        <button class="nav__link lang-switch__btn" type="button" aria-expanded="false" aria-controls="menu-lang">
+          {{icon:globe:lang-switch__globe}}<span class="visually-hidden">{{t.common.nav.language}}: </span>{{langCode}} {{icon:caret-down:nav__caret}}
+        </button>
+        <ul class="menu menu--lang lang-list" id="menu-lang">
+          {{languages}}
+        </ul>
+      </div>
+      <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="{{t.js.themeToDark}}">
         {{icon:moon:icon--moon}}{{icon:sun:icon--sun}}
       </button>
-      <a class="btn btn--primary btn--sm site-header__cta" href="{{root}}contact.html">Get a quote</a>
-      <button class="icon-btn nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="mobile-nav" aria-label="Open menu">
+      <a class="btn btn--primary btn--sm site-header__cta" href="{{base}}contact.html">{{t.common.quote}}</a>
+      <button class="icon-btn nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="mobile-nav" aria-label="{{t.js.menuOpen}}">
         {{icon:list:icon--open}}{{icon:x:icon--close}}
       </button>
     </div>
   </div>
 
-  <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile" hidden>
+  <nav class="mobile-nav" id="mobile-nav" aria-label="{{t.common.nav.mobile}}" hidden>
     <div class="wrap">
-      <p class="mobile-nav__group">Solutions</p>
+      <p class="mobile-nav__group">{{t.common.nav.solutions}}</p>
       <ul class="mobile-nav__list">
-        <li><a href="{{root}}solutions/fulfillment.html"{{nav:fulfillment}}>Fulfillment {{icon:arrow-right}}</a></li>
-        <li><a href="{{root}}solutions/manufacturers.html"{{nav:manufacturers}}>Manufacturers {{icon:arrow-right}}</a></li>
+        <li><a href="{{base}}solutions/fulfillment.html"{{nav:fulfillment}}>{{t.common.nav.fulfillment}} {{icon:arrow-right}}</a></li>
+        <li><a href="{{base}}solutions/manufacturers.html"{{nav:manufacturers}}>{{t.common.nav.manufacturers}} {{icon:arrow-right}}</a></li>
       </ul>
       <ul class="mobile-nav__list mobile-nav__list--main">
-        <li><a href="{{root}}about.html"{{nav:about}}>About {{icon:arrow-right}}</a></li>
-        <li><a href="{{root}}contact.html"{{nav:contact}}>Contact {{icon:arrow-right}}</a></li>
+        <li><a href="{{base}}about.html"{{nav:about}}>{{t.common.nav.about}} {{icon:arrow-right}}</a></li>
+        <li><a href="{{base}}contact.html"{{nav:contact}}>{{t.common.nav.contact}} {{icon:arrow-right}}</a></li>
       </ul>
-      <a class="btn btn--primary btn--lg mobile-nav__cta" href="{{root}}contact.html">Get a quote {{icon:arrow-right}}</a>
+      <a class="btn btn--primary btn--lg mobile-nav__cta" href="{{base}}contact.html">{{t.common.quote}} {{icon:arrow-right}}</a>
+      <p class="mobile-nav__group">{{t.common.nav.language}}</p>
+      <ul class="lang-list lang-list--grid">
+        {{languages}}
+      </ul>
     </div>
   </nav>
 </header>

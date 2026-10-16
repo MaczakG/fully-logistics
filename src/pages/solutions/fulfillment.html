@@ -2,26 +2,20 @@
 {
   "page": "fulfillment",
   "nav": "fulfillment",
-  "navGroup": "solutions",
-  "title": "Fulfillment for webshops | Fully Logistics",
-  "description": "Fulfillment for webshops: receiving, storage, pick and pack, shipping and returns from one warehouse, with live stock and tracking.",
-  "cta": {
-    "title": "Tell us what your webshop ships. We reply in one business day.",
-    "text": "Share your monthly order volume and product range, and we send back a clear quote."
-  }
+  "navGroup": "solutions"
 }
 ---
 <section class="page-hero" aria-labelledby="page-title">
   <div class="wrap">
     <div class="page-hero__grid">
-      <h1 id="page-title" class="page-hero__title" data-hero-in style="--i:0">Fulfillment that keeps up with your webshop.</h1>
+      <h1 id="page-title" class="page-hero__title" data-hero-in style="--i:0">{{t.fulfillment.hero.title}}</h1>
       <div class="page-hero__side" data-hero-in style="--i:1">
-        <p class="lead">Send us your stock. We check it in, store it, pack every order and hand it to your carrier.</p>
-        <a class="btn btn--primary btn--lg" href="{{root}}contact.html">Get a quote {{icon:arrow-right}}</a>
+        <p class="lead">{{t.fulfillment.hero.lead}}</p>
+        <a class="btn btn--primary btn--lg" href="{{base}}contact.html">{{t.common.quote}} {{icon:arrow-right}}</a>
       </div>
     </div>
     <figure class="page-hero__media media">
-      {{img name="pick-zone" alt="Picking zone with shelving full of yellow bins and packed parcels" sizes="(min-width: 1280px) 1200px, 100vw" priority}}
+      {{img name="pick-zone" sizes="(min-width: 1280px) 1200px, 100vw" priority}}
     </figure>
   </div>
 </section>
@@ -29,50 +23,50 @@
 <section class="section" aria-labelledby="route-title">
   <div class="wrap">
     <div class="section__head" data-reveal>
-      <h2 id="route-title">From your supplier to your customer&rsquo;s door</h2>
-      <p class="lead">Six stops, all run by one team.</p>
+      <h2 id="route-title">{{t.fulfillment.route.title}}</h2>
+      <p class="lead">{{t.fulfillment.route.lead}}</p>
     </div>
     <ol class="route">
       <li class="route__step" data-reveal>
         <span class="route__icon">{{icon:tray-arrow-down}}</span>
         <div class="route__text">
-          <h3>Send your stock</h3>
-          <p>Ship goods to our dock with an advance notice. We accept parcels, cartons and full pallets.</p>
+          <h3>{{t.fulfillment.route.steps.0.title}}</h3>
+          <p>{{t.fulfillment.route.steps.0.text}}</p>
         </div>
       </li>
       <li class="route__step" data-reveal style="--d:1">
         <span class="route__icon">{{icon:scan}}</span>
         <div class="route__text">
-          <h3>We check it in</h3>
-          <p>Every delivery is counted, scanned and inspected. Any difference is reported to you the same day.</p>
+          <h3>{{t.fulfillment.route.steps.1.title}}</h3>
+          <p>{{t.fulfillment.route.steps.1.text}}</p>
         </div>
       </li>
       <li class="route__step" data-reveal style="--d:2">
         <span class="route__icon">{{icon:plugs-connected}}</span>
         <div class="route__text">
-          <h3>Orders sync in</h3>
-          <p>Orders flow in from your shop automatically, and stock levels flow back the moment something moves.</p>
+          <h3>{{t.fulfillment.route.steps.2.title}}</h3>
+          <p>{{t.fulfillment.route.steps.2.text}}</p>
         </div>
       </li>
       <li class="route__step" data-reveal style="--d:3">
         <span class="route__icon">{{icon:package}}</span>
         <div class="route__text">
-          <h3>We pick and pack</h3>
-          <p>Orders are picked in waves, packed to your specification and checked before sealing.</p>
+          <h3>{{t.fulfillment.route.steps.3.title}}</h3>
+          <p>{{t.fulfillment.route.steps.3.text}}</p>
         </div>
       </li>
       <li class="route__step" data-reveal style="--d:4">
         <span class="route__icon">{{icon:truck}}</span>
         <div class="route__text">
-          <h3>The carrier collects</h3>
-          <p>Labels are printed for the carrier you choose, and tracking links go out to your customers.</p>
+          <h3>{{t.fulfillment.route.steps.4.title}}</h3>
+          <p>{{t.fulfillment.route.steps.4.text}}</p>
         </div>
       </li>
       <li class="route__step" data-reveal style="--d:5">
         <span class="route__icon">{{icon:arrow-u-up-left}}</span>
         <div class="route__text">
-          <h3>Returns come back</h3>
-          <p>Returned parcels are inspected within one working day, and your stock updates the same day.</p>
+          <h3>{{t.fulfillment.route.steps.5.title}}</h3>
+          <p>{{t.fulfillment.route.steps.5.text}}</p>
         </div>
       </li>
     </ol>
@@ -82,47 +76,47 @@
 <section class="section section--tint" aria-labelledby="included-title">
   <div class="wrap included">
     <figure class="included__media media" data-reveal>
-      {{img name="label-package" alt="Packer sealing and labelling a parcel at a packing table" sizes="(min-width: 900px) 30vw, 100vw"}}
+      {{img name="label-package" sizes="(min-width: 900px) 30vw, 100vw"}}
     </figure>
     <div class="included__body">
       <div class="section__head" data-reveal>
-        <h2 id="included-title">What the service covers</h2>
+        <h2 id="included-title">{{t.fulfillment.included.title}}</h2>
       </div>
       <div class="included__groups">
         <div class="group" data-reveal>
-          <h3>Inbound and storage</h3>
+          <h3>{{t.fulfillment.included.groups.0.title}}</h3>
           <ul class="check-list">
-            <li>{{icon:check}}<span>Delivery check and counting</span></li>
-            <li>{{icon:check}}<span>Barcode labelling of every product</span></li>
-            <li>{{icon:check}}<span>Pallet, shelf and bin storage</span></li>
-            <li>{{icon:check}}<span>Cycle counts and stock reports</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.0.items.0}}</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.0.items.1}}</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.0.items.2}}</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.0.items.3}}</span></li>
           </ul>
         </div>
         <div class="group" data-reveal style="--d:1">
-          <h3>Pick and pack</h3>
+          <h3>{{t.fulfillment.included.groups.1.title}}</h3>
           <ul class="check-list">
-            <li>{{icon:check}}<span>Pick waves for fast dispatch</span></li>
-            <li>{{icon:check}}<span>Your own boxes or ours</span></li>
-            <li>{{icon:check}}<span>Inserts, flyers and samples</span></li>
-            <li>{{icon:check}}<span>Gift wrap and personal notes</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.1.items.0}}</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.1.items.1}}</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.1.items.2}}</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.1.items.3}}</span></li>
           </ul>
         </div>
         <div class="group" data-reveal style="--d:2">
-          <h3>Shipping</h3>
+          <h3>{{t.fulfillment.included.groups.2.title}}</h3>
           <ul class="check-list">
-            <li>{{icon:check}}<span>Carrier labels and manifests</span></li>
-            <li>{{icon:check}}<span>Tracking links for your customers</span></li>
-            <li>{{icon:check}}<span>Cash on delivery where the carrier offers it</span></li>
-            <li>{{icon:check}}<span>Shipments across the EU</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.2.items.0}}</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.2.items.1}}</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.2.items.2}}</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.2.items.3}}</span></li>
           </ul>
         </div>
         <div class="group" data-reveal style="--d:3">
-          <h3>Returns and extras</h3>
+          <h3>{{t.fulfillment.included.groups.3.title}}</h3>
           <ul class="check-list">
-            <li>{{icon:check}}<span>Return inspection and restocking</span></li>
-            <li>{{icon:check}}<span>Photo reports for damaged goods</span></li>
-            <li>{{icon:check}}<span>Kitting and product bundles</span></li>
-            <li>{{icon:check}}<span>Relabelling and quality checks</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.3.items.0}}</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.3.items.1}}</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.3.items.2}}</span></li>
+            <li>{{icon:check}}<span>{{t.fulfillment.included.groups.3.items.3}}</span></li>
           </ul>
         </div>
       </div>
@@ -133,25 +127,25 @@
 <section class="section" aria-labelledby="pricing-title">
   <div class="wrap pricing">
     <div class="pricing__intro" data-reveal>
-      <h2 id="pricing-title">A price list you can read in a minute</h2>
-      <p class="lead">We quote per client, but the structure never changes.</p>
+      <h2 id="pricing-title">{{t.fulfillment.pricing.title}}</h2>
+      <p class="lead">{{t.fulfillment.pricing.lead}}</p>
     </div>
     <div class="pricing__body" data-reveal style="--d:1">
       <dl class="price-lines">
         <div class="price-line">
-          <dt>Storage</dt>
-          <dd>Charged per pallet or shelf position, per month. You pay for the space you actually use.</dd>
+          <dt>{{t.fulfillment.pricing.lines.0.name}}</dt>
+          <dd>{{t.fulfillment.pricing.lines.0.text}}</dd>
         </div>
         <div class="price-line">
-          <dt>Pick and pack</dt>
-          <dd>Charged per order, with a small charge for each extra item. Packaging materials are itemised.</dd>
+          <dt>{{t.fulfillment.pricing.lines.1.name}}</dt>
+          <dd>{{t.fulfillment.pricing.lines.1.text}}</dd>
         </div>
         <div class="price-line">
-          <dt>Shipping</dt>
-          <dd>Charged at carrier rates, using the volume discounts we have negotiated.</dd>
+          <dt>{{t.fulfillment.pricing.lines.2.name}}</dt>
+          <dd>{{t.fulfillment.pricing.lines.2.text}}</dd>
         </div>
       </dl>
-      <p class="pricing__note">Extras such as kitting, inserts or relabelling are quoted per job, before we start.</p>
+      <p class="pricing__note">{{t.fulfillment.pricing.note}}</p>
     </div>
   </div>
 </section>
@@ -159,20 +153,20 @@
 <section class="section section--tint" aria-labelledby="stack-title">
   <div class="wrap">
     <div class="section__head" data-reveal>
-      <h2 id="stack-title">Connects to the tools you already use</h2>
-      <p class="lead">Ready plugins for the major platforms, and an API for everything else.</p>
+      <h2 id="stack-title">{{t.fulfillment.stack.title}}</h2>
+      <p class="lead">{{t.fulfillment.stack.lead}}</p>
     </div>
     <div class="stack-groups">
       <div class="stack-group" data-reveal>
-        <h3>Webshop platforms</h3>
+        <h3>{{t.fulfillment.stack.platforms}}</h3>
         <ul class="chips">
-          <li>Shopify</li><li>WooCommerce</li><li>Shoprenter</li><li>UNAS</li><li>Magento</li><li>Custom API</li>
+          <li>Shopify</li><li>WooCommerce</li><li>Shoprenter</li><li>UNAS</li><li>Magento</li><li>{{t.fulfillment.stack.customApi}}</li>
         </ul>
       </div>
       <div class="stack-group" data-reveal style="--d:1">
-        <h3>Carriers</h3>
+        <h3>{{t.fulfillment.stack.carriers}}</h3>
         <ul class="chips">
-          <li>GLS</li><li>DPD</li><li>Foxpost</li><li>MPL</li><li>DHL</li><li>Pallet networks</li>
+          <li>GLS</li><li>DPD</li><li>Foxpost</li><li>MPL</li><li>DHL</li><li>{{t.fulfillment.stack.palletNetworks}}</li>
         </ul>
       </div>
     </div>

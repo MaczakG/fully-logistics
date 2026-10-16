@@ -1,0 +1,365 @@
+{
+  "meta": {
+    "name": "Deutsch",
+    "locale": "de_DE"
+  },
+  "common": {
+    "skip": "Zum Inhalt springen",
+    "homeLabel": "Fully Logistics, Startseite",
+    "quote": "Angebot anfordern",
+    "blurb": "Fulfillment und Kontraktlogistik für Webshops und Hersteller.",
+    "location": "Lager und Büro",
+    "country": "Ungarn",
+    "hours": "Montag bis Freitag, 6:00 bis 18:00\u00a0Uhr",
+    "nav": {
+      "primary": "Hauptnavigation",
+      "mobile": "Mobiles Menü",
+      "solutions": "Leistungen",
+      "company": "Unternehmen",
+      "fulfillment": "Fulfillment",
+      "fulfillmentDesc": "Lagerung, Pick & Pack und Versand für Webshops.",
+      "manufacturers": "Hersteller",
+      "manufacturersDesc": "Paletten und Pakete aus einem Bestand, von der Produktion bis zum Kunden.",
+      "home": "Startseite",
+      "about": "Über uns",
+      "contact": "Kontakt",
+      "language": "Sprache"
+    },
+    "cta": {
+      "title": "Sagen Sie uns, was Sie versenden. Wir antworten innerhalb eines Werktags.",
+      "text": "Nennen Sie uns Ihr monatliches Bestell- oder Palettenvolumen. Sie erhalten von uns ein klares Angebot."
+    }
+  },
+  "units": {
+    "percent": "\u00a0%",
+    "hours": "\u00a0Std."
+  },
+  "img": {
+    "hero-aisle": "Lagermitarbeiter gehen durch einen markierten Gang zwischen hohen Palettenregalen",
+    "parcels-team": "Zwei lächelnde Kollegen hinter einem Stapel gepackter Pakete",
+    "inventory-check": "Lagermitarbeiter prüft den Bestand auf einem Tablet vor Lagerregalen",
+    "dock-trailers": "Lkw-Auflieger, rückwärts an die Ladetore eines Distributionszentrums angedockt",
+    "team-aisle": "Zwei Kollegen in Warnwesten im Gespräch auf dem Weg durch einen Lagergang",
+    "scanner-worker": "Lagerarbeiter mit blauem Schutzhelm scannt einen Barcode an einem Regal",
+    "forklift-orange": "Orangefarbener Gabelstapler neben einem mit Holzbrettern beladenen Regal, während ein Kollege vorbeigeht",
+    "truck-warehouse": "Orangefarbener Lkw vor einer großen weißen Lagerhalle",
+    "pick-zone": "Kommissionierbereich mit Regalen voller gelber Behälter und gepackter Pakete",
+    "label-package": "Mitarbeiter verschließt und etikettiert ein Paket am Packtisch",
+    "racking-forklift": "Gelber Gabelstapler in einem hohen Gang zwischen Palettenregalen",
+    "forklift-trailer": "Staplerfahrer holt an der Laderampe eine Palette aus einem Auflieger",
+    "pallet-forklift": "Gabelstapler transportiert eine Palette mit Kartons vor hohen Regalen",
+    "factory-floor": "Team bereitet gestapelte Kartons in einem belebten Packbereich vor",
+    "aerial-trucks": "Luftaufnahme von Lkw, die in Reihen auf einem Logistikgelände parken"
+  },
+  "faq": [
+    {
+      "q": "Wie schnell können wir starten?",
+      "a": "Die meisten Kunden versenden ihre erste Bestellung etwa zwei Wochen nach Vertragsabschluss. In der ersten Woche trifft die Ware ein, in der zweiten binden wir Ihren Shop an und führen Testbestellungen durch."
+    },
+    {
+      "q": "Gibt es ein Mindestvolumen oder eine Mindestlaufzeit?",
+      "a": "Es gibt kein Mindestbestellvolumen. Nach einer dreimonatigen Startphase läuft der Vertrag monatlich weiter und ist mit einer Frist von 30\u00a0Tagen kündbar."
+    },
+    {
+      "q": "Wie setzen sich die Preise zusammen?",
+      "a": "Sie zahlen für die Lagerung pro Palette, für Pick & Pack pro Bestellung und für den Versand zu den Tarifen der Versanddienstleister. Zusatzleistungen wie Konfektionierung oder Beilagen kalkulieren wir pro Auftrag."
+    },
+    {
+      "q": "Welche Shopsysteme und Versanddienstleister binden Sie an?",
+      "a": "Wir haben fertige Plugins für Shopify, WooCommerce, Shoprenter und UNAS sowie eine API für individuelle Shops. Zu den Versanddienstleistern gehören GLS, DPD, Foxpost, MPL und DHL, dazu Palettennetzwerke."
+    },
+    {
+      "q": "Was passiert mit Retouren?",
+      "a": "Wir prüfen Retouren innerhalb eines Werktags. Verkaufsfähige Artikel gehen zurück ins Regal, und Ihr Bestand wird aktualisiert. Beschädigte Artikel werden fotografiert und Ihnen gemeldet."
+    },
+    {
+      "q": "Übernehmen Sie auch Paletten und sperrige Waren?",
+      "a": "Ja. Wir lagern Paletten und Kartons und versenden Pakete, Paletten und Komplettladungen. Bei zerbrechlichen, hochwertigen oder temperaturempfindlichen Waren sagen Sie uns bitte frühzeitig Bescheid, damit wir die Handhabung planen können."
+    },
+    {
+      "q": "Versenden Sie auch außerhalb Ungarns?",
+      "a": "Ja, mit unseren Versandpartnern in die gesamte EU. Für andere Zielländer erstellen wir die Versandpapiere auf Anfrage."
+    }
+  ],
+  "home": {
+    "title": "Fully Logistics | Fulfillment und Kontraktlogistik",
+    "description": "Fully Logistics lagert, verpackt und versendet für Webshops und Hersteller. Bis 14\u00a0Uhr bestätigte Bestellungen verlassen unser Lager am selben Tag.",
+    "hero": {
+      "eyebrow": "Fulfillment und Kontraktlogistik",
+      "line1": "Bis 14\u00a0Uhr bestellt.",
+      "line2": "<span class=\"hl\">Heute</span> versendet.",
+      "lead": "Wir lagern, verpacken und versenden für Webshops und Hersteller. So kann sich Ihr Team auf Verkauf und Produktion konzentrieren."
+    },
+    "benefits": {
+      "title": "Das bekommen Sie ab dem ersten Tag",
+      "lead": "Ein Lager, ein Team und eine Preisliste, ob Sie Pakete oder Paletten versenden.",
+      "dispatch": {
+        "title": "Versand am selben Tag",
+        "text": "Bis 14\u00a0Uhr bestätigte Bestellungen verlassen unsere Rampe noch am selben Werktag. Spätere Bestellungen versenden wir gleich am nächsten Morgen."
+      },
+      "prices": {
+        "title": "Eine Preisliste mit drei Positionen",
+        "text": "Lagerung, Pick & Pack und Versand stehen jeweils als eigene Position im Angebot. Im Kleingedruckten versteckt sich nichts.",
+        "rates": [
+          { "name": "Lagerung", "unit": "pro Palette und Monat" },
+          { "name": "Pick & Pack", "unit": "pro Bestellung" },
+          { "name": "Versand", "unit": "zum Tarif des Versanddienstleisters" }
+        ]
+      },
+      "stock": {
+        "title": "Ihr Bestand, jederzeit im Blick",
+        "text": "Live-Bestand, Auftragsstatus und Sendungsverfolgung in einem Portal, synchronisiert mit Ihrem Webshop über ein fertiges Plugin oder unsere API."
+      }
+    },
+    "proof": {
+      "title": "Kennzahlen, die jeder Kunde jeden Monat von uns erhält",
+      "stats": [
+        "Am Tag der Bestätigung versendete Bestellungen",
+        "Pickgenauigkeit über alle Sendungen",
+        "Im letzten Monat versendete Pakete",
+        "Vom Eintreffen des Lkw bis zum online verfügbaren Bestand"
+      ],
+      "cases": [
+        {
+          "tag": "Webshop",
+          "quote": "„Wir haben unsere Ware an einem Freitag geschickt und am Montag schon aus ihrem Lager versendet. Retouren sind innerhalb von zwei Tagen wieder eingebucht.“",
+          "name": "Dóra Szabadi",
+          "role": "Gründerin, Webshop für Tierbedarf",
+          "link": "Fulfillment für Webshops"
+        },
+        {
+          "tag": "Hersteller",
+          "quote": "„Paletten für den Handel und Pakete an Endkunden kommen aus demselben Bestand, und unsere Planung arbeitet jetzt mit einer einzigen Zahl.“",
+          "name": "Balázs Tornai",
+          "role": "Supply Chain Manager, Hersteller von Küchengeräten",
+          "link": "Logistik für Hersteller"
+        }
+      ]
+    },
+    "faq": {
+      "title": "Fragen vor dem ersten Gespräch",
+      "lead": "Ihre Frage fehlt? Schreiben Sie uns. Wir antworten innerhalb eines Werktags."
+    }
+  },
+  "fulfillment": {
+    "title": "Fulfillment für Webshops | Fully Logistics",
+    "description": "Fulfillment für Webshops: Wareneingang, Lagerung, Pick & Pack, Versand und Retouren aus einem Lager, mit Live-Bestand und Sendungsverfolgung.",
+    "cta": {
+      "title": "Sagen Sie uns, was Ihr Webshop versendet. Wir antworten innerhalb eines Werktags.",
+      "text": "Nennen Sie uns Ihr monatliches Bestellvolumen und Ihr Sortiment. Sie erhalten von uns ein klares Angebot."
+    },
+    "hero": {
+      "title": "Fulfillment, das mit Ihrem Webshop Schritt hält.",
+      "lead": "Schicken Sie uns Ihre Ware. Wir prüfen und lagern sie, verpacken jede Bestellung und übergeben sie an Ihren Versanddienstleister."
+    },
+    "route": {
+      "title": "Von Ihrem Lieferanten bis an die Haustür Ihrer Kunden",
+      "lead": "Sechs Stationen, ein Team.",
+      "steps": [
+        { "title": "Sie senden Ihre Ware", "text": "Liefern Sie die Ware mit Avis an unsere Rampe. Wir nehmen Pakete, Kartons und komplette Paletten an." },
+        { "title": "Wir buchen sie ein", "text": "Jede Lieferung wird gezählt, gescannt und geprüft. Abweichungen melden wir Ihnen noch am selben Tag." },
+        { "title": "Bestellungen laufen ein", "text": "Bestellungen kommen automatisch aus Ihrem Shop, und die Bestände werden zurückgemeldet, sobald sich etwas bewegt." },
+        { "title": "Wir kommissionieren und packen", "text": "Bestellungen werden in Wellen kommissioniert, nach Ihren Vorgaben verpackt und vor dem Verschließen geprüft." },
+        { "title": "Der Paketdienst holt ab", "text": "Wir drucken die Etiketten für den Versanddienstleister Ihrer Wahl, und Ihre Kunden erhalten Tracking-Links." },
+        { "title": "Retouren kommen zurück", "text": "Retouren werden innerhalb eines Werktags geprüft, und Ihr Bestand wird am selben Tag aktualisiert." }
+      ]
+    },
+    "included": {
+      "title": "Was unser Service umfasst",
+      "groups": [
+        {
+          "title": "Wareneingang und Lagerung",
+          "items": ["Eingangskontrolle und Zählung", "Barcode-Etikettierung jedes Artikels", "Lagerung auf Paletten, in Regalen und in Behältern", "Permanente Inventur und Bestandsberichte"]
+        },
+        {
+          "title": "Pick & Pack",
+          "items": ["Pickwellen für schnellen Versand", "Ihre eigenen Kartons oder unsere", "Beilagen, Flyer und Warenproben", "Geschenkverpackung und persönliche Grußkarten"]
+        },
+        {
+          "title": "Versand",
+          "items": ["Versandetiketten und Ladelisten", "Tracking-Links für Ihre Kunden", "Nachnahme, wo der Versanddienstleister sie anbietet", "Versand in die gesamte EU"]
+        },
+        {
+          "title": "Retouren und Zusatzleistungen",
+          "items": ["Retourenprüfung und Wiedereinlagerung", "Fotoberichte bei beschädigter Ware", "Konfektionierung und Produktsets", "Umetikettierung und Qualitätskontrollen"]
+        }
+      ]
+    },
+    "pricing": {
+      "title": "Eine Preisliste, die Sie in einer Minute verstehen",
+      "lead": "Wir kalkulieren für jeden Kunden individuell, aber die Struktur bleibt immer gleich.",
+      "lines": [
+        { "name": "Lagerung", "text": "Abgerechnet pro Paletten- oder Regalstellplatz und Monat. Sie zahlen nur für den Platz, den Sie tatsächlich nutzen." },
+        { "name": "Pick & Pack", "text": "Abgerechnet pro Bestellung, mit einem kleinen Aufschlag für jeden weiteren Artikel. Verpackungsmaterial wird einzeln ausgewiesen." },
+        { "name": "Versand", "text": "Abgerechnet zu den Tarifen der Versanddienstleister, mit den Mengenrabatten, die wir ausgehandelt haben." }
+      ],
+      "note": "Zusatzleistungen wie Konfektionierung, Beilagen oder Umetikettierung kalkulieren wir pro Auftrag, bevor wir beginnen."
+    },
+    "stack": {
+      "title": "Funktioniert mit den Tools, die Sie bereits nutzen",
+      "lead": "Fertige Plugins für die großen Plattformen und eine API für alles andere.",
+      "platforms": "Shopsysteme",
+      "customApi": "API-Anbindung",
+      "carriers": "Versandpartner",
+      "palletNetworks": "Palettennetzwerke"
+    }
+  },
+  "manufacturers": {
+    "title": "Kontraktlogistik für Hersteller | Fully Logistics",
+    "description": "Kontraktlogistik für Hersteller: Wareneingang, Lagerung, Mehrwertdienste und Warenausgang für Paletten und Pakete aus einem Bestand.",
+    "cta": {
+      "title": "Sagen Sie uns, was Sie produzieren. Wir antworten innerhalb eines Werktags.",
+      "text": "Nennen Sie uns Ihre Paletten- und Paketmengen und die Systeme, die Sie nutzen. Sie erhalten von uns ein klares Angebot."
+    },
+    "hero": {
+      "title": "Ein Bestand für Paletten und Pakete.",
+      "lead": "Von Ihrer Produktionslinie zum Handel und zu Endkunden: Wareneingang, Lagerung, Mehrwertdienste und Versand unter einem Dach."
+    },
+    "stages": {
+      "title": "Von der Produktion bis zum Kunden",
+      "lead": "Wählen Sie eine Phase und sehen Sie, was wir übernehmen.",
+      "label": "Logistikphasen",
+      "inbound": {
+        "tab": "Wareneingang",
+        "title": "Ware direkt aus Ihrer Produktion",
+        "text": "Wir nehmen Paletten und Komplettladungen an 11 Ladetoren an, gleichen sie mit Ihrem Avis ab und buchen sie innerhalb von 12\u00a0Stunden ein.",
+        "items": ["Avisierung und Rampentermine", "Entladung von Aufliegern und Containern", "Zählung, Qualitätskontrolle und Fotobericht", "Palettenetiketten mit Chargen- und Losdaten"]
+      },
+      "storage": {
+        "tab": "Lagerung",
+        "title": "Lagerung mit System",
+        "text": "Palettenregale, Bodenlagerflächen und Fachbodenregale für Kartons. Jeder Stellplatz ist in unserem Lagerverwaltungssystem erfasst.",
+        "items": ["Verfolgung von Chargen, Losen und Seriennummern", "Haltbarkeitsdaten mit Kommissionierung nach FEFO", "Zusatzflächen für saisonale Spitzen", "Permanente Inventur mit regelmäßigem Bericht an Sie"]
+      },
+      "value": {
+        "tab": "Mehrwertdienste",
+        "title": "Der letzte Schliff für Ihr Produkt",
+        "text": "Wir übernehmen die letzten Schritte zwischen Ihrer Fabrik und dem Kunden, damit Ihre Ware verkaufsfertig unser Lager verlässt.",
+        "items": ["Konfektionierung, Set-Bildung und Displaybau", "Umetikettierung, Aufkleber und Beilagen", "Umpacken in Handels- oder Versandkartons", "Qualitätskontrollen und Aufbereitung von Retouren"]
+      },
+      "outbound": {
+        "tab": "Warenausgang",
+        "title": "Paletten und Pakete, ein Bestand",
+        "text": "Nachschub für den Handel, Aufträge von Distributoren und einzelne Pakete an Endkunden: Alles wird aus demselben Bestand versendet.",
+        "items": ["Versand von Paletten und Mischpaletten", "Etiketten nach Händlervorgaben und Anliefertermine", "Paketversand über unsere Versandpartner", "Versand am selben Tag für Bestellungen bis 14\u00a0Uhr"]
+      }
+    },
+    "channels": {
+      "title": "Ein Bestand, zwei Vertriebswege",
+      "lead": "Beliefern Sie Handel und Endkunden aus demselben Bestand, ohne doppelte Bestandsführung.",
+      "retail": {
+        "title": "Paletten für Handel und Distributoren",
+        "items": ["Ganz- und Mischpaletten nach Händlervorgaben", "Versandetiketten und Anliefertermine", "EDI-Nachrichten oder Upload ins Händlerportal", "Zustellnachweis direkt in Ihr Postfach"]
+      },
+      "parcel": {
+        "title": "Pakete an Endkunden",
+        "items": ["Bestellungen aus Ihrem eigenen Webshop und von Marktplätzen", "Versand am selben Tag bei Bestätigung bis 14\u00a0Uhr", "Verpackung und Beilagen in Ihrem Markendesign", "Retourenabwicklung und Wiedereinlagerung"]
+      }
+    },
+    "systems": {
+      "title": "Ihre Systeme geben den Takt vor",
+      "lead": "Wir binden Ihr ERP an, damit Bestände, Aufträge und Sendungen synchron bleiben, ohne doppelte Erfassung.",
+      "features": [
+        { "title": "EDI und API", "text": "Auftrags-, Bestands- und Versandmeldungen in beide Richtungen." },
+        { "title": "SFTP und CSV", "text": "Ein einfacher Dateiaustausch, wenn keine vollständige Integration nötig ist." },
+        { "title": "Chargen- und Losverfolgung", "text": "Jede Palette lässt sich bis zu ihrem Produktionslauf zurückverfolgen." },
+        { "title": "Kontrolle der Haltbarkeit", "text": "Kommissionierung nach FEFO und Warnungen, bevor ein Haltbarkeitsdatum abläuft." },
+        { "title": "Seriennummern", "text": "Erfasst im Wareneingang und erneut im Warenausgang." },
+        { "title": "Monatliches Reporting", "text": "Kennzahlen zu Bestand, Versand und Genauigkeit, jeden Monat für Sie zusammengestellt." }
+      ]
+    }
+  },
+  "about": {
+    "title": "Über uns | Fully Logistics",
+    "description": "Lernen Sie das Lagerteam hinter Fully Logistics kennen und sehen Sie, wie ein Arbeitstag abläuft, vom ersten Lkw bis zum Bestellschluss um 14\u00a0Uhr.",
+    "hero": {
+      "title1": "Wir führen das Lager.",
+      "title2": "Sie führen Ihr Geschäft.",
+      "lead": "Wir sind ein Team erfahrener Lagerlogistiker. Wir lagern, verpacken und versenden für Webshops und Hersteller und berichten Ihnen über jeden Schritt."
+    },
+    "story": {
+      "title": "Warum es uns gibt",
+      "paragraphs": [
+        "Fully Logistics entstand aus einer einfachen Beobachtung: Gute Unternehmen verlieren Abende und Wochenenden an Packband und Stretchfolie. Wir haben ein Lager aufgebaut, in dem genau diese Arbeit unser Vollzeitjob ist.",
+        "Heute versenden wir für Webshops, die erst letzten Monat gestartet sind, und für Hersteller, die landesweite Handelsketten beliefern. Der Ablauf ist für beide gleich: annehmen, lagern, verpacken, versenden, berichten."
+      ]
+    },
+    "principles": [
+      { "title": "Wir halten, was wir versprechen", "text": "Bestellschluss und Versandzeitfenster stehen in Ihrem Vertrag, und wir berichten Ihnen, wie gut wir sie einhalten." },
+      { "title": "Wir zeigen unsere Zahlen", "text": "Genauigkeit, Versandtempo und Inventurergebnisse erhalten Sie jeden Monat, auch wenn wir ein Ziel verfehlt haben." },
+      { "title": "Wir melden uns früh", "text": "Ein verspäteter Lkw, eine beschädigte Palette oder eine Bestandsabweichung: Sie erfahren es am selben Tag, mit einem Lösungsvorschlag." },
+      { "title": "Wir halten es einfach", "text": "Ein Ansprechpartner, ein Portal und eine Preisliste, damit Sie nie drei Abteilungen hinterherlaufen müssen." }
+    ],
+    "day": {
+      "title": "Ein Arbeitstag, Stunde für Stunde",
+      "lead": "Der Rhythmus hinter dem Bestellschluss um 14\u00a0Uhr.",
+      "steps": [
+        "Die Lkw kommen an. Eingehende Ware wird entladen, geprüft und eingebucht.",
+        "Die Pickwellen starten für alles, was über Nacht bestätigt wurde.",
+        "Die Packstationen laufen auf Hochtouren. Vor dem Verschließen wird jedes Paket kontrolliert.",
+        "<strong>Bestellschluss.</strong> Was bis jetzt bestätigt ist, wird heute versendet.",
+        "Die Versanddienstleister holen Pakete und Paletten ab, und die Sendungsverfolgung startet.",
+        "Retouren werden geprüft und die Bestandszählungen des Tages abgeglichen."
+      ]
+    },
+    "facility": {
+      "title": "Wo Ihre Ware lagert",
+      "lead": "Ein moderner Standort in der Logistikregion rund um Budapest, gebaut für Paletten und Pakete gleichermaßen.",
+      "stats": ["Quadratmeter Hallenfläche", "Palettenstellplätze", "Ladetore", "Mitarbeitende im Lager"]
+    }
+  },
+  "contact": {
+    "title": "Kontakt | Fully Logistics",
+    "description": "Sagen Sie uns, was Sie versenden, und Sie erhalten innerhalb eines Werktags ein klares Angebot von Fully Logistics.",
+    "heading": "Sagen Sie uns, was Sie versenden.",
+    "lead": "Schicken Sie uns ein paar Angaben. Wir antworten innerhalb eines Werktags mit Rückfragen oder einem Angebot.",
+    "form": {
+      "title": "Angebotsanfrage",
+      "name": "Ihr Name",
+      "email": "Geschäftliche E-Mail",
+      "company": "Unternehmen",
+      "phone": "Telefon",
+      "optional": "(optional)",
+      "role": "Ich bin",
+      "roles": ["Webshop-Betreiber", "Hersteller", "Sonstiges"],
+      "volume": "Monatliches Volumen",
+      "volumeChoose": "Bitte wählen",
+      "volumes": ["Unter 500 Bestellungen", "500 bis 2.000 Bestellungen", "2.000 bis 10.000 Bestellungen", "Über 10.000 Bestellungen", "Überwiegend Paletten"],
+      "message": "Was versenden Sie?",
+      "messageHint": "Produkte, Abmessungen, besondere Anforderungen und wie Sie heute versenden.",
+      "consent": "Ich bin einverstanden, dass Fully Logistics mich zu dieser Anfrage kontaktiert.",
+      "successTitle": "Vielen Dank. Ihre Anfrage ist bei uns eingegangen.",
+      "successText": "Wir antworten innerhalb eines Werktags, meist schneller."
+    },
+    "aside": {
+      "label": "Kontaktdaten",
+      "nextTitle": "So geht es weiter",
+      "next": [
+        { "title": "Wir antworten.", "text": "Innerhalb eines Werktags, mit Rückfragen oder einer ersten Einschätzung." },
+        { "title": "Wir sprechen alles durch.", "text": "In einem kurzen Gespräch erfassen wir Ihre Produkte und Ihren Bestellfluss." },
+        { "title": "Sie erhalten ein schriftliches Angebot.", "text": "Alle drei Preispositionen, dazu ein Starttermin." }
+      ]
+    }
+  },
+  "js": {
+    "themeToDark": "Zum dunklen Design wechseln",
+    "themeToLight": "Zum hellen Design wechseln",
+    "menuOpen": "Menü öffnen",
+    "menuClose": "Menü schließen",
+    "errName": "Bitte geben Sie Ihren Namen ein.",
+    "errEmail": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+    "errMessage": "Bitte beschreiben Sie kurz, was Sie versenden.",
+    "errConsent": "Bitte setzen Sie das Häkchen, damit wir Sie kontaktieren dürfen.",
+    "errField": "Bitte prüfen Sie dieses Feld.",
+    "errSummary": "Bitte korrigieren Sie die markierten Felder und versuchen Sie es erneut.",
+    "sendFailed": "Etwas ist schiefgelaufen, Ihre Anfrage wurde nicht gesendet. Bitte versuchen Sie es erneut oder schreiben Sie uns an {email}.",
+    "mailOpened": "Ihr E-Mail-Programm sollte sich mit der fertigen Anfrage öffnen. Falls nicht, schreiben Sie an {email}.",
+    "mailSubject": "Angebotsanfrage von {from}",
+    "mailName": "Name",
+    "mailEmail": "E-Mail",
+    "mailCompany": "Unternehmen",
+    "mailPhone": "Telefon",
+    "mailRole": "Ich bin",
+    "mailVolume": "Monatliches Volumen"
+  }
+}
