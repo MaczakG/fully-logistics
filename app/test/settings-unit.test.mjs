@@ -4,7 +4,7 @@
 // permission normalisation and temporary passwords.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { budapestDayStartIso, cleanFields, deriveZone, diff, missingRequired, normalizeCompany, patternCodes } from '../worker/routes/settings.js';
+import { budapestDayStartIso, cleanFields, deriveZone, diff, missingRequired, normalizeCompany, patternCodes, visibleFields, withDefaults } from '../worker/routes/settings.js';
 import { normalizePermissions, permissionObject, temporaryPassword } from '../worker/routes/users.js';
 import { passwordProblem } from '../worker/lib/auth.js';
 
@@ -39,6 +39,16 @@ test('cleanFields: types, unknown keys dropped, credentials keep or clear', () =
   cleanFields(DEFS.credentialFields, 'x', 'credentials', notObject);
   assert.ok(notObject.credentials);
   assert.deepEqual(cleanFields(DEFS.credentialFields, undefined, 'credentials'), {});
+});
+
+test('visibleFields and withDefaults: hidden developer settings, adapter defaults', () => {
+  const defs = [...DEFS.settingFields, { key: 'api_base_url', label: 'API', type: 'text' }, { key: 'notify', type: 'checkbox', default: true }, { key: 'size', type: 'select', default: 'xs', options: ['xs', 's'] }];
+  assert.ok(!visibleFields(defs).some((f) => f.key === 'api_base_url'));
+  assert.deepEqual(visibleFields(null), []);
+  const v = visibleFields(defs);
+  assert.deepEqual(withDefaults(v, {}, { client_number: 5 }), { client_number: 5, notify: true, size: 'xs' });
+  assert.deepEqual(withDefaults(v, { notify: false }, {}), { size: 'xs' }, 'stored values win');
+  assert.deepEqual(withDefaults(v, {}, { size: 's' }), { size: 's', notify: true }, 'sent values win');
 });
 
 test('missingRequired: merges stored and incoming values', () => {

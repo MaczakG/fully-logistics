@@ -781,7 +781,8 @@
         optional: !f.required, autocomplete: 'new-password', attrs,
       });
     }
-    const v = values ? values[f.key] : undefined;
+    // Not saved yet: the adapter's default, so the first save stores it.
+    const v = values && values[f.key] !== undefined ? values[f.key] : f.default;
     if (f.type === 'checkbox') return ui.field({ name, label, type: 'checkbox', value: !!v, hint: help, attrs });
     if (f.type === 'select') return ui.field({ name, label, type: 'select', value: v ?? '', options: optionList(f.options), placeholder: f.required ? undefined : 'Nincs megadva', hint: help, attrs, optional: !f.required });
     return ui.field({ name, label, type: f.type === 'number' ? 'number' : 'text', value: v ?? '', hint: help, attrs, optional: !f.required });
@@ -795,6 +796,7 @@
       const m = el.name.match(/^(credentials|settings)\.(.+)$/);
       if (!m) continue;
       const [, kind, key] = m;
+      if (HIDDEN_KEYS.has(key)) continue;
       let v;
       if (el.type === 'checkbox') v = el.checked;
       else if (el.dataset.type === 'num') v = el.value === '' ? (kind === 'credentials' ? '' : null) : Number(String(el.value).replace(',', '.'));
@@ -805,9 +807,22 @@
     return out;
   }
 
-  const fieldsBlock = (title, defs, kind, values, masked) => (defs && defs.length
-    ? html`<h3>${title}</h3><div class="form-grid">${defs.map((f) => integrationField(f, kind, values, masked))}</div>`
-    : '');
+  // Developer only settings (api_base_url) are never shown or sent; the server drops them too.
+  const HIDDEN_KEYS = new Set(['api_base_url']);
+  const fieldsBlock = (title, defs, kind, values, masked) => {
+    const list = (defs || []).filter((f) => f && !HIDDEN_KEYS.has(f.key));
+    return list.length ? html`<h3>${title}</h3><div class="form-grid">${list.map((f) => integrationField(f, kind, values, masked))}</div>` : '';
+  };
+
+  // What the courier adapter supports (listCouriers() features).
+  const FEATURES = [['tracking', 'Nyomkövetés'], ['cod', 'Utánvét'], ['pickupPoints', 'Csomagpont, automata'], ['testMode', 'Teszt rendszer']];
+  const featureList = (f) => {
+    if (!f || !Object.keys(f).length) return '';
+    return html`<ul class="feature-list" aria-label="Támogatott funkciók">
+      ${FEATURES.map(([k, label]) => html`<li data-on="${f[k] ? 'true' : 'false'}">${FL.icon(f[k] ? 'check' : 'x')}${label}<span class="visually-hidden">: ${f[k] ? 'igen' : 'nem'}</span></li>`)}
+      ${f.closeRequired ? html`<li data-on="warn">${FL.icon('info')}Napi zárás kötelező</li>` : ''}
+    </ul>`;
+  };
 
   // ================================================================ Futárszolgálatok
   async function couriersTab(root) {
@@ -831,6 +846,7 @@
           <dt>Hozzáférés</dt><dd>${Object.values(c.credentials || {}).some(Boolean) ? 'megadva' : html`<span class="muted">nincs megadva</span>`}</dd>
           <dt>Utoljára mentve</dt><dd>${c.updated_at ? fmt.dateTime(c.updated_at) : html`<span class="muted">soha</span>`}</dd>
         </dl>
+        ${featureList(c.features)}
         ${c.error ? ui.notice(c.error, 'danger') : ''}
         ${c.last_error ? ui.notice(html`<b>Utolsó hiba:</b> ${c.last_error}`, 'warn') : ''}
         <div class="actions">

@@ -164,6 +164,55 @@ test('couriers: generic forms, masked credentials, no secrets to the browser', a
   }
 });
 
+test('couriers: adapter defaults, activation needs required fields, api_base_url stays hidden', async () => {
+  const r = await admin.get('/api/settings/couriers');
+  const gls = r.data.items.find((c) => c.code === 'gls');
+  if (!gls) return; // courier adapters not installed in this build
+  assert.equal(typeof gls.features.tracking, 'boolean');
+  assert.ok(!gls.settingFields.some((f) => f.key === 'api_base_url'));
+
+  const bad = await admin.put('/api/settings/couriers/gls', { active: true });
+  assert.equal(bad.status, 400);
+  assert.match(bad.data.error.message, /aktiváláshoz/);
+  const required = [...gls.credentialFields.filter((f) => f.required).map((f) => `credentials.${f.key}`), ...gls.settingFields.filter((f) => f.required).map((f) => `settings.${f.key}`)];
+  const stored = (await srv.call('accounts.getCourierAccount', ['gls'])).result;
+  for (const key of required) {
+    const [kind, k] = key.split('.');
+    if (!stored || !stored[kind][k]) assert.ok(bad.data.error.fields[key], key);
+  }
+
+  // Saving fills the adapter defaults; the browser cannot set api_base_url.
+  const creds = Object.fromEntries(gls.credentialFields.map((f) => [f.key, `ertek-${f.key}-1234567`]));
+  const settings = Object.fromEntries(gls.settingFields.filter((f) => f.required).map((f) => [f.key, f.type === 'number' ? 100200300 : 'X1']));
+  const saved = await admin.put('/api/settings/couriers/gls', { active: false, carrier_id: fx.carriers.gls, credentials: creds, settings: { ...settings, api_base_url: 'http://127.0.0.1:9' } });
+  assert.equal(saved.status, 200, JSON.stringify(saved.data));
+  for (const f of gls.settingFields.filter((x) => x.default !== undefined)) assert.deepEqual(saved.data.settings[f.key], f.default, f.key);
+  assert.equal((await srv.call('accounts.getCourierAccount', ['gls'])).result.settings.api_base_url, undefined);
+  assert.ok(!JSON.stringify(saved.data).includes('ertek-password'));
+
+  const on = await admin.put('/api/settings/couriers/gls', { active: true });
+  assert.equal(on.status, 200, JSON.stringify(on.data));
+  assert.equal(on.data.active, true);
+  assert.equal((await srv.call('couriers.isConfigured', ['gls'])).result, true);
+
+  // A stored api_base_url (tests only) is never sent to the browser and survives saving the form.
+  await srv.call('accounts.saveCourierAccount', ['gls', { settings: { api_base_url: 'http://127.0.0.1:9' } }]);
+  const list = await admin.get('/api/settings/couriers');
+  assert.ok(!JSON.stringify(list.data).includes('api_base_url'));
+  assert.ok(!JSON.stringify(list.data).includes('127.0.0.1'));
+  await admin.put('/api/settings/couriers/gls', { settings: { ...list.data.items.find((c) => c.code === 'gls').settings } });
+  assert.equal((await srv.call('accounts.getCourierAccount', ['gls'])).result.settings.api_base_url, 'http://127.0.0.1:9');
+
+  // Connection test against a closed local port: a clear failure, kept as the last error.
+  const t = await admin.post('/api/settings/couriers/gls/test');
+  assert.equal(t.status, 200);
+  assert.equal(t.data.ok, false);
+  assert.ok(t.data.message);
+  const after = (await admin.get('/api/settings/couriers')).data.items.find((c) => c.code === 'gls');
+  assert.equal(after.last_error, t.data.message);
+  await admin.put('/api/settings/couriers/gls', { active: false });
+});
+
 test('invoicing: provider choice, masked credentials, test needs a provider', async () => {
   const r = await admin.get('/api/settings/invoicing');
   assert.equal(r.status, 200);
@@ -228,14 +277,17 @@ test('activity log: filters, pagination, export; integration log filters', async
   assert.match(csv.headers.get('content-type'), /text\/csv/);
   assert.match(await csv.text(), /Időpont;Felhasználó;Modul/);
 
+  // Own system names: real adapters called by other tests log here too.
   await srv.sql(`INSERT INTO integration_log (system, direction, action, ok, status, message) VALUES
-    ('gls', 'out', 'label', 1, 200, 'Címke kész'), ('gls', 'out', 'label', 0, 500, 'Szerver hiba'), ('shopify', 'in', 'webhook', 1, 200, 'Rendelés')`);
-  const errorsOnly = await admin.get('/api/settings/integration-log?ok=0');
+    ('naplo-a', 'out', 'label', 1, 200, 'Címke kész'), ('naplo-a', 'out', 'label', 0, 500, 'Szerver hiba'), ('naplo-b', 'in', 'webhook', 1, 200, 'Rendelés')`);
+  const errorsOnly = await admin.get('/api/settings/integration-log?ok=0&system=naplo-a');
   assert.equal(errorsOnly.data.total, 1);
   assert.equal(errorsOnly.data.items[0].message, 'Szerver hiba');
-  const gls = await admin.get('/api/settings/integration-log?system=gls');
-  assert.equal(gls.data.total, 2);
-  assert.ok((await admin.get('/api/settings/audit/filters')).data.systems.includes('shopify'));
+  assert.ok((await admin.get('/api/settings/integration-log?ok=0')).data.items.every((x) => !x.ok));
+  const a = await admin.get('/api/settings/integration-log?system=naplo-a');
+  assert.equal(a.data.total, 2);
+  assert.equal((await admin.get('/api/settings/integration-log?direction=in&system=naplo-b')).data.total, 1);
+  assert.ok((await admin.get('/api/settings/audit/filters')).data.systems.includes('naplo-b'));
 });
 
 test('permissions: view only roles read, cannot change; no settings right is 403 everywhere', async () => {

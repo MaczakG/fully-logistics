@@ -354,6 +354,28 @@ const COLUMN_BY_HEADER = Object.fromEntries(CSV_COLUMNS.flatMap((c) => c.aliases
 
 const optionValues = (options) => (options || []).map((o) => (Array.isArray(o) ? o[0] : o && typeof o === 'object' ? o.value : o));
 
+// Settings that only tests and developers use (api_base_url points an adapter at a fake carrier
+// server). They are never sent to the browser and never accepted from it; a stored value stays.
+const HIDDEN_KEYS = new Set(['api_base_url']);
+export const visibleFields = (defs) => (Array.isArray(defs) ? defs.filter((f) => f && f.key && !HIDDEN_KEYS.has(f.key)) : []);
+
+// Only the values of the fields the screen shows.
+function pick(values, defs) {
+  const out = {};
+  for (const f of defs) if (values && Object.prototype.hasOwnProperty.call(values, f.key)) out[f.key] = values[f.key];
+  return out;
+}
+
+// Defaults of the adapter (field.default) for settings that are neither stored nor sent.
+export function withDefaults(defs, stored, incoming) {
+  const out = { ...incoming };
+  for (const f of defs) {
+    if (f.default === undefined || f.key in out || (stored && f.key in stored)) continue;
+    out[f.key] = f.default;
+  }
+  return out;
+}
+
 // Cleans the values sent for a courier or invoicing form against the adapter's field definitions
 // ({ key, label, type: text|password|select|number|checkbox, required, options }). Unknown keys
 // are dropped. For credentials an empty or missing value keeps the stored one and null clears it.
@@ -448,16 +470,19 @@ function providerDefs() {
 const PROVIDER_NAMES = { szamlazz: 'Számlázz.hu', billingo: 'Billingo' };
 
 function courierView(def, account, error = '') {
+  const credentialFields = visibleFields(def.credentialFields);
+  const settingFields = visibleFields(def.settingFields);
   return {
     code: def.code,
     name: def.name || CARRIERS[def.code] || def.code,
-    credentialFields: def.credentialFields || [],
-    settingFields: def.settingFields || [],
+    credentialFields,
+    settingFields,
+    features: def.features && typeof def.features === 'object' ? def.features : {},
     configured: !!account,
     active: !!(account && account.active),
     carrier_id: account ? account.carrier_id : null,
-    settings: account ? account.settings : {},
-    credentials: account ? maskCredentials(account.credentials) : {},
+    settings: account ? pick(account.settings, settingFields) : {},
+    credentials: account ? maskCredentials(pick(account.credentials, credentialFields)) : {},
     last_error: account ? account.last_error || '' : '',
     updated_at: account ? account.updated_at : null,
     error,
@@ -491,14 +516,18 @@ async function readInvoicing(env) {
     provider: conf.provider || '',
     choices,
     error,
-    providers: defs.map((d) => ({
-      code: d.code,
-      name: d.name || PROVIDER_NAMES[d.code] || d.code,
-      credentialFields: d.credentialFields || [],
-      settingFields: d.settingFields || [],
-      settings: (conf.settings || {})[d.code] || {},
-      credentials: maskCredentials((conf.credentials || {})[d.code] || {}),
-    })),
+    providers: defs.map((d) => {
+      const credentialFields = visibleFields(d.credentialFields);
+      const settingFields = visibleFields(d.settingFields);
+      return {
+        code: d.code,
+        name: d.name || PROVIDER_NAMES[d.code] || d.code,
+        credentialFields,
+        settingFields,
+        settings: pick((conf.settings || {})[d.code], settingFields),
+        credentials: maskCredentials(pick((conf.credentials || {})[d.code], credentialFields)),
+      };
+    }),
   };
 }
 
@@ -1146,8 +1175,10 @@ export function register(r) {
     const body = await ctx.body();
     const data = validate(body, { active: { type: 'bool' }, carrier_id: { type: 'id', nullable: true } }, { partial: true });
     const errors = {};
-    const settings = cleanFields(def.settingFields, body.settings, 'settings', errors);
-    const credentials = cleanFields(def.credentialFields, body.credentials, 'credentials', errors);
+    const settingFields = visibleFields(def.settingFields);
+    const credentialFields = visibleFields(def.credentialFields);
+    let settings = cleanFields(settingFields, body.settings, 'settings', errors);
+    const credentials = cleanFields(credentialFields, body.credentials, 'credentials', errors);
     if (Object.keys(errors).length) throw badRequest('Ellenőrizd a megjelölt mezőket.', errors);
     if (data.carrier_id) {
       const c = await first(db, "SELECT id, carrier_code FROM partners WHERE id = ? AND type = 'carrier'", data.carrier_id);
@@ -1159,10 +1190,11 @@ export function register(r) {
     } catch (e) {
       throw cryptoProblem(e);
     }
+    settings = withDefaults(settingFields, current ? current.settings : {}, settings);
     const active = data.active !== undefined ? data.active : !!(current && current.active);
     if (active) {
-      missingRequired(def.credentialFields, current ? current.credentials : {}, credentials, 'credentials', errors);
-      missingRequired(def.settingFields, current ? current.settings : {}, settings, 'settings', errors);
+      missingRequired(credentialFields, current ? current.credentials : {}, credentials, 'credentials', errors);
+      missingRequired(settingFields, current ? current.settings : {}, settings, 'settings', errors);
       if (Object.keys(errors).length) throw badRequest('Az aktiváláshoz töltsd ki a kötelező mezőket.', errors);
     }
     try {
@@ -1202,8 +1234,8 @@ export function register(r) {
     const settings = {};
     const credentials = {};
     for (const d of defs) {
-      const s = cleanFields(d.settingFields, body.settings && body.settings[d.code], 'settings', errors);
-      const c = cleanFields(d.credentialFields, body.credentials && body.credentials[d.code], 'credentials', errors);
+      const s = cleanFields(visibleFields(d.settingFields), body.settings && body.settings[d.code], 'settings', errors);
+      const c = cleanFields(visibleFields(d.credentialFields), body.credentials && body.credentials[d.code], 'credentials', errors);
       if (Object.keys(s).length) settings[d.code] = s;
       if (Object.keys(c).length) credentials[d.code] = c;
     }
@@ -1216,9 +1248,14 @@ export function register(r) {
     }
     const provider = body.provider !== undefined ? body.provider : current.provider;
     const def = defs.find((d) => d.code === provider);
+    for (const d of defs) {
+      if (!settings[d.code] && d.code !== provider) continue;
+      const s = withDefaults(visibleFields(d.settingFields), (current.settings || {})[d.code], settings[d.code] || {});
+      if (Object.keys(s).length) settings[d.code] = s;
+    }
     if (def) {
-      missingRequired(def.credentialFields, (current.credentials || {})[provider], credentials[provider], 'credentials', errors);
-      missingRequired(def.settingFields, (current.settings || {})[provider], settings[provider], 'settings', errors);
+      missingRequired(visibleFields(def.credentialFields), (current.credentials || {})[provider], credentials[provider], 'credentials', errors);
+      missingRequired(visibleFields(def.settingFields), (current.settings || {})[provider], settings[provider], 'settings', errors);
       if (Object.keys(errors).length) throw badRequest('A számlázó használatához töltsd ki a kötelező mezőket.', errors);
     }
     try {
