@@ -6,7 +6,7 @@ Az alkalmazás egy AWS Lightsail szerveren fut Frankfurtban (eu-central-1). A we
 | --- | --- | --- |
 | Szerver | Ubuntu 24.04, 1 GB RAM, állandó IP-cím. Node.js futtatja az alkalmazást, előtte a Caddy adja a HTTPS-t | kb. 7 USD/hó |
 | Tárhely (bucket) | a feltöltött fájlok (szerződések, címkék, számlák, fotók), az óránkénti adatbázis-mentések és a kiadott verziók | kb. 1 USD/hó |
-| Napi pillanatkép | a szerver teljes lemeze, minden éjjel 1-kor, az utolsó 7 nap | 1 USD/hó alatt |
+| Napi pillanatkép | a szerver teljes lemeze, minden éjjel (01:00 UTC), az utolsó 7 nap | 1 USD/hó alatt |
 
 Az adatbázis egy SQLite fájl a szerveren (`/var/lib/fully-app/fully-app.sqlite`). Óránként tömörített mentés készül róla a tárhelyre (`backups/db/`): az utolsó 48 óra minden mentése megmarad, utána 60 napig napi egy.
 

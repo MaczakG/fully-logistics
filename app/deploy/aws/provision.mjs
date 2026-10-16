@@ -49,15 +49,28 @@ async function ensureStaticIp(conf) {
   return staticIp;
 }
 
+// Every page of a paginated Lightsail list.
+async function listAll(action, key, params = {}) {
+  const out = [];
+  let pageToken;
+  do {
+    const r = await ls(aws, action, { ...params, ...(pageToken ? { pageToken } : {}) });
+    out.push(...(r[key] || []));
+    pageToken = r.nextPageToken;
+  } while (pageToken);
+  return out;
+}
+
 async function pickBundle() {
-  const { bundles } = await ls(aws, 'GetBundles', { includeInactive: false });
-  const fit = bundles.filter((b) => b.isActive && (b.supportedPlatforms || []).includes('LINUX_UNIX') && b.ramSizeInGb === ramGb && !/ipv6/i.test(b.bundleId));
+  const bundles = await listAll('GetBundles', 'bundles', { includeInactive: false });
+  const fit = bundles.filter((b) => b.isActive && (b.supportedPlatforms || []).includes('LINUX_UNIX') && b.ramSizeInGb === ramGb
+    && (b.publicIpv4AddressCount === undefined ? !/ipv6/i.test(b.bundleId) : b.publicIpv4AddressCount > 0));
   if (!fit.length) throw new Error(`Nincs ${ramGb} GB-os Linux csomag ebben a régióban.`);
   return fit.sort((a, b) => a.price - b.price)[0];
 }
 
 async function pickBlueprint() {
-  const { blueprints } = await ls(aws, 'GetBlueprints', { includeInactive: false });
+  const blueprints = await listAll('GetBlueprints', 'blueprints', { includeInactive: false });
   for (const id of ['ubuntu_24_04', 'ubuntu_22_04']) if (blueprints.some((b) => b.blueprintId === id && b.isActive)) return id;
   throw new Error('Nincs Ubuntu 24.04 vagy 22.04 kép ebben a régióban.');
 }
@@ -112,6 +125,7 @@ async function main() {
         availabilityZone: `${conf.region}a`,
         blueprintId,
         bundleId: plan.bundleId,
+        ipAddressType: 'ipv4',
         userData,
         addOns: [{ addOnType: 'AutoSnapshot', autoSnapshotAddOnRequest: { snapshotTimeOfDay: '01:00' } }],
         tags: [{ key: 'app', value: name }],
@@ -126,8 +140,8 @@ async function main() {
       await waitOps(aws, await ls(aws, 'PutInstancePublicPorts', {
         instanceName: conf.instanceName,
         portInfos: [
-          { fromPort: 80, toPort: 80, protocol: 'tcp' },
-          { fromPort: 443, toPort: 443, protocol: 'tcp' },
+          { fromPort: 80, toPort: 80, protocol: 'tcp', cidrs: ['0.0.0.0/0'] },
+          { fromPort: 443, toPort: 443, protocol: 'tcp', cidrs: ['0.0.0.0/0'] },
           { fromPort: 22, toPort: 22, protocol: 'tcp', cidrListAliases: ['lightsail-connect'] },
         ],
       }), 'PutInstancePublicPorts');

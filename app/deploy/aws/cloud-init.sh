@@ -1,5 +1,5 @@
 #!/bin/bash
-# First boot of the AWS Lightsail server (launch script). provision.mjs fills in the __PLACEHOLDERS__.
+# First boot of the AWS Lightsail server (launch script). provision.mjs fills in the placeholders.
 # Installs Node.js 24, Caddy (HTTPS) and SQLite, creates the app user and folders, writes the app's
 # settings, downloads the first release and hands over to the deploy agent (deploy/aws/agent.mjs).
 # Log: /var/log/fully-app-init.log
