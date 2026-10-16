@@ -39,11 +39,14 @@ export async function setOrderStatus(ctx, orderId, to, text = '', extra = {}) {
   if (TIMESTAMP[to]) changes[TIMESTAMP[to]] = at;
   if (to === 'shipped') changes.shipped_date = budapestDate();
   const keys = Object.keys(changes);
-  await batch(db, [
+  // Guarded on the status read above: when another request moved the order in between, nothing is
+  // written (the event only follows a matched update) and the caller gets a conflict.
+  const [upd] = await batch(db, [
     stmt(db, `UPDATE orders SET ${keys.map((k) => `${k} = ?`).join(', ')} WHERE id = ? AND status = ?`, ...keys.map((k) => changes[k]), orderId, order.status),
-    stmt(db, 'INSERT INTO order_events (order_id, at, type, text, user_id) VALUES (?, ?, ?, ?, ?)',
+    stmt(db, 'INSERT INTO order_events (order_id, at, type, text, user_id) SELECT ?, ?, ?, ?, ? WHERE changes() > 0',
       orderId, at, 'status', text || STATUSES.order[to].label, ctx.user ? ctx.user.id : null),
   ]);
+  if (!upd.meta.changes) throw conflict(`A(z) ${order.number} rendelés állapota közben megváltozott. Töltsd újra az oldalt.`);
   return { ...order, status: to };
 }
 

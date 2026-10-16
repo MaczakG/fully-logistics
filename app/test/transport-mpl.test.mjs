@@ -44,8 +44,9 @@ before(async () => {
   assert.equal(saved.ok, true, JSON.stringify(saved));
 });
 after(async () => {
-  await srv.stop();
-  fake.close();
+  // Close the fake first: if the server never started, an open listener would keep the run alive.
+  if (fake) fake.close();
+  if (srv) await srv.stop();
 });
 
 test('mpl daily closing runs before shipping and keeps the manifest open on failure', async () => {

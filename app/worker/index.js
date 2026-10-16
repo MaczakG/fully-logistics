@@ -54,8 +54,12 @@ async function handleApi(req, env, exec, url) {
   const method = req.method;
   try {
     if (url.pathname.startsWith('/api/v1/')) {
-      ctx.apiPartner = await partnerFromApiKey(env, req);
-      if (!ctx.apiPartner) throw unauthorized('Hiányzó vagy érvénytelen API kulcs.');
+      // Every partner API route needs a key, except the public documentation.
+      const hit = partnerApi.match(method, url.pathname);
+      if (!(hit && hit.route && hit.route.opts.public)) {
+        ctx.apiPartner = await partnerFromApiKey(env, req);
+        if (!ctx.apiPartner) throw unauthorized('Hiányzó vagy érvénytelen API kulcs.');
+      }
       return await run(partnerApi, ctx, method, url.pathname);
     }
 

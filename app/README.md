@@ -80,5 +80,24 @@ npm test
 
 ## Időzített feladatok
 
-- 10 percenként: új rendelések letöltése a bekötött webshopokból.
+- 10 percenként: új rendelések letöltése a bekötött webshopokból, a feladott csomagok nyomkövetési számának visszaküldése és (ha be van kapcsolva) a készlet visszaküldése a webshopba.
 - Óránként: a napi tárhely-pillanatkép (a napi arányos tárolási díjhoz). 23 óra után egyszer rögzíti az adott napot.
+- Óránként: a feladott csomagok kézbesítési állapotának lekérdezése a futároktól (a kézbesített rendelések „Kézbesítve” állapotba kerülnek).
+
+## Ajánlott: kéréskorlát a partner API-ra
+
+Az API kulcsonként percenként 120 kérést enged. A kulcs nélküli kéréseket is érdemes a Cloudflare-en korlátozni: **fully.hu zóna > Security > WAF > Rate limiting rules > Create rule**. Feltétel: *Hostname* egyenlő `app.fully.hu` és *URI Path* kezdete `/api/v1/`. Korlát: 300 kérés / 1 perc IP-címenként, művelet: *Block*, 1 percre.
+
+## Amit élesben kell először kipróbálni
+
+A külső rendszerek kapcsolatait a hivatalos dokumentációjuk alapján építettük meg, és tesztszerverekkel ellenőriztük. Valódi hozzáféréssel még nem futottak, ezért az első használatkor érdemes egy-egy próbát tenni.
+
+- **Futárok (GLS, DPD, Foxpost, MPL, DHL):** **Beállítások > Futárszolgálatok > Kapcsolat tesztelése**, utána egy próbacímke egy belső címre. Ahol van, a futár tesztrendszerét (a „Tesztrendszer” kapcsolót) használd először. Az MPL-nél a futárátvétel lezárása a Magyar Posta napi zárását is elvégzi, a feladójegyzék PDF-et a futárátvétel oldalán találod.
+- **Számlázó (Számlázz.hu, Billingo):** egy próbaelszámolás jóváhagyása és kiszámlázása. A Számlázz.hu-nál díjbekérő vagy teszt Számla Agent kulccsal, a Billingónál egy teszt fiókkal. Figyeld a kedvezménysorokat (negatív tételek) és a kerekítést.
+- **Webshopok (Shopify, WooCommerce, Shoprenter, UNAS):** a partner **Integrációk** fülén a kapcsolat felvétele, **Kapcsolat tesztelése**, majd **Szinkronizálás most**. A Shoprenter API-ban nincs nyomkövetési szám mező, ott a rendelés állapota változik, és kérésre a megjegyzésbe kerül a szám. Az UNAS néhány hibás belépés után letiltja az IP-címet, ezért ott hibás kulcsot nem próbálunk újra magától.
+
+## Könyvelővel egyeztetendő
+
+- **Teljesítési dátum** a havi számlákon: alapból a fizetési határidő, legfeljebb a hónap végét követő 60. nap (Áfa tv. 58. §). **Beállítások > Számlázó** alatt átállítható.
+- **Tárolási díj:** csak a tároló és a karantén raktárhelyek számítanak, az átvételi, csomagoló és visszáru zóna nem.
+- **Utánvét kezelési díj (%):** csak a forintos utánvét összegéből számolunk, és a visszaküldött rendelések is beleszámítanak.

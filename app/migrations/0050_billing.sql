@@ -26,7 +26,6 @@ CREATE TABLE snapshot_runs (
   source TEXT NOT NULL DEFAULT 'cron'
 );
 
-CREATE INDEX movements_type_date ON movements(type, date);
 CREATE INDEX returns_date ON returns(received_date);
 CREATE INDEX orders_shipped_date ON orders(shipped_date);
 CREATE INDEX billing_entries_date ON billing_entries(date);

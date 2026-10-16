@@ -373,18 +373,19 @@
       const code = input.value.trim();
       input.value = '';
       if (code) await onScan(code);
-      input.focus();
+      // Back to the scan field, unless the handler moved focus on purpose (quantity, tracking ...).
+      if (!document.activeElement || document.activeElement === document.body || document.activeElement === input) input.focus();
     });
     return input;
   };
 
   /* ------------------------------------------------------------ CSV import
-     csvImport({ title, endpoint, help, templateName, templateColumns: [label...], extra: {...} })
+     csvImport({ title, endpoint, help, templateName, templateColumns: [label...], extra: {...}, unit: 'tétel' })
      Flow: choose file -> POST endpoint with preview=1 -> server answers
        { rows: n, valid: n, errors: [{ line, message }], sample: [...] }
      -> user confirms -> POST again with preview=0 -> { imported: n, ... }.
      Resolves with the final server response, or undefined if cancelled. */
-  ui.csvImport = ({ title, endpoint, help, templateName = 'sablon.csv', templateColumns = [], extra = {} }) => new Promise((resolve) => {
+  ui.csvImport = ({ title, endpoint, help, templateName = 'sablon.csv', templateColumns = [], extra = {}, unit = 'tétel' }) => new Promise((resolve) => {
     let file = null;
     const dlg = ui.dialog({
       title,
@@ -409,7 +410,7 @@
         if (!file) throw new FL.ApiError(400, 'bad_request', 'Válassz ki egy CSV fájlt.', { file: 'Válassz ki egy fájlt.' });
         const preview = form.dataset.stage !== 'commit';
         const res = await FL.api.upload(endpoint, file, { ...extra, preview: preview ? '1' : '0' });
-        if (!preview) { ui.toast(`Importálva: ${FL.fmt.int(res.imported)} tétel.`, 'ok'); resolve(res); return true; }
+        if (!preview) { ui.toast(`Importálva: ${FL.fmt.int(res.imported)} ${unit}.`, 'ok'); resolve(res); return true; }
         const box = form.querySelector('[data-preview]');
         box.innerHTML = String(html`
           ${ui.kpis([{ label: 'Sorok', value: FL.fmt.int(res.rows) }, { label: 'Importálható', value: FL.fmt.int(res.valid), tone: 'ok' }, { label: 'Hibás', value: FL.fmt.int(res.errors.length), tone: res.errors.length ? 'danger' : '' }])}

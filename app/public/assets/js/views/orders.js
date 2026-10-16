@@ -359,6 +359,7 @@
         const r = await ui.csvImport({
           title: 'Rendelések importálása CSV-ből',
           endpoint: '/api/orders/import',
+          unit: 'rendelés',
           help: 'Minden sor egy rendeléstétel. Az azonos partnerkódú és rendelésszámú sorokból egy rendelés lesz, a címadatokat az első sorból vesszük. A futár: gls, dpd, foxpost, mpl vagy dhl. A már importált rendelésszámok kimaradnak.',
           templateName: 'rendelesek-sablon.csv',
           templateColumns: CSV_COLUMNS,

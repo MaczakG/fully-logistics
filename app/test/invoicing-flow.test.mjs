@@ -65,8 +65,9 @@ before(async () => {
   assert.equal((await admin.post(`/api/billing/statements/${ids[102]}/approve`)).status, 200);
 });
 after(async () => {
-  await srv.stop();
-  mock.close();
+  // Close the fake first: if the server never started, an open listener would keep the run alive.
+  if (mock) mock.close();
+  if (srv) await srv.stop();
 });
 
 const ok = (r, status = 200) => { assert.equal(r.status, status, JSON.stringify(r.data)); return r.data; };

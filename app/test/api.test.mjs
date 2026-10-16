@@ -119,11 +119,12 @@ test('documentation page is served as HTML', async () => {
   assert.match(md.data, /^# Fully Logistics partner API/);
 });
 
-test('documentation is public (needs the /api/v1 public route support in worker/index.js)', {
-  todo: 'worker/index.js asks for the API key before routing; see the report for the proposed change',
-}, async () => {
+test('documentation is public, everything else still needs a key', async () => {
   const r = await api(null).get('/docs');
   assert.equal(r.status, 200);
+  assert.equal((await api(null).get('/docs.md')).status, 200);
+  assert.equal((await api(null).get('/products')).status, 401);
+  assert.equal((await api(null).get('/nincs-ilyen')).status, 401);
 });
 
 test('products: list is limited to the partner, cursor pagination', async () => {

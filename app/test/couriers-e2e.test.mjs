@@ -63,8 +63,9 @@ before(async () => {
   await srv.sql(`UPDATE settings SET value = json_set(value, '$.phone', '+36 1 234 5678', '$.email', 'raktar@fully.hu') WHERE key = 'company'`);
 });
 after(async () => {
-  await srv.stop();
-  fake.close();
+  // Close the fake first: if the server never started, an open listener would keep the run alive.
+  if (fake) fake.close();
+  if (srv) await srv.stop();
 });
 
 const ok = (r) => { assert.equal(r.ok, true, JSON.stringify(r)); return r.result; };
