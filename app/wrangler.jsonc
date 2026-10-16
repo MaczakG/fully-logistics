@@ -17,7 +17,7 @@
       "binding": "DB",
       "database_name": "fully-app",
       // Replace with the id Cloudflare shows after creating the database (app/README.md, step 1).
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "65ad9f4c-a4ad-4a34-bdfa-88cd0df868fe",
       "migrations_dir": "migrations"
     }
   ],

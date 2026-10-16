@@ -16,7 +16,7 @@ Ehhez Cloudflare fiók kell, amelyben a `fully.hu` domain is kezelve van (a DNS 
 
 ### 2. D1 adatbázis
 
-**Storage & Databases > D1 SQL Database > Create Database**: név `fully-app`, helyként (Location) válaszd az **Eastern Europe** lehetőséget. A létrehozás után másold ki a **Database ID**-t, és írd be az `app/wrangler.jsonc` fájlba a `REPLACE_WITH_D1_DATABASE_ID` helyére (vagy küldd el, és beírom).
+**Storage & Databases > D1 SQL Database > Create Database**: név `fully-app`, helyként (Location) válaszd az **Eastern Europe** lehetőséget. Az adatbázis azonosítója (Database ID) az `app/wrangler.jsonc` fájlban van (`database_id`). Ha új adatbázist hozol létre, ott kell kicserélni.
 
 ### 3. R2 tárhely
 
