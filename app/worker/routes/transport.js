@@ -18,6 +18,7 @@ import { STATUSES } from '../lib/constants.js';
 import { toCsv } from '../lib/csv.js';
 import { budapestDate, isDate, nowIso } from '../lib/time.js';
 import { pushFulfillments } from '../integrations/webshops/index.js';
+import { closeShipments, isConfigured } from '../integrations/couriers/index.js';
 
 const OPEN_PICKUP = ['planned', 'arrived'];
 const CHUNK = 90;
@@ -389,6 +390,15 @@ export function register(r) {
     const bad = orders.filter((o) => !['packed', 'shipped'].includes(o.status));
     if (bad.length) {
       throw conflict(`Ezek a rendelések nem feladásra kész állapotúak: ${shortList(bad.map((o) => `${o.number} (${STATUSES.order[o.status].label})`), 3)}. Vedd le őket a manifesztről.`);
+    }
+    // Carriers with a mandatory daily closing (MPL "zárás"): close the parcels with the carrier
+    // first, while nothing is shipped yet, so a failure leaves the manifest open to retry.
+    if (orders.every((o) => o.status === 'packed') && p.carrier_code && await isConfigured(ctx.env, p.carrier_code)) {
+      const tracked = await all(db, "SELECT tracking_number FROM orders WHERE pickup_id = ? AND tracking_number <> ''", p.id);
+      const closing = await closeShipments(ctx, p.carrier_code, { trackingNumbers: tracked.map((t) => t.tracking_number) });
+      if (closing.required && closing.documentIds.length) {
+        await run(db, 'UPDATE carrier_pickups SET manifest_document_id = ?, updated_at = ? WHERE id = ?', closing.documentIds[0], nowIso(), p.id);
+      }
     }
     const manifest = d.manifest_number || p.manifest_number || p.number;
     if (manifest !== p.manifest_number) await run(db, 'UPDATE carrier_pickups SET manifest_number = ?, updated_at = ? WHERE id = ?', manifest, nowIso(), p.id);

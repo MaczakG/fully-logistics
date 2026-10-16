@@ -186,7 +186,7 @@
           <div><p class="small">${p.company.name} · ${[p.company.zip, p.company.city, p.company.address].filter(Boolean).join(' ')}</p>
             <h2>Átadás-átvételi manifeszt</h2></div>
           <dl class="dl small">
-            <dt>Manifesztszám</dt><dd class="num">${p.manifest_number || p.number}</dd>
+            <dt>Manifesztszám</dt><dd class="num">${p.manifest_number || p.number}${p.manifest_document_id ? html` · <a href="${api.documentUrl(p.manifest_document_id, true)}" target="_blank" rel="noopener">jegyzék (PDF)</a>` : ''}</dd>
             <dt>Fuvarozó</dt><dd>${p.carrier_name}</dd>
             <dt>Átvétel napja</dt><dd>${fmt.date(p.date)}${win ? `, ${win}` : ''}</dd>
           </dl>
