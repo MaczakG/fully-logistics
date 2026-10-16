@@ -38,8 +38,6 @@
   const byRoute = Object.fromEntries(ITEMS.map((i) => [i.route, i]));
   FL.routes = Object.fromEntries(ITEMS.map((i) => [i.key, `#/${i.route}`]));
 
-  FL.views = FL.views || {};
-  FL.view = (key, def) => { FL.views[key] = def; };
   FL.state = { me: null, permissions: {}, meta: null };
   FL.app = {};
 
@@ -316,7 +314,12 @@
     try {
       const out = await view.render(section, { params, query, path, route: item });
       current = out || null;
-      content.focus({ preventScroll: true });
+      // Keep focus where the view put it (scan fields); else [data-autofocus]; else the content.
+      if (!content.contains(document.activeElement) || document.activeElement === content) {
+        const auto = section.querySelector('[data-autofocus]');
+        if (auto) auto.focus({ preventScroll: true });
+        else content.focus({ preventScroll: true });
+      }
     } catch (err) {
       if (err instanceof FL.ApiError && err.status === 401) return;
       console.error(err);
