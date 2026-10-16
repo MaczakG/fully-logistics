@@ -8,6 +8,14 @@
   const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+  /* Interface text in the page language, written into every page by build.mjs from the "js"
+     group of src/i18n/<lang>.json. {name} placeholders are filled in by fill(). */
+  const strings = (() => {
+    try { return JSON.parse(document.getElementById('i18n').textContent); } catch (err) { return {}; }
+  })();
+  const t = (key) => strings[key] || '';
+  const fill = (text, values) => text.replace(/\{(\w+)\}/g, (m, name) => (name in values ? values[name] : m));
+
   /* ---------------------------------------------------------------- theme */
   const THEME_KEY = 'fl-theme';
   const themeBtn = $('[data-theme-toggle]');
@@ -20,7 +28,7 @@
       try { localStorage.setItem(THEME_KEY, theme); } catch (err) { /* storage unavailable */ }
     }
     if (themeBtn) {
-      themeBtn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+      themeBtn.setAttribute('aria-label', t(theme === 'dark' ? 'themeToLight' : 'themeToDark'));
     }
   };
   if (themeBtn) {
@@ -72,7 +80,7 @@
   if (navToggle && mobileNav) {
     const setNav = (open) => {
       navToggle.setAttribute('aria-expanded', String(open));
-      navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      navToggle.setAttribute('aria-label', t(open ? 'menuClose' : 'menuOpen'));
       mobileNav.hidden = !open;
     };
     navToggle.addEventListener('click', () => setNav(mobileNav.hidden));
@@ -114,7 +122,7 @@
       const prefix = el.dataset.prefix || '';
       const suffix = el.dataset.suffix || '';
       const finalText = el.textContent;
-      const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+      const fmt = new Intl.NumberFormat(root.lang || undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
       const duration = 1300;
       const start = performance.now();
       const tick = (now) => {
@@ -198,10 +206,10 @@
     const submit = $('[data-submit]', form);
     const success = $('[data-success]', form);
     const messages = {
-      name: 'Please enter your name.',
-      email: 'Please enter a valid email address.',
-      message: 'Please tell us a little about what you ship.',
-      consent: 'Please tick the box so we can contact you.',
+      name: t('errName'),
+      email: t('errEmail'),
+      message: t('errMessage'),
+      consent: t('errConsent'),
     };
 
     const setStatus = (text, tone) => {
@@ -228,7 +236,7 @@
       }
     };
     const check = (input) => {
-      const msg = input.checkValidity() ? '' : messages[input.name] || 'Please check this field.';
+      const msg = input.checkValidity() ? '' : messages[input.name] || t('errField');
       setError(input, msg);
       return !msg;
     };
@@ -251,7 +259,7 @@
       const invalid = required.filter((input) => !check(input));
       if (invalid.length) {
         invalid[0].focus();
-        setStatus('Please fix the highlighted fields and try again.', 'error');
+        setStatus(t('errSummary'), 'error');
         return;
       }
       setStatus('', '');
@@ -271,7 +279,7 @@
             success.focus();
           }
         } catch (err) {
-          setStatus(`Something went wrong and your request was not sent. Please try again, or email us at ${inbox}.`, 'error');
+          setStatus(fill(t('sendFailed'), { email: inbox }), 'error');
         } finally {
           setBusy(false);
         }
@@ -279,18 +287,18 @@
       }
 
       const lines = [
-        `Name: ${data.get('name')}`,
-        `Email: ${data.get('email')}`,
-        `Company: ${data.get('company') || '-'}`,
-        `Phone: ${data.get('phone') || '-'}`,
-        `I am a: ${data.get('role') || '-'}`,
-        `Monthly volume: ${data.get('volume') || '-'}`,
+        `${t('mailName')}: ${data.get('name')}`,
+        `${t('mailEmail')}: ${data.get('email')}`,
+        `${t('mailCompany')}: ${data.get('company') || '-'}`,
+        `${t('mailPhone')}: ${data.get('phone') || '-'}`,
+        `${t('mailRole')}: ${data.get('role') || '-'}`,
+        `${t('mailVolume')}: ${data.get('volume') || '-'}`,
         '',
         String(data.get('message') || ''),
       ];
-      const subject = `Quote request from ${data.get('company') || data.get('name')}`;
+      const subject = fill(t('mailSubject'), { from: data.get('company') || data.get('name') });
       window.location.href = `mailto:${inbox}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`;
-      setStatus(`Your email app should open with the request ready to send. If it does not, write to ${inbox}.`, 'ok');
+      setStatus(fill(t('mailOpened'), { email: inbox }), 'ok');
       setBusy(false);
     });
   }

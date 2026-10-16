@@ -1,0 +1,365 @@
+{
+  "meta": {
+    "name": "Français",
+    "locale": "fr_FR"
+  },
+  "common": {
+    "skip": "Aller au contenu",
+    "homeLabel": "Fully Logistics, accueil",
+    "quote": "Demander un devis",
+    "blurb": "E-logistique et logistique contractuelle pour les e-commerçants et les industriels.",
+    "location": "Entrepôt et bureaux",
+    "country": "Hongrie",
+    "hours": "Du lundi au vendredi, de 6\u00a0h à 18\u00a0h",
+    "nav": {
+      "primary": "Principale",
+      "mobile": "Mobile",
+      "solutions": "Solutions",
+      "company": "Entreprise",
+      "fulfillment": "E-logistique",
+      "fulfillmentDesc": "Stockage, préparation, emballage et expédition pour les boutiques en ligne.",
+      "manufacturers": "Industriels",
+      "manufacturersDesc": "Palettes et colis depuis un stock unique, de la ligne au client.",
+      "home": "Accueil",
+      "about": "À propos",
+      "contact": "Contact",
+      "language": "Langue"
+    },
+    "cta": {
+      "title": "Dites-nous ce que vous expédiez. Nous répondons sous un jour ouvré.",
+      "text": "Indiquez votre volume mensuel de commandes ou de palettes, et recevez un devis clair."
+    }
+  },
+  "units": {
+    "percent": "\u00a0%",
+    "hours": "\u00a0h"
+  },
+  "img": {
+    "hero-aisle": "Personnel d’entrepôt marchant dans une allée balisée entre de hauts rayonnages à palettes",
+    "parcels-team": "Deux collègues souriants derrière une pile de colis emballés",
+    "inventory-check": "Employé d’entrepôt contrôlant le stock sur une tablette devant des étagères",
+    "dock-trailers": "Semi-remorques mises à quai aux portes de chargement d’un centre de distribution",
+    "team-aisle": "Deux collègues en gilet haute visibilité discutant en traversant une allée d’entrepôt",
+    "scanner-worker": "Opérateur d’entrepôt au casque de chantier bleu scannant un code-barres sur une étagère",
+    "forklift-orange": "Chariot élévateur orange près d’un rayonnage chargé de planches de bois, tandis qu’un collègue passe",
+    "truck-warehouse": "Camion de marchandises orange garé devant un grand entrepôt blanc",
+    "pick-zone": "Zone de préparation avec des étagères remplies de bacs jaunes et de colis emballés",
+    "label-package": "Opérateur fermant et étiquetant un colis sur un poste d’emballage",
+    "racking-forklift": "Chariot élévateur jaune dans une allée bordée de hauts rayonnages à palettes",
+    "forklift-trailer": "Cariste sortant une palette d’une remorque à un quai de chargement",
+    "pallet-forklift": "Chariot élévateur déplaçant une palette de cartons devant de hauts rayonnages",
+    "factory-floor": "Équipe préparant des piles de cartons dans une zone d’emballage en pleine activité",
+    "aerial-trucks": "Vue aérienne de camions alignés sur le parking d’une plateforme logistique"
+  },
+  "faq": [
+    {
+      "q": "Quel est le délai de démarrage\u00a0?",
+      "a": "La plupart de nos clients expédient leur première commande environ deux semaines après la signature. Votre stock arrive la première semaine. La deuxième semaine, nous connectons votre boutique et passons des commandes de test."
+    },
+    {
+      "q": "Y a-t-il un volume minimum ou une durée d’engagement\u00a0?",
+      "a": "Il n’y a aucun volume minimum de commandes. Après une période de démarrage de trois mois, le contrat est reconduit de mois en mois, avec un préavis de 30\u00a0jours."
+    },
+    {
+      "q": "Comment fonctionne la tarification\u00a0?",
+      "a": "Vous payez le stockage à la palette, la préparation et l’emballage à la commande, et l’expédition aux tarifs transporteur. Les prestations annexes, comme le kitting ou les encarts, font l’objet d’un devis séparé."
+    },
+    {
+      "q": "Avec quelles plateformes et quels transporteurs travaillez-vous\u00a0?",
+      "a": "Nous proposons des connecteurs prêts à l’emploi pour Shopify, WooCommerce, Shoprenter et UNAS, et une API pour les boutiques sur mesure. Côté transporteurs, nous travaillons avec GLS, DPD, Foxpost, MPL et DHL, ainsi qu’avec des réseaux de messagerie palettisée."
+    },
+    {
+      "q": "Comment gérez-vous les retours\u00a0?",
+      "a": "Nous contrôlons les colis retournés sous un jour ouvré. Les articles revendables sont remis en rayon et votre stock est mis à jour. Les articles endommagés sont photographiés et vous sont signalés."
+    },
+    {
+      "q": "Gérez-vous les palettes et les produits volumineux\u00a0?",
+      "a": "Oui. Nous stockons palettes et cartons, et nous expédions colis, palettes et chargements complets. Pour les marchandises fragiles, de grande valeur ou sensibles à la température, prévenez-nous en amont afin que nous puissions organiser leur manutention."
+    },
+    {
+      "q": "Expédiez-vous hors de Hongrie\u00a0?",
+      "a": "Oui, dans toute l’UE avec nos transporteurs partenaires. Pour les autres destinations, nous préparons les documents sur demande."
+    }
+  ],
+  "home": {
+    "title": "Fully Logistics | E-logistique et logistique contractuelle",
+    "description": "Fully Logistics stocke, emballe et expédie pour les e-commerçants et les industriels. Les commandes confirmées avant 14\u00a0h quittent notre entrepôt le jour même.",
+    "hero": {
+      "eyebrow": "E-logistique et logistique contractuelle",
+      "line1": "Validé avant 14\u00a0h.",
+      "line2": "Parti <span class=\"hl\">aujourd’hui.</span>",
+      "lead": "Nous stockons, emballons et expédions pour les e-commerçants et les industriels, afin que vos équipes se concentrent sur la vente et la production."
+    },
+    "benefits": {
+      "title": "Ce que vous obtenez dès le premier jour",
+      "lead": "Un seul entrepôt, une seule équipe et une seule grille tarifaire, pour vos colis comme pour vos palettes.",
+      "dispatch": {
+        "title": "Expédition le jour même",
+        "text": "Les commandes confirmées avant 14\u00a0h quittent notre quai le même jour ouvré. Les suivantes partent le lendemain matin, à la première heure."
+      },
+      "prices": {
+        "title": "Une grille tarifaire en trois lignes",
+        "text": "Stockage, préparation et emballage, expédition\u00a0: chaque poste a sa propre ligne sur le devis. Aucune surprise en petits caractères.",
+        "rates": [
+          { "name": "Stockage", "unit": "par palette et par mois" },
+          { "name": "Préparation et emballage", "unit": "par commande" },
+          { "name": "Expédition", "unit": "aux tarifs transporteur" }
+        ]
+      },
+      "stock": {
+        "title": "Votre stock, sous vos yeux",
+        "text": "Stock en temps réel, statut des commandes et suivi des colis sur un seul portail, synchronisés avec votre boutique en ligne via un connecteur prêt à l’emploi ou notre API."
+      }
+    },
+    "proof": {
+      "title": "Les chiffres que nous communiquons à chaque client, chaque mois",
+      "stats": [
+        "Commandes expédiées le jour de leur confirmation",
+        "Fiabilité de préparation sur l’ensemble des envois",
+        "Colis expédiés le mois dernier",
+        "De l’arrivée du camion au stock disponible en ligne"
+      ],
+      "cases": [
+        {
+          "tag": "E-commerce",
+          "quote": "«\u00a0Nous avons envoyé notre stock un vendredi, et dès le lundi nos commandes partaient de leur entrepôt. Les retours sont réintégrés en stock en moins de deux jours.\u00a0»",
+          "name": "Dóra Szabadi",
+          "role": "Fondatrice, boutique en ligne d’articles pour animaux",
+          "link": "E-logistique pour e-commerçants"
+        },
+        {
+          "tag": "Industriel",
+          "quote": "«\u00a0Les palettes pour la grande distribution et les colis aux particuliers partent du même stock, et notre planification repose désormais sur un chiffre unique.\u00a0»",
+          "name": "Balázs Tornai",
+          "role": "Responsable supply chain, fabricant d’électroménager de cuisine",
+          "link": "Logistique pour industriels"
+        }
+      ]
+    },
+    "faq": {
+      "title": "Vos questions avant un premier appel",
+      "lead": "Votre question n’y figure pas\u00a0? Écrivez-nous, nous répondons sous un jour ouvré."
+    }
+  },
+  "fulfillment": {
+    "title": "E-logistique pour e-commerçants | Fully Logistics",
+    "description": "E-logistique pour e-commerçants\u00a0: réception, stockage, préparation, expédition et retours depuis un seul entrepôt, avec stock et suivi en temps réel.",
+    "cta": {
+      "title": "Dites-nous ce qu’expédie votre boutique en ligne. Nous répondons sous un jour ouvré.",
+      "text": "Indiquez votre volume mensuel de commandes et votre gamme de produits, et recevez un devis clair."
+    },
+    "hero": {
+      "title": "Une e-logistique qui suit le rythme de votre boutique.",
+      "lead": "Envoyez-nous votre stock. Nous le réceptionnons et le stockons, puis nous emballons chaque commande et la remettons à votre transporteur."
+    },
+    "route": {
+      "title": "De votre fournisseur à la porte de vos clients",
+      "lead": "Six étapes, toutes gérées par une seule équipe.",
+      "steps": [
+        { "title": "Envoyez votre stock", "text": "Livrez vos marchandises à notre quai avec un avis d’expédition. Nous acceptons colis, cartons et palettes complètes." },
+        { "title": "Nous réceptionnons", "text": "Chaque livraison est comptée, scannée et contrôlée. Tout écart vous est signalé le jour même." },
+        { "title": "Les commandes arrivent", "text": "Vos commandes remontent automatiquement de la boutique, et les niveaux de stock se mettent à jour dès qu’un article bouge." },
+        { "title": "Nous préparons et emballons", "text": "Les commandes sont préparées par vagues, emballées selon votre cahier des charges et contrôlées avant la fermeture du colis." },
+        { "title": "Le transporteur passe", "text": "Les étiquettes sont imprimées pour le transporteur de votre choix, et vos clients reçoivent leur lien de suivi." },
+        { "title": "Nous traitons les retours", "text": "Les colis retournés sont contrôlés sous un jour ouvré, et votre stock est mis à jour le jour même." }
+      ]
+    },
+    "included": {
+      "title": "Ce que comprend le service",
+      "groups": [
+        {
+          "title": "Réception et stockage",
+          "items": ["Contrôle et comptage des livraisons", "Étiquetage code-barres de chaque produit", "Stockage sur palette, en étagère ou en bac", "Inventaires tournants et rapports de stock"]
+        },
+        {
+          "title": "Préparation et emballage",
+          "items": ["Préparation par vagues pour expédier vite", "Vos cartons ou les nôtres", "Encarts, flyers et échantillons", "Emballage cadeau et mots personnalisés"]
+        },
+        {
+          "title": "Expédition",
+          "items": ["Étiquettes et bordereaux transporteur", "Liens de suivi pour vos clients", "Contre-remboursement si le transporteur le propose", "Envois dans toute l’UE"]
+        },
+        {
+          "title": "Retours et prestations annexes",
+          "items": ["Contrôle des retours et remise en stock", "Rapports photo des produits endommagés", "Kitting et création de lots", "Réétiquetage et contrôles qualité"]
+        }
+      ]
+    },
+    "pricing": {
+      "title": "Une grille tarifaire qui se lit en une minute",
+      "lead": "Chaque devis est personnalisé, mais la structure ne change jamais.",
+      "lines": [
+        { "name": "Stockage", "text": "Facturation par emplacement palette ou étagère, et par mois. Vous ne payez que l’espace réellement utilisé." },
+        { "name": "Préparation et emballage", "text": "Facturation à la commande, avec un léger supplément par article additionnel. Les fournitures d’emballage sont détaillées." },
+        { "name": "Expédition", "text": "Facturation aux tarifs transporteur, avec les remises sur volume que nous avons négociées." }
+      ],
+      "note": "Les prestations annexes, comme le kitting, les encarts ou le réétiquetage, font l’objet d’un devis séparé, avant tout démarrage."
+    },
+    "stack": {
+      "title": "Connecté aux outils que vous utilisez déjà",
+      "lead": "Des connecteurs prêts à l’emploi pour les principales plateformes, et une API pour tout le reste.",
+      "platforms": "Plateformes e-commerce",
+      "customApi": "API sur mesure",
+      "carriers": "Transporteurs",
+      "palletNetworks": "Messagerie palettisée"
+    }
+  },
+  "manufacturers": {
+    "title": "Logistique contractuelle pour industriels | Fully Logistics",
+    "description": "Logistique contractuelle pour industriels\u00a0: réception, stockage, prestations à valeur ajoutée et expédition de palettes et de colis depuis un stock unique.",
+    "cta": {
+      "title": "Dites-nous ce que vous produisez. Nous répondons sous un jour ouvré.",
+      "text": "Indiquez vos volumes de palettes et de colis ainsi que les systèmes que vous utilisez, et recevez un devis clair."
+    },
+    "hero": {
+      "title": "Un seul stock pour les palettes et les colis.",
+      "lead": "De votre ligne de production aux enseignes et aux consommateurs\u00a0: réception, stockage, prestations à valeur ajoutée et expédition sous un même toit."
+    },
+    "stages": {
+      "title": "De la ligne de production au client",
+      "lead": "Choisissez une étape pour voir ce que nous prenons en charge.",
+      "label": "Étapes logistiques",
+      "inbound": {
+        "tab": "Réception",
+        "title": "Réception en sortie de ligne",
+        "text": "Nous réceptionnons palettes et chargements complets sur 11\u00a0quais, les rapprochons de votre avis d’expédition et les intégrons en stock sous 12\u00a0heures.",
+        "items": ["Avis d’expédition (ASN) et rendez-vous à quai", "Déchargement de remorques et de conteneurs", "Comptage, contrôle qualité et rapport photo", "Étiquetage des palettes avec numéros de lot"]
+      },
+      "storage": {
+        "tab": "Stockage",
+        "title": "Un stockage qui reste organisé",
+        "text": "Rayonnages à palettes, stockage de masse au sol et étagères pour cartons\u00a0: chaque emplacement est suivi dans notre système de gestion d’entrepôt.",
+        "items": ["Traçabilité par lot et par numéro de série", "Dates de péremption et préparation en FEFO", "Espace supplémentaire lors des pics saisonniers", "Inventaires tournants réguliers, avec compte rendu"]
+      },
+      "value": {
+        "tab": "Valeur ajoutée",
+        "title": "Les dernières étapes avant la vente",
+        "text": "Nous réalisons les dernières opérations entre votre usine et le client, pour que vos produits finis partent prêts à la vente.",
+        "items": ["Kitting, mise en lot et montage de présentoirs", "Réétiquetage, pose de stickers et encarts", "Reconditionnement en cartons de vente ou d’expédition", "Contrôles qualité et remise en état des retours"]
+      },
+      "outbound": {
+        "tab": "Expédition",
+        "title": "Palettes et colis, un seul stock",
+        "text": "Réassort des magasins, commandes des distributeurs et colis aux particuliers partent tous du même stock.",
+        "items": ["Envois en palettes homogènes ou mixtes", "Étiquettes enseigne et rendez-vous de livraison", "Colis via notre réseau de transporteurs", "Expédition le jour même pour toute commande reçue avant 14\u00a0h"]
+      }
+    },
+    "channels": {
+      "title": "Un seul stock, deux canaux de sortie",
+      "lead": "Servez la distribution et les consommateurs depuis le même stock, sans double comptage.",
+      "retail": {
+        "title": "Palettes pour les enseignes et les distributeurs",
+        "items": ["Palettes complètes ou mixtes, conformes aux exigences des enseignes", "Étiquettes d’acheminement et rendez-vous de livraison", "Messages EDI ou dépôts sur portail", "Preuves de livraison envoyées par e-mail"]
+      },
+      "parcel": {
+        "title": "Colis pour les particuliers",
+        "items": ["Commandes de votre boutique en ligne et des places de marché", "Expédition le jour même pour toute commande confirmée avant 14\u00a0h", "Emballages à votre marque et encarts", "Retours traités et remis en stock"]
+      }
+    },
+    "systems": {
+      "title": "Vos systèmes gardent la main",
+      "lead": "Nous nous connectons à votre ERP pour que stocks, commandes et expéditions restent synchronisés, sans double saisie.",
+      "features": [
+        { "title": "EDI et API", "text": "Messages de commandes, de stock et d’expédition dans les deux sens." },
+        { "title": "SFTP et CSV", "text": "Un simple échange de fichiers quand une intégration complète n’est pas nécessaire." },
+        { "title": "Traçabilité par lot", "text": "Remontez de n’importe quelle palette jusqu’au lot de production dont elle provient." },
+        { "title": "Gestion des péremptions", "text": "Préparation en FEFO et alertes avant la date de péremption." },
+        { "title": "Numéros de série", "text": "Enregistrés à la réception, puis à nouveau à l’expédition." },
+        { "title": "Rapports mensuels", "text": "Chiffres de stock, d’expédition et de fiabilité, envoyés chaque mois." }
+      ]
+    }
+  },
+  "about": {
+    "title": "À propos | Fully Logistics",
+    "description": "Découvrez l’équipe d’entrepôt de Fully Logistics et le déroulé d’une journée, de l’arrivée des camions à l’heure limite de 14\u00a0h.",
+    "hero": {
+      "title1": "Nous gérons l’entrepôt.",
+      "title2": "Vous gérez votre activité.",
+      "lead": "Nous sommes une équipe de logisticiens\u00a0: nous stockons, emballons et expédions pour les e-commerçants et les industriels, et nous rendons compte de chaque étape."
+    },
+    "story": {
+      "title": "Pourquoi nous nous sommes lancés",
+      "paragraphs": [
+        "Fully Logistics est née d’un constat simple\u00a0: de bonnes entreprises perdent leurs soirées et leurs week-ends entre ruban adhésif et film étirable. Nous avons construit un entrepôt où ce travail est notre métier, à plein temps.",
+        "Aujourd’hui, nous expédions pour des boutiques en ligne lancées le mois dernier comme pour des industriels qui approvisionnent les grandes enseignes nationales. La routine est la même pour tous\u00a0: réceptionner, stocker, emballer, expédier, rendre compte."
+      ]
+    },
+    "principles": [
+      { "title": "Nous tenons nos engagements", "text": "Heures limites et créneaux d’expédition sont inscrits dans votre contrat, et nous rendons compte de leur respect." },
+      { "title": "Nous montrons nos chiffres", "text": "Fiabilité, rapidité d’expédition et comptages de stock\u00a0: vous recevez tout chaque mois, ratés compris." },
+      { "title": "Nous vous prévenons tôt", "text": "Un camion en retard, une palette endommagée ou un écart de stock\u00a0: nous vous le signalons le jour même, avec une solution." },
+      { "title": "Nous faisons simple", "text": "Un seul interlocuteur, un seul portail et une seule grille tarifaire\u00a0: vous n’avez jamais à courir après trois services." }
+    ],
+    "day": {
+      "title": "Une journée type, heure par heure",
+      "lead": "Le rythme qui permet de tenir l’heure limite de 14\u00a0h.",
+      "steps": [
+        "Les camions arrivent. Les marchandises entrantes sont déchargées, contrôlées et intégrées au stock.",
+        "Les vagues de préparation démarrent pour toutes les commandes confirmées pendant la nuit.",
+        "L’emballage bat son plein, avec un contrôle qualité avant la fermeture de chaque colis.",
+        "<strong>Heure limite.</strong> Les commandes confirmées avant cette heure partent le jour même.",
+        "Les transporteurs enlèvent les colis et les palettes, et le suivi devient actif.",
+        "Les retours sont contrôlés et les comptages de stock du jour sont rapprochés."
+      ]
+    },
+    "facility": {
+      "title": "Le site qui abrite votre stock",
+      "lead": "Un site moderne dans la couronne logistique de Budapest, conçu pour les palettes comme pour les colis.",
+      "stats": ["Mètres carrés de surface au sol", "Emplacements palettes", "Quais de chargement", "Collaborateurs dans l’entrepôt"]
+    }
+  },
+  "contact": {
+    "title": "Contact | Fully Logistics",
+    "description": "Dites-nous ce que vous expédiez et recevez un devis clair de Fully Logistics sous un jour ouvré.",
+    "heading": "Dites-nous ce que vous expédiez.",
+    "lead": "Envoyez-nous quelques détails\u00a0: nous répondons sous un jour ouvré avec nos questions ou un devis.",
+    "form": {
+      "title": "Demande de devis",
+      "name": "Votre nom",
+      "email": "E-mail professionnel",
+      "company": "Entreprise",
+      "phone": "Téléphone",
+      "optional": "(facultatif)",
+      "role": "Vous êtes",
+      "roles": ["E-commerçant", "Industriel", "Autre"],
+      "volume": "Volume mensuel",
+      "volumeChoose": "Choisissez une option",
+      "volumes": ["Moins de 500\u00a0commandes", "De 500 à 2\u00a0000\u00a0commandes", "De 2\u00a0000 à 10\u00a0000\u00a0commandes", "Plus de 10\u00a0000\u00a0commandes", "Principalement des palettes"],
+      "message": "Qu’expédiez-vous\u00a0?",
+      "messageHint": "Produits, dimensions, contraintes de manutention et organisation actuelle.",
+      "consent": "J’accepte que Fully Logistics me contacte au sujet de cette demande.",
+      "successTitle": "Merci. Nous avons bien reçu votre demande.",
+      "successText": "Nous répondons sous un jour ouvré, souvent plus tôt."
+    },
+    "aside": {
+      "label": "Coordonnées",
+      "nextTitle": "Les prochaines étapes",
+      "next": [
+        { "title": "Nous vous répondons.", "text": "Sous un jour ouvré, avec nos questions ou une première estimation." },
+        { "title": "Nous en discutons.", "text": "Un court appel pour cerner vos produits et votre flux de commandes." },
+        { "title": "Vous recevez un devis écrit.", "text": "Les trois lignes tarifaires, avec une date de démarrage." }
+      ]
+    }
+  },
+  "js": {
+    "themeToDark": "Passer au thème sombre",
+    "themeToLight": "Passer au thème clair",
+    "menuOpen": "Ouvrir le menu",
+    "menuClose": "Fermer le menu",
+    "errName": "Veuillez indiquer votre nom.",
+    "errEmail": "Veuillez saisir une adresse e-mail valide.",
+    "errMessage": "Veuillez nous décrire en quelques mots ce que vous expédiez.",
+    "errConsent": "Veuillez cocher la case pour que nous puissions vous contacter.",
+    "errField": "Veuillez vérifier ce champ.",
+    "errSummary": "Veuillez corriger les champs signalés, puis réessayer.",
+    "sendFailed": "Une erreur s’est produite et votre demande n’a pas été envoyée. Veuillez réessayer ou nous écrire à {email}.",
+    "mailOpened": "Votre messagerie devrait s’ouvrir avec la demande prête à envoyer. Sinon, écrivez-nous à {email}.",
+    "mailSubject": "Demande de devis de {from}",
+    "mailName": "Nom",
+    "mailEmail": "E-mail",
+    "mailCompany": "Entreprise",
+    "mailPhone": "Téléphone",
+    "mailRole": "Profil",
+    "mailVolume": "Volume mensuel"
+  }
+}

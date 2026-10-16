@@ -1,0 +1,365 @@
+{
+  "meta": {
+    "name": "Polski",
+    "locale": "pl_PL"
+  },
+  "common": {
+    "skip": "Przejdź do treści",
+    "homeLabel": "Fully Logistics, strona główna",
+    "quote": "Zapytanie o wycenę",
+    "blurb": "Fulfillment i logistyka kontraktowa dla sklepów internetowych i producentów.",
+    "location": "Magazyn i biuro",
+    "country": "Węgry",
+    "hours": "Od poniedziałku do piątku, od 6:00 do 18:00",
+    "nav": {
+      "primary": "Menu główne",
+      "mobile": "Menu mobilne",
+      "solutions": "Usługi",
+      "company": "Firma",
+      "fulfillment": "Fulfillment",
+      "fulfillmentDesc": "Magazynowanie, kompletacja, pakowanie i wysyłka dla sklepów internetowych.",
+      "manufacturers": "Producenci",
+      "manufacturersDesc": "Palety i paczki z jednego stanu magazynowego, od linii produkcyjnej do klienta.",
+      "home": "Strona główna",
+      "about": "O nas",
+      "contact": "Kontakt",
+      "language": "Język"
+    },
+    "cta": {
+      "title": "Co Państwo wysyłają? Odpowiemy w ciągu jednego dnia roboczego.",
+      "text": "Wystarczy podać miesięczną liczbę zamówień lub palet, a prześlemy przejrzystą wycenę."
+    }
+  },
+  "units": {
+    "percent": "%",
+    "hours": "\u00a0h"
+  },
+  "img": {
+    "hero-aisle": "Pracownicy magazynu idą oznakowaną alejką między wysokimi regałami paletowymi",
+    "parcels-team": "Dwoje uśmiechniętych pracowników za stosem spakowanych paczek",
+    "inventory-check": "Pracownik magazynu sprawdza stan zapasów na tablecie przed regałami",
+    "dock-trailers": "Naczepy podstawione pod rampy załadunkowe centrum dystrybucyjnego",
+    "team-aisle": "Dwoje pracowników w kamizelkach odblaskowych rozmawia, idąc alejką magazynu",
+    "scanner-worker": "Magazynier w niebieskim kasku skanuje kod kreskowy na regale",
+    "forklift-orange": "Pomarańczowy wózek widłowy przy regale z deskami, obok przechodzi pracownik",
+    "truck-warehouse": "Pomarańczowa ciężarówka zaparkowana przed dużym białym magazynem",
+    "pick-zone": "Strefa kompletacji z regałami pełnymi żółtych pojemników i spakowanych paczek",
+    "label-package": "Pracownik zakleja i etykietuje paczkę na stanowisku pakowania",
+    "racking-forklift": "Żółty wózek widłowy w wysokiej alejce między regałami paletowymi",
+    "forklift-trailer": "Operator wózka widłowego wywozi paletę z naczepy przy rampie załadunkowej",
+    "pallet-forklift": "Wózek widłowy przewozi paletę z kartonami przed wysokimi regałami",
+    "factory-floor": "Zespół przygotowuje stosy kartonów na ruchliwej hali pakowania",
+    "aerial-trucks": "Widok z lotu ptaka na ciężarówki zaparkowane w rzędach na placu logistycznym"
+  },
+  "faq": [
+    {
+      "q": "Jak szybko można zacząć?",
+      "a": "Większość klientów wysyła pierwsze zamówienie około dwóch tygodni po podpisaniu umowy. W pierwszym tygodniu przyjmujemy towar, a w drugim podłączamy Państwa sklep i realizujemy zamówienia testowe."
+    },
+    {
+      "q": "Czy obowiązuje minimalny wolumen lub minimalny okres umowy?",
+      "a": "Nie ma minimalnej liczby zamówień. Po trzymiesięcznym okresie początkowym umowa obowiązuje na czas nieokreślony z 30-dniowym okresem wypowiedzenia."
+    },
+    {
+      "q": "Jak wygląda cennik?",
+      "a": "Magazynowanie rozliczamy za paletę, kompletację i pakowanie za zamówienie, a wysyłkę według stawek przewoźnika. Usługi dodatkowe, takie jak kompletacja zestawów czy wkładki do paczek, wyceniamy osobno dla każdego zlecenia."
+    },
+    {
+      "q": "Z jakimi platformami sklepowymi i przewoźnikami współpracujecie?",
+      "a": "Mamy gotowe wtyczki do Shopify, WooCommerce, Shoprenter i UNAS, a dla sklepów autorskich udostępniamy API. Współpracujemy z przewoźnikami GLS, DPD, Foxpost, MPL i DHL, a także z sieciami paletowymi."
+    },
+    {
+      "q": "Co dzieje się ze zwrotami?",
+      "a": "Zwrócone paczki sprawdzamy w ciągu jednego dnia roboczego. Produkty nadające się do sprzedaży wracają na półkę, a stany magazynowe zostają zaktualizowane. Uszkodzone produkty fotografujemy i zgłaszamy Państwu."
+    },
+    {
+      "q": "Czy obsługujecie palety i towary wielkogabarytowe?",
+      "a": "Tak. Magazynujemy palety i kartony oraz wysyłamy paczki, palety i pełne ładunki. W przypadku towarów delikatnych, o wysokiej wartości lub wrażliwych na temperaturę prosimy o wcześniejszą informację, abyśmy mogli zaplanować ich obsługę."
+    },
+    {
+      "q": "Czy wysyłacie poza Węgry?",
+      "a": "Tak, na terenie całej UE, za pośrednictwem naszych partnerów przewozowych. Na życzenie przygotowujemy dokumentację wysyłek do innych krajów."
+    }
+  ],
+  "home": {
+    "title": "Fully Logistics | Fulfillment i logistyka kontraktowa",
+    "description": "Fully Logistics magazynuje, pakuje i wysyła towary sklepów internetowych i producentów. Zamówienia potwierdzone do 14:00 opuszczają magazyn tego samego dnia.",
+    "hero": {
+      "eyebrow": "Fulfillment i logistyka kontraktowa",
+      "line1": "Złożone do\u00a014:00.",
+      "line2": "Wysłane <span class=\"hl\">dziś.</span>",
+      "lead": "Magazynujemy, pakujemy i wysyłamy towary sklepów internetowych i producentów, aby Państwa zespół mógł skupić się na sprzedaży i produkcji."
+    },
+    "benefits": {
+      "title": "Co zyskują Państwo od pierwszego dnia",
+      "lead": "Jeden magazyn, jeden zespół i jeden cennik, niezależnie od tego, czy wysyłają Państwo paczki, czy palety.",
+      "dispatch": {
+        "title": "Wysyłka tego samego dnia",
+        "text": "Zamówienia potwierdzone do 14:00 wyjeżdżają z naszej rampy tego samego dnia roboczego. Późniejsze zamówienia wysyłamy następnego dnia z samego rana."
+      },
+      "prices": {
+        "title": "Cennik w trzech pozycjach",
+        "text": "Magazynowanie, kompletacja i pakowanie oraz wysyłka to w wycenie trzy osobne pozycje. Nic nie jest ukryte w drobnym druku.",
+        "rates": [
+          { "name": "Magazynowanie", "unit": "za paletę, miesięcznie" },
+          { "name": "Kompletacja i pakowanie", "unit": "za zamówienie" },
+          { "name": "Wysyłka", "unit": "według stawek przewoźnika" }
+        ]
+      },
+      "stock": {
+        "title": "Pełny wgląd w zapasy",
+        "text": "Bieżące stany magazynowe, statusy zamówień i śledzenie przesyłek w jednym portalu, zsynchronizowanym z Państwa sklepem przez gotową wtyczkę lub nasze API."
+      }
+    },
+    "proof": {
+      "title": "Wskaźniki, które co miesiąc raportujemy każdemu klientowi",
+      "stats": [
+        "Zamówienia wysłane w dniu potwierdzenia",
+        "Dokładność kompletacji we wszystkich wysyłkach",
+        "Paczki wysłane w ubiegłym miesiącu",
+        "Od przyjazdu ciężarówki do dostępności towaru w sklepie"
+      ],
+      "cases": [
+        {
+          "tag": "Sklep internetowy",
+          "quote": "„Towar wysłaliśmy w piątek, a w poniedziałek realizowaliśmy już zamówienia z ich magazynu. Zwroty wracają na stan w ciągu dwóch dni.”",
+          "name": "Dóra Szabadi",
+          "role": "Założycielka sklepu internetowego z artykułami dla zwierząt",
+          "link": "Fulfillment dla sklepów internetowych"
+        },
+        {
+          "tag": "Producent",
+          "quote": "„Palety dla sieci handlowych i paczki do klientów indywidualnych wychodzą z tego samego stanu magazynowego, a planujemy teraz na podstawie jednej liczby.”",
+          "name": "Balázs Tornai",
+          "role": "Kierownik ds. łańcucha dostaw u producenta sprzętu kuchennego",
+          "link": "Logistyka dla producentów"
+        }
+      ]
+    },
+    "faq": {
+      "title": "Pytania przed pierwszą rozmową",
+      "lead": "Jeśli brakuje tu Państwa pytania, prosimy o kontakt. Odpowiadamy w ciągu jednego dnia roboczego."
+    }
+  },
+  "fulfillment": {
+    "title": "Fulfillment dla sklepów internetowych | Fully Logistics",
+    "description": "Fulfillment dla sklepów internetowych: przyjęcie towaru, magazynowanie, kompletacja, pakowanie, wysyłka i zwroty w jednym magazynie, ze stanami na żywo.",
+    "cta": {
+      "title": "Co wysyła Państwa sklep? Odpowiemy w ciągu jednego dnia roboczego.",
+      "text": "Wystarczy podać miesięczną liczbę zamówień i asortyment, a prześlemy przejrzystą wycenę."
+    },
+    "hero": {
+      "title": "Fulfillment, który nadąża za Państwa sklepem.",
+      "lead": "Wystarczy przesłać nam towar. Przyjmujemy go i magazynujemy, pakujemy każde zamówienie i przekazujemy je Państwa przewoźnikowi."
+    },
+    "route": {
+      "title": "Od dostawcy pod drzwi klienta",
+      "lead": "Sześć etapów, za które odpowiada jeden zespół.",
+      "steps": [
+        { "title": "Dostawa towaru", "text": "Towar trafia na naszą rampę z wcześniejszą awizacją. Przyjmujemy paczki, kartony i pełne palety." },
+        { "title": "Przyjęcie towaru", "text": "Każdą dostawę liczymy, skanujemy i sprawdzamy. O każdej rozbieżności informujemy Państwa tego samego dnia." },
+        { "title": "Synchronizacja zamówień", "text": "Zamówienia spływają ze sklepu automatycznie, a przy każdym ruchu towaru stany magazynowe aktualizują się w sklepie." },
+        { "title": "Kompletacja i pakowanie", "text": "Zamówienia kompletujemy falami, pakujemy zgodnie z Państwa specyfikacją i sprawdzamy przed zaklejeniem." },
+        { "title": "Odbiór przez przewoźnika", "text": "Drukujemy etykiety wybranego przewoźnika, a Państwa klienci otrzymują linki do śledzenia przesyłek." },
+        { "title": "Obsługa zwrotów", "text": "Zwrócone paczki sprawdzamy w ciągu jednego dnia roboczego, a stany magazynowe aktualizujemy tego samego dnia." }
+      ]
+    },
+    "included": {
+      "title": "Zakres usługi",
+      "groups": [
+        {
+          "title": "Przyjęcie i magazynowanie",
+          "items": ["Kontrola i przeliczenie dostaw", "Etykietowanie każdego produktu kodem kreskowym", "Składowanie na paletach, półkach i w pojemnikach", "Inwentaryzacja cykliczna i raporty stanów"]
+        },
+        {
+          "title": "Kompletacja i pakowanie",
+          "items": ["Kompletacja falowa dla szybkiej wysyłki", "Państwa opakowania lub nasze", "Wkładki, ulotki i próbki", "Pakowanie prezentowe i spersonalizowane bileciki"]
+        },
+        {
+          "title": "Wysyłka",
+          "items": ["Etykiety przewoźników i manifesty", "Linki do śledzenia dla Państwa klientów", "Płatność za pobraniem, jeśli oferuje ją przewoźnik", "Wysyłki na terenie całej UE"]
+        },
+        {
+          "title": "Zwroty i usługi dodatkowe",
+          "items": ["Kontrola zwrotów i ponowne przyjęcie na stan", "Raporty zdjęciowe uszkodzonych towarów", "Kompletacja zestawów i pakietów produktowych", "Przeetykietowanie i kontrola jakości"]
+        }
+      ]
+    },
+    "pricing": {
+      "title": "Cennik, który da się przeczytać w minutę",
+      "lead": "Wycenę przygotowujemy indywidualnie, ale jej struktura jest zawsze taka sama.",
+      "lines": [
+        { "name": "Magazynowanie", "text": "Rozliczane za miejsce paletowe lub półkowe, miesięcznie. Płacą Państwo tylko za faktycznie zajmowaną przestrzeń." },
+        { "name": "Kompletacja i pakowanie", "text": "Rozliczane za zamówienie, z niewielką dopłatą za każdą dodatkową sztukę. Materiały opakowaniowe wykazujemy osobno." },
+        { "name": "Wysyłka", "text": "Rozliczana według stawek przewoźnika, z uwzględnieniem wynegocjowanych przez nas rabatów wolumenowych." }
+      ],
+      "note": "Usługi dodatkowe, takie jak kompletacja zestawów, wkładki czy przeetykietowanie, wyceniamy osobno dla każdego zlecenia, zanim przystąpimy do pracy."
+    },
+    "stack": {
+      "title": "Integracja z narzędziami, których już Państwo używają",
+      "lead": "Gotowe wtyczki do najważniejszych platform i API dla wszystkich pozostałych.",
+      "platforms": "Platformy sklepowe",
+      "customApi": "Integracja przez API",
+      "carriers": "Przewoźnicy",
+      "palletNetworks": "Sieci paletowe"
+    }
+  },
+  "manufacturers": {
+    "title": "Logistyka kontraktowa dla producentów | Fully Logistics",
+    "description": "Logistyka kontraktowa dla producentów: przyjęcie, magazynowanie, usługi o wartości dodanej i wysyłka palet oraz paczek z jednego stanu magazynowego.",
+    "cta": {
+      "title": "Co Państwo produkują? Odpowiemy w ciągu jednego dnia roboczego.",
+      "text": "Wystarczy podać wolumeny palet i paczek oraz używane systemy, a prześlemy przejrzystą wycenę."
+    },
+    "hero": {
+      "title": "Jeden stan magazynowy dla palet i paczek.",
+      "lead": "Od linii produkcyjnej do sieci handlowych i konsumentów: przyjęcie towaru, magazynowanie, usługi o wartości dodanej i wysyłka pod jednym dachem."
+    },
+    "stages": {
+      "title": "Od linii produkcyjnej do klienta",
+      "lead": "Po wybraniu etapu zobaczą Państwo, czym się zajmujemy.",
+      "label": "Etapy logistyki",
+      "inbound": {
+        "tab": "Przyjęcie",
+        "title": "Przyjęcie towaru z linii produkcyjnej",
+        "text": "Palety i pełne ładunki rozładowujemy przy 11\u00a0rampach, sprawdzamy ich zgodność z awizacją i w ciągu 12\u00a0godzin wprowadzamy je na stan.",
+        "items": ["Awizacje dostaw i rezerwacja okien rozładunkowych", "Rozładunek naczep i kontenerów", "Przeliczenie, kontrola jakości i raport zdjęciowy", "Etykietowanie palet z danymi partii produkcyjnej"]
+      },
+      "storage": {
+        "tab": "Magazynowanie",
+        "title": "Magazyn, w którym panuje porządek",
+        "text": "Regały paletowe, powierzchnia do składowania blokowego i regały półkowe na kartony, a każda lokalizacja jest ewidencjonowana w naszym systemie WMS.",
+        "items": ["Śledzenie partii i numerów seryjnych", "Kontrola dat ważności i kompletacja według FEFO", "Dodatkowa powierzchnia na sezonowe szczyty", "Regularna inwentaryzacja cykliczna z raportem dla Państwa"]
+      },
+      "value": {
+        "tab": "Usługi VAS",
+        "title": "Ostatni etap przed sprzedażą",
+        "text": "Zajmujemy się końcowymi czynnościami między Państwa fabryką a klientem, aby wyroby opuszczały magazyn gotowe do sprzedaży.",
+        "items": ["Kompletacja zestawów i pakietów, montaż ekspozytorów", "Przeetykietowanie, naklejki i wkładki", "Przepakowanie do kartonów detalicznych lub wysyłkowych", "Kontrola jakości i odświeżanie zwróconych produktów"]
+      },
+      "outbound": {
+        "tab": "Wysyłka",
+        "title": "Palety i paczki z jednego stanu magazynowego",
+        "text": "Uzupełnianie dostaw dla sieci handlowych, zamówienia dystrybutorów i pojedyncze paczki do konsumentów wysyłamy z tego samego stanu magazynowego.",
+        "items": ["Wysyłki palet jednorodnych i mieszanych", "Etykiety dla sieci handlowych i awizacje dostaw", "Paczki przez naszą sieć przewoźników", "Wysyłka tego samego dnia dla zamówień złożonych do 14:00"]
+      }
+    },
+    "channels": {
+      "title": "Jeden stan magazynowy, dwa kanały",
+      "lead": "Sieci handlowe i klientów indywidualnych obsługują Państwo z tego samego stanu magazynowego, bez podwójnego liczenia.",
+      "retail": {
+        "title": "Palety dla sieci handlowych i dystrybutorów",
+        "items": ["Pełne i mieszane palety zgodne z wymaganiami sieci", "Etykiety logistyczne i awizacje dostaw", "Komunikaty EDI lub przesyłanie danych przez portal", "Potwierdzenia dostawy (POD) prosto na Państwa skrzynkę e-mail"]
+      },
+      "parcel": {
+        "title": "Paczki do klientów indywidualnych",
+        "items": ["Zamówienia z własnego sklepu internetowego i platform marketplace", "Wysyłka tego samego dnia dla zamówień potwierdzonych do 14:00", "Opakowania firmowe i wkładki", "Obsługa zwrotów i ponowne przyjęcie na stan"]
+      }
+    },
+    "systems": {
+      "title": "Państwa systemy pozostają nadrzędne",
+      "lead": "Łączymy się z Państwa systemem ERP, dzięki czemu stany, zamówienia i wysyłki są zawsze zsynchronizowane, bez podwójnego wprowadzania danych.",
+      "features": [
+        { "title": "EDI i API", "text": "Komunikaty o zamówieniach, stanach i wysyłkach w obu kierunkach." },
+        { "title": "SFTP i CSV", "text": "Prosta wymiana plików, gdy pełna integracja nie jest potrzebna." },
+        { "title": "Śledzenie partii", "text": "Każdą paletę można przypisać do partii produkcyjnej, z której pochodzi." },
+        { "title": "Kontrola dat ważności", "text": "Kompletacja według FEFO i alerty przed upływem terminu ważności." },
+        { "title": "Numery seryjne", "text": "Rejestrowane przy przyjęciu i ponownie przy wysyłce." },
+        { "title": "Raporty miesięczne", "text": "Stany, wysyłki i wskaźniki dokładności przesyłane Państwu co miesiąc." }
+      ]
+    }
+  },
+  "about": {
+    "title": "O nas | Fully Logistics",
+    "description": "Kim jesteśmy i jak wygląda dzień pracy w magazynie Fully Logistics, od przyjazdu pierwszych ciężarówek do godziny granicznej 14:00.",
+    "hero": {
+      "title1": "My prowadzimy magazyn.",
+      "title2": "Państwo prowadzą firmę.",
+      "lead": "Jesteśmy zespołem praktyków logistyki magazynowej. Magazynujemy, pakujemy i wysyłamy towary sklepów internetowych i producentów, a z każdego etapu składamy raport."
+    },
+    "story": {
+      "title": "Dlaczego powstaliśmy",
+      "paragraphs": [
+        "Pomysł na Fully Logistics wziął się z prostej obserwacji: dobre firmy tracą wieczory i weekendy na taśmę pakową i folię stretch. Zbudowaliśmy magazyn, w którym ta praca jest naszym podstawowym zajęciem.",
+        "Dziś wysyłamy towary sklepów internetowych, które wystartowały w zeszłym miesiącu, i producentów zaopatrujących ogólnokrajowe sieci handlowe. Rytm pracy jest dla wszystkich taki sam: przyjęcie, magazynowanie, pakowanie, wysyłka, raport."
+      ]
+    },
+    "principles": [
+      { "title": "Dotrzymujemy obietnic", "text": "Godziny graniczne i okna wysyłek zapisujemy w umowie i raportujemy ich realizację." },
+      { "title": "Pokazujemy liczby", "text": "Co miesiąc otrzymują Państwo dane o dokładności, tempie wysyłek i stanach magazynowych, także te mniej korzystne." },
+      { "title": "Informujemy od razu", "text": "O spóźnionej ciężarówce, uszkodzonej palecie czy rozbieżności w stanach informujemy tego samego dnia i od razu proponujemy rozwiązanie." },
+      { "title": "Stawiamy na prostotę", "text": "Jedna osoba kontaktowa, jeden portal i jeden cennik, więc nie muszą Państwo krążyć między trzema działami." }
+    ],
+    "day": {
+      "title": "Dzień pracy godzina po godzinie",
+      "lead": "Rytm pracy podporządkowany godzinie granicznej 14:00.",
+      "steps": [
+        "Przyjeżdżają ciężarówki. Dostawy są rozładowywane, sprawdzane i przyjmowane na stan.",
+        "Rusza kompletacja falowa wszystkich zamówień potwierdzonych w nocy.",
+        "Pakowanie idzie pełną parą, a przed zaklejeniem każda paczka przechodzi kontrolę jakości.",
+        "<strong>Godzina graniczna.</strong> Zamówienia potwierdzone do tej godziny wyjeżdżają jeszcze dziś.",
+        "Przewoźnicy odbierają paczki i palety, a linki do śledzenia przesyłek stają się aktywne.",
+        "Sprawdzamy zwroty i uzgadniamy dzienne stany magazynowe."
+      ]
+    },
+    "facility": {
+      "title": "Gdzie przechowujemy Państwa towar",
+      "lead": "Nowoczesny obiekt w pasie logistycznym wokół Budapesztu, przystosowany zarówno do palet, jak i do paczek.",
+      "stats": ["Powierzchnia w metrach kwadratowych", "Miejsca paletowe", "Rampy załadunkowe", "Pracownicy magazynu"]
+    }
+  },
+  "contact": {
+    "title": "Kontakt | Fully Logistics",
+    "description": "Wystarczy opisać, co Państwo wysyłają, aby w ciągu jednego dnia roboczego otrzymać od Fully Logistics przejrzystą wycenę.",
+    "heading": "Co Państwo wysyłają?",
+    "lead": "Wystarczy kilka informacji. W ciągu jednego dnia roboczego odezwiemy się z pytaniami lub z wyceną.",
+    "form": {
+      "title": "Formularz zapytania",
+      "name": "Imię i nazwisko",
+      "email": "Służbowy adres e-mail",
+      "company": "Firma",
+      "phone": "Telefon",
+      "optional": "(opcjonalnie)",
+      "role": "Rodzaj działalności",
+      "roles": ["Sklep internetowy", "Producent", "Inna działalność"],
+      "volume": "Miesięczny wolumen",
+      "volumeChoose": "Prosimy wybrać",
+      "volumes": ["Poniżej 500 zamówień", "Od 500 do 2000 zamówień", "Od 2000 do 10\u00a0000 zamówień", "Powyżej 10\u00a0000 zamówień", "Głównie palety"],
+      "message": "Co Państwo wysyłają?",
+      "messageHint": "Produkty, wymiary, szczególne wymagania i obecna organizacja logistyki.",
+      "consent": "Wyrażam zgodę na kontakt ze strony Fully Logistics w sprawie tego zapytania.",
+      "successTitle": "Dziękujemy. Otrzymaliśmy Państwa zapytanie.",
+      "successText": "Odpowiemy w ciągu jednego dnia roboczego, zwykle szybciej."
+    },
+    "aside": {
+      "label": "Dane kontaktowe",
+      "nextTitle": "Co dalej",
+      "next": [
+        { "title": "Odpowiadamy.", "text": "W ciągu jednego dnia roboczego, z pytaniami lub wstępną wyceną." },
+        { "title": "Omawiamy szczegóły.", "text": "Krótka rozmowa o Państwa produktach i przepływie zamówień." },
+        { "title": "Otrzymują Państwo pisemną wycenę.", "text": "Wszystkie trzy pozycje cennika oraz termin rozpoczęcia współpracy." }
+      ]
+    }
+  },
+  "js": {
+    "themeToDark": "Włącz ciemny motyw",
+    "themeToLight": "Włącz jasny motyw",
+    "menuOpen": "Otwórz menu",
+    "menuClose": "Zamknij menu",
+    "errName": "Prosimy podać imię i nazwisko.",
+    "errEmail": "Prosimy podać prawidłowy adres e-mail.",
+    "errMessage": "Prosimy krótko opisać, co Państwo wysyłają.",
+    "errConsent": "Prosimy zaznaczyć to pole, abyśmy mogli się z Państwem skontaktować.",
+    "errField": "Prosimy sprawdzić to pole.",
+    "errSummary": "Prosimy poprawić zaznaczone pola i spróbować ponownie.",
+    "sendFailed": "Coś poszło nie tak i zapytanie nie zostało wysłane. Prosimy spróbować ponownie lub napisać do nas na adres {email}.",
+    "mailOpened": "Powinien otworzyć się program pocztowy z gotowym zapytaniem. Jeśli tak się nie stanie, prosimy napisać na adres {email}.",
+    "mailSubject": "Zapytanie o wycenę: {from}",
+    "mailName": "Imię i nazwisko",
+    "mailEmail": "E-mail",
+    "mailCompany": "Firma",
+    "mailPhone": "Telefon",
+    "mailRole": "Rodzaj działalności",
+    "mailVolume": "Miesięczny wolumen"
+  }
+}

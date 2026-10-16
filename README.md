@@ -1,6 +1,6 @@
 # Fully Logistics website
 
-Marketing site for a fulfillment and contract logistics company. Five pages, plain HTML, CSS and JavaScript, no framework and no runtime dependencies.
+Marketing site for a fulfillment and contract logistics company. Five pages in seven languages, plain HTML, CSS and JavaScript, no framework and no runtime dependencies.
 
 | Page | Built file (in `dist/`) |
 | --- | --- |
@@ -9,6 +9,20 @@ Marketing site for a fulfillment and contract logistics company. Five pages, pla
 | Solutions: Manufacturers | `solutions/manufacturers.html` |
 | About | `about.html` |
 | Contact | `contact.html` |
+
+Hungarian is the default language and lives at the root of the site. Every other language has its own folder with the same file names:
+
+| Language | Folder | Text |
+| --- | --- | --- |
+| Magyar (default) | `/` | `src/i18n/hu.json` |
+| Deutsch | `/de/` | `src/i18n/de.json` |
+| English | `/en/` | `src/i18n/en.json` |
+| Español | `/es/` | `src/i18n/es.json` |
+| Français | `/fr/` | `src/i18n/fr.json` |
+| Română | `/ro/` | `src/i18n/ro.json` |
+| Polski | `/pl/` | `src/i18n/pl.json` |
+
+So the German About page is `/de/about.html`. A language switcher in the header (in the menu on phones, and as a row of links in the footer) leads to the same page in the chosen language.
 
 ## Run it
 
@@ -39,10 +53,11 @@ Keep the assets directory on `dist/`, never the repository root. The root contai
 Edit the sources, then rebuild with `node build.mjs`. The header, footer, icons, responsive images and FAQ live in one place and stay identical on every page. The build needs only Node 18+. It also lints the output: every link, image and anchor must resolve inside `dist/`, no em or en dashes may appear in the markup, and no deployed file may exceed 25 MiB.
 
 ```
-src/pages/           page content (front matter holds title, description, nav state)
+src/pages/           page structure; text is referenced as {{t.home.hero.lead}} and so on
+src/i18n/<lang>.json all visible text of one language: pages, titles and descriptions, image alt
+                     texts, FAQ (also emitted as schema.org FAQPage data), form and script messages
 src/partials/        header, footer, brand mark, call-to-action panel
-src/data/site.json   contact details, footer text, default call-to-action copy
-src/data/faq.json    FAQ questions and answers (also emitted as schema.org FAQPage data)
+src/data/site.json   site name, URL, language list, contact details (address, phone, email)
 src/icons/           Phosphor "bold" icon subset, inlined at build time
 src/images.json      photo manifest (sizes and Unsplash source)
 assets/css/site.css  all styling; colour, type and spacing tokens are at the top
@@ -53,14 +68,26 @@ dist/                the finished site (generated, not committed, never edit by 
 wrangler.jsonc       Cloudflare deployment settings
 ```
 
+## Languages
+
+**Changing text.** Edit the string in every language file that needs it, then rebuild. All seven files have the same keys in the same order, so the German version of a Hungarian string sits at the same place in `de.json`. Write characters as they are (á, ő, ș, ł, „…”), never as HTML entities, and write a non-breaking space as `\u00a0` (for example between a number and its unit). A few strings carry markup, such as the highlighted word in the home headline: keep the tags.
+
+**The build checks the translations.** Every language file must have exactly the keys, list lengths, HTML tags and `{placeholders}` of `hu.json`, and may not use HTML entities, ASCII double quotes or em and en dashes. A missing or extra string fails the build with the exact key, so no page can go out half translated.
+
+**Adding a language.** Copy `src/i18n/hu.json` to `src/i18n/<code>.json`, translate the values (set `meta.name` to the language's own name and `meta.locale`, for example `it_IT`), add the code to `languages` in `src/data/site.json` and rebuild. The first code in that list is the default language served at the root.
+
+**Numbers** on the statistics are formatted for each language at build time (`98,7%`, `41 860`, `41.860`), and the count-up animation uses the same format. The unit after a figure comes from `units` in the language file.
+
 ## Replace before launch
 
 Everything below is sample content written to make the design realistic. None of it comes from a real company.
 
+- **Translations:** the German, English, Spanish, French, Romanian and Polish texts were drafted with AI from the same source. Have a native speaker proofread each language before launch, in particular headlines, the price terms and the contact form.
+
 - **Proof section (home) and facility figures (About):** percentages, parcel counts, floor space, dock doors, staff numbers and the two client quotes with their names.
 - **Commercial claims:** 2 pm cut-off, "no minimum volume", "30 days' notice", three-month start period, 12 hour goods-in time, "first order in about two weeks".
 - **Platform and carrier lists:** Shopify, WooCommerce, Shoprenter, UNAS, Magento, GLS, DPD, Foxpost, MPL, DHL. Keep only what you actually integrate with.
-- **Contact details** in `src/data/site.json`: the address, phone number and the `.example` email address are placeholders. The contact form falls back to that email address, so messages go nowhere until you replace it.
+- **Contact details** in `src/data/site.json`: the address, phone number and the `.example` email address are placeholders. The contact form falls back to that email address, so messages go nowhere until you replace it. The opening hours and the country name are text, so they live in `common.hours` and `common.country` of each language file.
 - **Working day timetable** on About (06:00 to 17:30).
 
 Search the source for `SAMPLE CONTENT` to find the marked blocks.
@@ -71,7 +98,7 @@ The form validates inline. To make it send, set `data-endpoint` on the `<form>` 
 
 ## SEO
 
-Set `"url"` in `src/data/site.json` (for example `https://www.example.com`) and rebuild to add canonical and Open Graph URLs. `assets/img/og.jpg` is the social sharing image.
+Set `"url"` in `src/data/site.json` (for example `https://www.example.com`) and rebuild to add canonical and Open Graph URLs, plus `hreflang` links that tell search engines which page is the same content in which language (Hungarian is also the `x-default`). These URLs have no `.html` ending (`/de/about`, `/solutions/fulfillment`, `/de/`), because Cloudflare redirects `about.html` to `about` and search engines should see the final address. On another host, make sure it serves `about.html` at `/about` too (Netlify and GitHub Pages do; Vercel needs `cleanUrls`). Every page sets its `lang` attribute and Open Graph locale. `assets/img/og.jpg` is the social sharing image.
 
 ## Design notes
 
@@ -79,7 +106,7 @@ Set `"url"` in `src/data/site.json` (for example `https://www.example.com`) and 
 - **Themes:** light and dark, following the visitor's system setting, with a manual toggle in the header that remembers the choice. Both are defined once with `light-dark()` tokens.
 - **Motion:** the hero photo lifts like a dock door, content reveals on scroll, statistics count up once. All of it is switched off for visitors who prefer reduced motion, and every page works without JavaScript.
 - **Fonts** are self-hosted (`assets/fonts/`), so no request goes to Google. **Images** are WebP at three widths with `srcset`.
-- **Checked:** no horizontal overflow at 360, 390, 820, 1280 and 1440 px wide; axe-core reports zero WCAG 2.2 AA violations on all pages in both themes.
+- **Checked:** all 35 pages (five pages in seven languages) have no horizontal overflow and no header collisions at 360, 390, 640, 820, 900, 1024, 1280 and 1440 px wide; axe-core reports zero WCAG 2.2 AA violations on all of them in both themes.
 
 ## Credits and licences
 
