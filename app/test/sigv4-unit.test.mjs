@@ -2,7 +2,7 @@
 // IAM ListUsers, 2015-08-30), plus S3 key encoding.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { encodeKey, signRequest, signingKey } from '../server/sigv4.mjs';
+import { encodeKey, presignS3Get, signRequest, signingKey } from '../server/sigv4.mjs';
 
 const credentials = { accessKeyId: 'AKIDEXAMPLE', secretAccessKey: 'wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY' };
 
@@ -27,4 +27,13 @@ test('signature of the documented ListUsers request', () => {
 
 test('S3 keys keep their slashes and encode the rest', () => {
   assert.equal(encodeKey('files/contract/2026-10/a b+c(1).pdf'), 'files/contract/2026-10/a%20b%2Bc%281%29.pdf');
+});
+
+test('presigned S3 URL of the documented example', () => {
+  const url = presignS3Get({
+    bucket: 'examplebucket', region: 'us-east-1', key: 'test.txt', expiresIn: 86400, now: new Date('2013-05-24T00:00:00Z'),
+    endpoint: 'https://examplebucket.s3.amazonaws.com',
+    credentials: { accessKeyId: 'AKIAIOSFODNN7EXAMPLE', secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY' },
+  });
+  assert.equal(url, 'https://examplebucket.s3.amazonaws.com/test.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20130524%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20130524T000000Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=aeeed9bbccd4d02ee5c0109b86d86835f995330da4c265957d157751f604d404');
 });

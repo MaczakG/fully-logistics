@@ -2,13 +2,19 @@
 
 Raktárkezelő és adminisztrációs rendszer a Fully Logistics munkatársainak: betárolás, megrendelések, komissió, leltár, készlet, rendeléstörténet, fuvarszervezés, partnerek tarifákkal, ajánlatkészítő, havi elszámolás és számlázás, beállítások, felhasználók és jogosultsági mátrix.
 
-Egy Cloudflare Worker szolgálja ki az API-t és a felületet, az adatok a Cloudflare D1 adatbázisban, a fájlok (szerződések, címkék, számlák) az R2 tárhelyen vannak. A weboldal (fully.hu) ettől függetlenül, a repó gyökeréből települ.
+**Üzemeltetés: AWS Lightsail** (Frankfurt). Egy Node.js szerver szolgálja ki az API-t és a felületet. Az adatok egy SQLite adatbázisban vannak a szerveren, óránkénti mentéssel. A fájlok (szerződések, címkék, számlák) a Lightsail tárhelyen vannak, a HTTPS-t a Caddy adja. Telepítés, frissítés, domain, mentések: **[deploy/aws/README.md](deploy/aws/README.md)**. A weboldal (fully.hu) ettől függetlenül, a repó gyökeréből települ a Cloudflare-re.
 
-Fejlesztői leírás: [DEVELOPING.md](DEVELOPING.md). Partner API dokumentáció: [docs/partner-api.md](docs/partner-api.md), élesben a `https://app.fully.hu/api/v1/docs` címen.
+Ugyanez a kód Cloudflare Workers-en (D1, R2) is fut. Ezt az alábbi, „Alternatíva” részben leírt út használja.
 
-## Egyszeri beállítás a Cloudflare-en
+Fejlesztői leírás: [DEVELOPING.md](DEVELOPING.md). Partner API dokumentáció: [docs/partner-api.md](docs/partner-api.md), élesben a `/api/v1/docs` címen.
 
-Ehhez Cloudflare fiók kell, amelyben a `fully.hu` domain is kezelve van (a DNS a Cloudflare-en). Ha a domain még nincs a Cloudflare-en: **Add a domain**, majd a domainregisztrálónál a névszervereket a Cloudflare által mutatottakra kell állítani.
+## Első belépés után
+
+Nyisd meg az alkalmazás címét. Az első indításkor a rendszer a telepítési kódot kéri (AWS-en a `provision.mjs` írja ki), és létrehozza az első adminisztrátort. Utána érdemes a lenti 8. pont sorrendjében haladni (Cégadatok, Raktárhelyek, Alap tarifák, Futárok és számlázó, Partnerek, Felhasználók).
+
+## Alternatíva: egyszeri beállítás a Cloudflare-en
+
+Most nem ezt használjuk. Ehhez Cloudflare fiók kell, amelyben a `fully.hu` domain is kezelve van (a DNS a Cloudflare-en). Ha a domain még nincs a Cloudflare-en: **Add a domain**, majd a domainregisztrálónál a névszervereket a Cloudflare által mutatottakra kell állítani.
 
 ### 1. Workers Paid csomag (5 USD/hó)
 
@@ -73,9 +79,11 @@ Nyisd meg a `https://app.fully.hu` címet. Az első indításkor a rendszer a `S
 ```bash
 cd app
 npm install
-cp .dev.vars.example .dev.vars
-npm run dev      # http://localhost:8787, telepítési kód: local-setup-token
-npm test
+node build.mjs
+SETUP_TOKEN=local-setup-token ENCRYPTION_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))") \
+  MIGRATE_ON_START=1 npm start     # Node.js, mint az AWS szerveren: http://localhost:8787, adatok: app/data/
+npm run dev                        # vagy wrangler dev (Cloudflare futtatókörnyezet), .dev.vars kell hozzá
+npm test                           # minden teszt a Node.js futtatókörnyezeten; npm run test:workers: wrangler dev-vel
 ```
 
 ## Időzített feladatok

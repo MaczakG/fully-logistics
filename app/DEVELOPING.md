@@ -1,13 +1,20 @@
 # Developing the WMS app
 
-The app is one Cloudflare Worker: `worker/` is the API, `public/` is the single page app (built into `dist/` by `build.mjs`), `migrations/` is the D1 schema. No framework and no runtime dependencies; `wrangler` is the only dev dependency.
+The app is written as one Cloudflare Worker: `worker/` is the API, `public/` is the single page app (built into `dist/` by `build.mjs`), `migrations/` is the D1 schema. No framework and no runtime dependencies; `wrangler` is the only dev dependency.
+
+It runs in two runtimes from the same code:
+- **Node.js** (production on AWS Lightsail, see `deploy/aws/README.md`): `server/` provides the bindings. `env.DB` is D1's API on a SQLite file (`node:sqlite`), `env.FILES` is R2's API on the Lightsail bucket (S3, own SigV4) or a folder, `env.ASSETS` serves `dist/` with `_headers`, and a minute timer runs the cron schedules. Start: `npm start` (settings in `server/config.mjs`).
+- **Cloudflare Workers** (`wrangler dev` / `wrangler deploy`), with D1, R2 and the assets binding.
+
+Stick to what both have: Web APIs (fetch, Request, Response, crypto.subtle, streams), the D1 calls `prepare/bind/all/first/run/raw/batch`, and the R2 calls `put/get/head/delete/list`.
 
 ```bash
 cd app
 npm install
 cp .dev.vars.example .dev.vars
 npm run dev          # build, apply migrations to the local D1, wrangler dev on http://localhost:8787
-npm test             # every test/*.test.mjs, each with its own wrangler dev and empty database
+npm test             # every test/*.test.mjs on the Node runtime, each file with its own empty database
+npm run test:workers # the same on wrangler dev (Workers runtime), slower
 node build.mjs       # build + lint (icons exist, no em or en dashes anywhere)
 ```
 

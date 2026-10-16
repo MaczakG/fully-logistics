@@ -2,7 +2,6 @@
 // static assets with _headers, migrations, backups and their pruning.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -11,7 +10,7 @@ import { DiskBucket, S3Bucket } from '../server/bucket.mjs';
 import { createAssets, parseHeaders } from '../server/assets.mjs';
 import { migrate } from '../server/migrate.mjs';
 import { backupDatabase, pruneBackups, restoreBackup } from '../server/backup.mjs';
-import { signRequest } from '../server/sigv4.mjs';
+import { startFakeS3 } from './fake-s3.mjs';
 
 const dir = mkdtempSync(join(tmpdir(), 'fl-server-'));
 after(() => rmSync(dir, { recursive: true, force: true }));
@@ -74,42 +73,15 @@ test('disk bucket: put, get, head, list, delete; keys cannot escape the folder',
   await assert.rejects(b.put('a/../../kint.txt', 'x'), /Invalid object key/);
 });
 
-// A small S3 lookalike: checks the signature with the same algorithm, stores objects in memory.
+// S3 lookalike that checks every signature (test/fake-s3.mjs).
 let s3;
 let s3base;
-const objects = new Map();
+let objects;
 const creds = { accessKeyId: 'AKIATEST', secretAccessKey: 'titok' };
 before(async () => {
-  s3 = createServer((req, res) => {
-    const chunks = [];
-    req.on('data', (c) => chunks.push(c));
-    req.on('end', () => {
-      const body = Buffer.concat(chunks);
-      const url = `http://${req.headers.host}${req.url}`;
-      const signed = signRequest({
-        method: req.method, url, body, service: 's3', region: 'eu-central-1', credentials: creds,
-        headers: req.headers['content-type'] ? { 'content-type': req.headers['content-type'] } : {},
-        now: new Date(req.headers['x-amz-date'].replace(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/, '$1-$2-$3T$4:$5:$6Z')),
-      });
-      if (signed.headers.authorization !== req.headers.authorization) { res.statusCode = 403; return res.end('<Error><Code>SignatureDoesNotMatch</Code></Error>'); }
-      const u = new URL(url);
-      const key = decodeURIComponent(u.pathname.slice(1));
-      if (req.method === 'PUT') { objects.set(key, { body, type: req.headers['content-type'] }); res.setHeader('etag', '"e1"'); return res.end(); }
-      if (req.method === 'GET' && u.searchParams.get('list-type') === '2') {
-        const prefix = u.searchParams.get('prefix') || '';
-        const keys = [...objects.keys()].filter((k) => k.startsWith(prefix)).sort();
-        return res.end(`<ListBucketResult><IsTruncated>false</IsTruncated>${keys.map((k) => `<Contents><Key>${k.replace(/&/g, '&amp;')}</Key><Size>${objects.get(k).body.length}</Size><LastModified>2026-10-16T10:00:00.000Z</LastModified></Contents>`).join('')}</ListBucketResult>`);
-      }
-      const o = objects.get(key);
-      if (req.method === 'DELETE') { objects.delete(key); res.statusCode = 204; return res.end(); }
-      if (!o) { res.statusCode = 404; return res.end('<Error><Code>NoSuchKey</Code></Error>'); }
-      res.setHeader('content-type', o.type || 'application/octet-stream');
-      res.setHeader('content-length', o.body.length);
-      res.end(req.method === 'HEAD' ? undefined : o.body);
-    });
-  });
-  await new Promise((r) => s3.listen(0, '127.0.0.1', r));
-  s3base = `http://127.0.0.1:${s3.address().port}`;
+  s3 = await startFakeS3({ credentials: creds });
+  s3base = s3.base;
+  objects = s3.objects;
 });
 after(() => s3 && s3.close());
 

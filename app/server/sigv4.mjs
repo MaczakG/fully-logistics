@@ -63,6 +63,32 @@ export function signRequest({ method = 'GET', url, headers = {}, body = '', serv
   return { headers: out, signature, canonicalRequest, stringToSign };
 }
 
+// A presigned S3 URL (query string auth): anyone holding it can GET (or PUT) that one object until
+// it expires (at most 7 days). A new server uses one to fetch its first release and one to upload
+// its setup log.
+export const presignS3Get = (opts) => presignS3({ ...opts, method: 'GET' });
+
+export function presignS3({ method = 'GET', bucket, region, key, credentials, expiresIn = 3600, now = new Date(), endpoint = '' }) {
+  const base = endpoint || `https://${bucket}.s3.${region}.amazonaws.com`;
+  const u = new URL(`${base}/${encodeKey(key)}`);
+  const amzDate = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const dateStamp = amzDate.slice(0, 8);
+  const scope = `${dateStamp}/${region}/s3/aws4_request`;
+  const params = {
+    'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+    'X-Amz-Credential': `${credentials.accessKeyId}/${scope}`,
+    'X-Amz-Date': amzDate,
+    'X-Amz-Expires': String(expiresIn),
+    'X-Amz-SignedHeaders': 'host',
+  };
+  if (credentials.sessionToken) params['X-Amz-Security-Token'] = credentials.sessionToken;
+  const query = Object.keys(params).sort().map((k) => `${rfc3986(k)}=${rfc3986(params[k])}`).join('&');
+  const canonicalRequest = [method, u.pathname, query, `host:${u.host}\n`, 'host', 'UNSIGNED-PAYLOAD'].join('\n');
+  const stringToSign = ['AWS4-HMAC-SHA256', amzDate, scope, sha256Hex(canonicalRequest)].join('\n');
+  const signature = hex(hmac(signingKey(credentials.secretAccessKey, dateStamp, region, 's3'), stringToSign));
+  return `${u.origin}${u.pathname}?${query}&X-Amz-Signature=${signature}`;
+}
+
 export async function awsFetch(url, { method = 'GET', headers = {}, body, service, region, credentials, fetchImpl = fetch } = {}) {
   const { headers: signed } = signRequest({ method, url, headers, body: body ?? '', service, region, credentials });
   return fetchImpl(url, { method, headers: signed, body: body === undefined || method === 'GET' || method === 'HEAD' ? undefined : body });

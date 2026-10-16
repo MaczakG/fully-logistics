@@ -3,7 +3,7 @@
 //
 //   node server/migrate.mjs [--db path] [--dir migrations]   (DB_PATH from the environment otherwise)
 
-import { readdir, readFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
@@ -12,6 +12,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 export const MIGRATIONS_DIR = resolve(HERE, '../migrations');
 
 export async function migrate(dbPath, { dir = MIGRATIONS_DIR, log = console.log } = {}) {
+  if (dbPath !== ':memory:') await mkdir(dirname(resolve(dbPath)), { recursive: true });
   const db = new DatabaseSync(dbPath);
   try {
     db.exec('PRAGMA busy_timeout = 10000');
