@@ -1,5 +1,6 @@
 #!/bin/bash
-# First boot of the AWS Lightsail server (launch script). provision.mjs fills in the placeholders.
+# First boot of the AWS Lightsail server. launchScript() in lib.mjs fills in the placeholders and
+# wraps this bash script so Lightsail's /bin/sh launch script can run it.
 # Installs Node.js 24, Caddy (HTTPS) and SQLite, creates the app user and folders, writes the app's
 # settings, downloads the first release and hands over to the deploy agent (deploy/aws/agent.mjs).
 # Log: /var/log/fully-app-init.log
@@ -69,4 +70,6 @@ curl -fsS --retry 8 --retry-delay 5 -o /opt/fully-app/bootstrap/release.tar.gz '
 echo '__BOOTSTRAP_SHA256__  /opt/fully-app/bootstrap/release.tar.gz' | sha256sum -c -
 tar -xzf /opt/fully-app/bootstrap/release.tar.gz -C /opt/fully-app/bootstrap
 node --no-warnings /opt/fully-app/bootstrap/app/deploy/aws/agent.mjs --bootstrap
+# This file holds the bucket key and the setup token; /etc/fully-app/env keeps them from now on.
+rm -f /root/fully-app-init.sh
 echo "fully-app init done $(date -Is)"

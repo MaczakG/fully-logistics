@@ -141,6 +141,39 @@ export async function waitForVersion(bucket, version, { minutes = 15 } = {}) {
 
 export const sslipName = (ip) => `${ip.replace(/\./g, '-')}.sslip.io`;
 
+// The Lightsail launch script: cloud-init.sh with its placeholders filled in, wrapped for /bin/sh.
+// Lightsail puts the launch script into its own sh script, where bash syntax (set -o pipefail,
+// process substitution) stops everything on the first line. So the wrapper only writes the bash
+// script to a root-only file with a quoted here-document (nothing is expanded) and runs it.
+const INIT_EOF = 'FULLY_APP_INIT_EOF';
+export async function launchScript(values) {
+  const checks = {
+    BUCKET: /^[a-z0-9-]+$/, REGION: /^[a-z0-9-]+$/, S3_KEY_ID: /^[A-Z0-9]+$/, S3_SECRET: /^[A-Za-z0-9/+=]+$/,
+    SETUP_TOKEN: /^[A-Za-z0-9_-]+$/, BOOTSTRAP_URL: /^https?:\/\/[^'\s]+$/, LOG_URL: /^https?:\/\/[^'\s]+$/, BOOTSTRAP_SHA256: /^[a-f0-9]{64}$/,
+  };
+  let inner = await readFile(join(HERE, 'cloud-init.sh'), 'utf8');
+  for (const [name, re] of Object.entries(checks)) {
+    const v = String(values[name] ?? '');
+    if (!re.test(v)) throw new Error(`Váratlan érték a launch scriptben: ${name}`);
+    inner = inner.split(`__${name}__`).join(v);
+  }
+  const left = inner.match(/__[A-Z0-9_]+__/g);
+  if (left) throw new Error(`Kitöltetlen helyek a launch scriptben: ${left.join(', ')}`);
+  if (inner.includes(INIT_EOF)) throw new Error('A launch script nem tartalmazhatja a lezáró jelet.');
+  const script = [
+    '#!/bin/sh',
+    '# Fully Logistics app setup. The setup itself is bash (deploy/aws/cloud-init.sh); see launchScript() in lib.mjs.',
+    'umask 077',
+    `cat > /root/fully-app-init.sh <<'${INIT_EOF}'`,
+    inner.replace(/\n$/, ''),
+    INIT_EOF,
+    'bash /root/fully-app-init.sh',
+    '',
+  ].join('\n');
+  if (script.length > 16000) throw new Error('A launch script túl hosszú.');
+  return script;
+}
+
 export async function checkHttps(hostname) {
   try {
     const r = await fetch(`https://${hostname}/api/health`, { signal: AbortSignal.timeout(15000) });

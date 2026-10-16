@@ -5,11 +5,9 @@
 //
 //   AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... node deploy/aws/provision.mjs [--size 1] [--name fully-app]
 
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { presignS3, presignS3Get } from '../../server/sigv4.mjs';
 import {
-  HERE, awsFromEnv, buildBundle, checkHttps, deployBucket, log, ls, putHostnames, randomToken, readConfig,
+  awsFromEnv, buildBundle, checkHttps, deployBucket, launchScript, log, ls, putHostnames, randomToken, readConfig,
   sleep, sslipName, uploadRelease, waitForVersion, waitOps, writeConfig,
 } from './lib.mjs';
 
@@ -105,17 +103,10 @@ async function main() {
       const url = presignS3Get({ bucket: conf.bucket, region: conf.region, key: `releases/${bundle.version}.tar.gz`, credentials: { accessKeyId: serverKey.accessKeyId, secretAccessKey: serverKey.secretAccessKey }, expiresIn: 6 * 3600 });
       const logUrl = presignS3({ method: 'PUT', bucket: conf.bucket, region: conf.region, key: 'status/init.log', credentials: { accessKeyId: serverKey.accessKeyId, secretAccessKey: serverKey.secretAccessKey }, expiresIn: 7 * 24 * 3600 });
       setupToken = randomToken(18);
-      const safe = (v, re) => { if (!re.test(v)) throw new Error('Váratlan karakter egy beállításban.'); return v; };
-      const userData = (await readFile(join(HERE, 'cloud-init.sh'), 'utf8'))
-        .replace('__BUCKET__', safe(conf.bucket, /^[a-z0-9-]+$/))
-        .replace('__REGION__', safe(conf.region, /^[a-z0-9-]+$/))
-        .replace('__S3_KEY_ID__', safe(serverKey.accessKeyId, /^[A-Z0-9]+$/))
-        .replace('__S3_SECRET__', safe(serverKey.secretAccessKey, /^[A-Za-z0-9/+=]+$/))
-        .replace('__SETUP_TOKEN__', safe(setupToken, /^[A-Za-z0-9_-]+$/))
-        .replace('__BOOTSTRAP_URL__', safe(url, /^https:\/\/[^'\s]+$/))
-        .replace('__LOG_URL__', safe(logUrl, /^https:\/\/[^'\s]+$/))
-        .replace('__BOOTSTRAP_SHA256__', bundle.sha256);
-      if (userData.length > 16000) throw new Error('A launch script túl hosszú.');
+      const userData = await launchScript({
+        BUCKET: conf.bucket, REGION: conf.region, S3_KEY_ID: serverKey.accessKeyId, S3_SECRET: serverKey.secretAccessKey,
+        SETUP_TOKEN: setupToken, BOOTSTRAP_URL: url, LOG_URL: logUrl, BOOTSTRAP_SHA256: bundle.sha256,
+      });
 
       const plan = await pickBundle();
       const blueprintId = await pickBlueprint();
