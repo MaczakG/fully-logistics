@@ -98,7 +98,7 @@ The form validates inline. To make it send, set `data-endpoint` on the `<form>` 
 
 ## SEO
 
-Set `"url"` in `src/data/site.json` (for example `https://www.example.com`) and rebuild to add canonical and Open Graph URLs, plus `hreflang` links that tell search engines which page is the same content in which language (Hungarian is also the `x-default`). Every page sets its `lang` attribute and Open Graph locale. `assets/img/og.jpg` is the social sharing image.
+Set `"url"` in `src/data/site.json` (for example `https://www.example.com`) and rebuild to add canonical and Open Graph URLs, plus `hreflang` links that tell search engines which page is the same content in which language (Hungarian is also the `x-default`). These URLs have no `.html` ending (`/de/about`, `/solutions/fulfillment`, `/de/`), because Cloudflare redirects `about.html` to `about` and search engines should see the final address. On another host, make sure it serves `about.html` at `/about` too (Netlify and GitHub Pages do; Vercel needs `cleanUrls`). Every page sets its `lang` attribute and Open Graph locale. `assets/img/og.jpg` is the social sharing image.
 
 ## Design notes
 

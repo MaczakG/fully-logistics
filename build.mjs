@@ -148,8 +148,10 @@ function faqJsonLd(ctx) {
 
 // Where a page lives inside dist/: the default language at the root, the others in their folder.
 const pagePath = (lang, rel) => (lang === DEFAULT_LANG ? '' : `${lang}/`) + rel;
-// The public URL path of a page: folder index pages are addressed by their folder.
-const pageUrl = (lang, rel) => pagePath(lang, rel).replace(/(^|\/)index\.html$/, '$1');
+// The public URL path of a page, as the host serves it after its own redirects: folder index
+// pages by their folder (/de/), every other page without .html (/de/about). Canonical, hreflang
+// and og:url point there, so search engines never land on a redirect.
+const pageUrl = (lang, rel) => pagePath(lang, rel).replace(/(^|\/)index\.html$/, '$1').replace(/\.html$/, '');
 
 function seoTags(ctx) {
   const tags = [
