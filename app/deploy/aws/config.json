@@ -1,0 +1,11 @@
+{
+  "region": "eu-central-1",
+  "instanceName": "fully-app",
+  "bucket": "fully-app-2hblgc0m",
+  "staticIpName": "fully-app-ip",
+  "ip": "18.185.119.189",
+  "hostnames": [
+    "18-185-119-189.sslip.io"
+  ],
+  "serverKeyId": "AKIATYUN2H3UV5TNSUPW"
+}
