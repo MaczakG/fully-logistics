@@ -331,9 +331,10 @@ CREATE TABLE orders (
   shipped_date TEXT,                     -- Budapest date of shipping, used for billing
   delivered_at TEXT,
   cancelled_at TEXT,
-  fulfillment_synced_at TEXT,            -- tracking sent back to the webshop
-  UNIQUE (partner_id, source, external_id)
+  fulfillment_synced_at TEXT             -- tracking sent back to the webshop
 );
+-- One order per webshop/API order id; manual orders have no external id.
+CREATE UNIQUE INDEX orders_external ON orders(partner_id, source, external_id) WHERE external_id <> '';
 CREATE INDEX orders_status ON orders(status, created_at);
 CREATE INDEX orders_partner ON orders(partner_id, created_at);
 CREATE INDEX orders_shipped ON orders(partner_id, shipped_date);
