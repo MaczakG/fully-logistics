@@ -1,1 +1,22 @@
-/* history view styles */
+/* Rendeléstörténet: filters and the return (visszáru) dialog. The order detail uses orders.css. */
+
+.hs-root > *, .hs-root .panel > * { min-width: 0; }
+.hs-quick { display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; min-height: 2.5rem; }
+
+/* ---------- Return dialog ---------- */
+.rt-lines { display: grid; gap: 0; border: 1px solid var(--line); background: var(--paper); }
+.rt-line {
+  display: grid; gap: 0.5rem 0.75rem; align-items: start; padding: 0.75rem;
+  grid-template-columns: minmax(10rem, 1.4fr) 6rem minmax(8rem, 0.8fr) minmax(10rem, 1.2fr) auto;
+  border-top: 1px solid var(--line);
+}
+.rt-line:first-child { border-top: 0; }
+.rt-line__prod { display: grid; gap: 0.125rem; align-self: center; min-width: 0; }
+.rt-line__loc { display: grid; gap: 0.375rem; }
+.rt-line__loc .input[hidden] { display: none; }
+.rt-line__split { margin-top: 1.5rem; }
+@media (max-width: 899.98px) {
+  .rt-line { grid-template-columns: 6rem minmax(0, 1fr); }
+  .rt-line__prod, .rt-line__loc, .rt-line__split { grid-column: 1 / -1; }
+  .rt-line__split { margin-top: 0; justify-self: start; }
+}

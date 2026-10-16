@@ -1,1 +1,90 @@
-/* picking view styles */
+/* Komissió: wave list, the hand-scanner wave screen, packing station, printed pick list. */
+
+.pk-count {
+  display: inline-grid; place-items: center; min-width: 1.5rem; height: 1.5rem; padding: 0 0.375rem;
+  font: 700 0.75rem/1 var(--font-mono); color: var(--on-hi-vis); background: var(--hi-vis);
+}
+.pk-root > *, .pk-screen > *, .pk-root .panel > * { min-width: 0; }
+.pk-listprogress { display: grid; gap: 0.25rem; min-width: 8rem; }
+
+/* ---------- Wave screen ---------- */
+.pk-screen { display: grid; gap: 1.25rem; }
+.pk-summary { gap: 0.75rem; }
+.pk-summary__bar { display: grid; gap: 0.5rem; }
+.pk-summary__bar .progress { height: 0.875rem; }
+.pk-summary__picker { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+
+.pk-work { display: grid; gap: 0.75rem; scroll-margin-top: calc(var(--topbar-h) + 0.5rem); }
+.pk-work[hidden] { display: none; }
+.scan[data-flash="ok"] { border-color: #6FD39B; box-shadow: 0 0 0 3px #6FD39B; }
+.scan[data-flash="danger"] { border-color: #FF9C92; box-shadow: 0 0 0 3px #FF9C92; }
+.pk-feedback {
+  min-height: 2.75rem; padding: 0.625rem 0.875rem; font-weight: 600;
+  background: var(--panel); border: 1px solid var(--line); border-left: 6px solid var(--line-strong);
+}
+.pk-feedback:empty { display: none; }
+.pk-feedback[data-tone="ok"] { color: var(--ok); background: var(--ok-bg); border-color: var(--ok); }
+.pk-feedback[data-tone="danger"] { color: var(--danger); background: var(--danger-bg); border-color: var(--danger); }
+.pk-feedback[data-tone="info"] { color: var(--info); background: var(--info-bg); border-color: var(--info); }
+
+.pk-task { display: grid; gap: 1rem; padding: 1rem; background: var(--panel); border: 2px solid var(--ink); }
+.pk-task__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.pk-task__grid { display: grid; gap: 0.75rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr); }
+@media (max-width: 759.98px) { .pk-task__grid { grid-template-columns: minmax(0, 1fr); } }
+.pk-cell { display: grid; gap: 0.375rem; align-content: start; padding: 0.875rem; background: var(--paper); border: 1px solid var(--line); min-width: 0; }
+.pk-cell[data-state="current"] { border: 2px solid var(--ink); box-shadow: inset 6px 0 0 var(--hi-vis); padding-left: 1.25rem; }
+.pk-cell[data-state="done"] { background: var(--ok-bg); border-color: var(--ok); }
+.pk-cell[data-state="done"] .pk-label { color: var(--ok); }
+.pk-label { display: inline-flex; align-items: center; gap: 0.375rem; font: 600 0.6875rem/1.2 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.pk-label .icon { width: 1rem; height: 1rem; }
+.pk-stepno { display: inline-grid; place-items: center; width: 1.125rem; height: 1.125rem; font-size: 0.6875rem; color: var(--paper); background: var(--ink-3); }
+.pk-cell[data-state="current"] .pk-stepno { background: var(--ink); }
+.pk-big { font: 800 clamp(1.75rem, 1.1rem + 3vw, 3rem)/1.05 var(--font-mono); letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.pk-big small { font-size: 0.45em; font-weight: 600; }
+.pk-mid { font: 800 clamp(1.25rem, 1rem + 1.2vw, 1.75rem)/1.1 var(--font-mono); overflow-wrap: anywhere; }
+
+.pk-qty { display: grid; gap: 0.375rem; }
+.pk-qty > label { font-size: 0.8125rem; font-weight: 700; }
+.pk-qty__row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: stretch; }
+.pk-qty__row .btn--icon.btn--lg { width: 3rem; }
+.pk-qty__input { width: 7rem; min-height: 3rem; font-size: 1.375rem; text-align: center; }
+.pk-qty__row .btn--primary { flex: 1 1 12rem; }
+.pk-task__actions { justify-content: flex-start; }
+
+.pk-tasklist tr.pk-group td { border-top: 2px solid var(--line-strong); }
+.pk-tasklist tbody tr:first-child td { border-top: 0; }
+.pk-tasklist tr[data-current="true"] td { background: color-mix(in oklab, var(--hi-vis) 22%, var(--panel)); }
+
+/* ---------- Packing station ---------- */
+.pk-pack { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
+@media (max-width: 1099.98px) { .pk-pack { grid-template-columns: minmax(0, 1fr); } }
+.pk-pack__side { display: grid; gap: 1.25rem; min-width: 0; }
+.pk-ordernum { font: 800 1.375rem/1.1 var(--font-mono); letter-spacing: -0.01em; }
+.pk-packorder h2 a { text-decoration: none; }
+.pk-cod {
+  display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
+  font-size: 1.125rem; color: var(--on-hi-vis); background: repeating-linear-gradient(-45deg, var(--hi-vis) 0 14px, var(--hi-vis-hover) 14px 28px);
+  border: 2px solid var(--ink-fixed);
+}
+.pk-cod .icon { width: 1.5rem; height: 1.5rem; }
+.pk-cod b { font-family: var(--font-mono); }
+.pk-packform { padding-top: 0.25rem; border-top: 1px solid var(--line); }
+
+/* ---------- Printed pick list ---------- */
+.pk-print { display: none; }
+@media print {
+  .pk-screen { display: none !important; }
+  .pk-print { display: block; color: #000; }
+  .pk-print__head { margin-bottom: 4mm; }
+  .pk-print__head h1 { font-size: 16pt; }
+  .pk-print__head p { font-size: 9pt; }
+  .pk-print__table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+  .pk-print__table th, .pk-print__table td { padding: 1.5mm 2mm; border: 0.3mm solid #999; text-align: left; vertical-align: top; }
+  .pk-print__table th { background: #eee; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.04em; }
+  .pk-print__table tr { break-inside: avoid; }
+  .pk-print__table tr.pk-group td { border-top: 0.6mm solid #000; }
+  .pk-print__table .num { text-align: right; font-size: 11pt; }
+  .pk-box { width: 9mm; }
+  .pk-box::before { content: ""; display: block; width: 4.5mm; height: 4.5mm; border: 0.4mm solid #000; }
+  .pk-print__sign { margin-top: 10mm; font-size: 10pt; }
+}
