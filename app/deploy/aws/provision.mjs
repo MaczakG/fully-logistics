@@ -4,6 +4,7 @@
 // script prints the temporary HTTPS address and the one-time setup token for the first admin.
 //
 //   AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... node deploy/aws/provision.mjs [--size 1] [--name fully-app]
+//   --recreate-server   delete and rebuild the server (when its first-boot setup failed)
 
 import { presignS3, presignS3Get } from '../../server/sigv4.mjs';
 import {
@@ -84,6 +85,17 @@ async function main() {
 
   let instance = null;
   try { ({ instance } = await ls(aws, 'GetInstance', { instanceName: conf.instanceName })); } catch (err) { if (!notFound(err)) throw err; }
+
+  // --recreate-server: the launch script runs only on the first boot, so a server whose setup
+  // failed is rebuilt. Its disk goes (with the database on it); the bucket and the IP stay.
+  if (instance && process.argv.includes('--recreate-server')) {
+    log(`A szerver törlése és újraépítése: ${conf.instanceName}`);
+    await waitOps(aws, await ls(aws, 'DeleteInstance', { instanceName: conf.instanceName, forceDeleteAddOns: true }), 'DeleteInstance');
+    for (let i = 0; i < 60; i++) {
+      try { await ls(aws, 'GetInstance', { instanceName: conf.instanceName }); await sleep(3000); } catch (err) { if (notFound(err)) break; throw err; }
+    }
+    instance = null;
+  }
 
   let setupToken = null;
   if (!instance) {

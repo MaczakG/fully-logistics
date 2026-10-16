@@ -11,6 +11,8 @@ echo "fully-app init $(date -Is)"
 upload_log() { sleep 1; curl -fsS --retry 3 -X PUT --upload-file /var/log/fully-app-init.log '__LOG_URL__' || true; }
 trap upload_log EXIT
 export DEBIAN_FRONTEND=noninteractive
+# On first boot unattended-upgrades may hold the package lock for a while: wait instead of failing.
+APT="apt-get -o DPkg::Lock::Timeout=600"
 
 if [ ! -f /swapfile ]; then
   fallocate -l 1G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
@@ -18,19 +20,21 @@ if [ ! -f /swapfile ]; then
 fi
 timedatectl set-timezone Europe/Budapest || true
 
-apt-get update -y
-apt-get install -y ca-certificates curl gnupg debian-keyring debian-archive-keyring apt-transport-https sqlite3 unattended-upgrades
+$APT update -y
+$APT install -y ca-certificates curl gnupg debian-keyring debian-archive-keyring apt-transport-https sqlite3 unattended-upgrades
 
 # Node.js 24 LTS (NodeSource)
 curl -fsSL https://deb.nodesource.com/setup_24.x -o /tmp/nodesource_setup.sh
 bash /tmp/nodesource_setup.sh
-apt-get install -y nodejs
+$APT install -y nodejs
 
 # Caddy (official repository)
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor --yes -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' -o /etc/apt/sources.list.d/caddy-stable.list
-apt-get update -y
-apt-get install -y caddy
+# apt reads keyrings as the unprivileged _apt user (otherwise: NO_PUBKEY), as in Caddy's install guide.
+chmod o+r /usr/share/keyrings/caddy-stable-archive-keyring.gpg /etc/apt/sources.list.d/caddy-stable.list
+$APT update -y
+$APT install -y caddy
 
 id fullyapp >/dev/null 2>&1 || useradd --system --home-dir /var/lib/fully-app --shell /usr/sbin/nologin fullyapp
 install -d -m 755 /opt/fully-app /opt/fully-app/releases /opt/fully-app/bootstrap
