@@ -1,1 +1,131 @@
-/* inbound view styles */
+/* Betárolás: list, new inbound form, receiving and putaway workflow, printable receiving report.
+   Same tokens as app.css; nothing here changes shared components. */
+
+.inb-chips { display: flex; flex-wrap: wrap; gap: 0.375rem; align-items: center; }
+.inb-statusline { margin-top: -0.5rem; }
+.inb-late { color: var(--warn); font-weight: 700; }
+.inb-issues { display: grid; gap: 0.25rem; margin-top: 0.5rem; padding-left: 1.125rem; list-style: square; color: var(--ink); }
+.inb-filters .field { min-width: 9.5rem; }
+.inb-screen { display: grid; gap: 1.25rem; align-content: start; min-width: 0; }
+.inb-region:empty { display: none; }
+.inb-code { white-space: nowrap; }
+.table.inb-table { min-width: 52rem; }
+.inb-warn { display: inline-flex; flex: 1 1 18rem; gap: 0.375rem; align-items: flex-start; color: var(--warn); font-size: 0.8125rem; font-weight: 600; }
+.inb-region { display: grid; gap: 1rem; }
+
+/* ---------- new / edit form: lines ---------- */
+.inb-flines { display: grid; gap: 0.625rem; }
+.inb-flines > legend { margin-bottom: 0.25rem; }
+.inb-flines [data-lines] { display: grid; gap: 0.5rem; }
+.inb-fline {
+  display: grid; gap: 0.5rem 0.75rem; align-items: start;
+  grid-template-columns: minmax(0, 3fr) 8rem minmax(0, 1.2fr) 10rem 2.5rem;
+}
+.inb-fline--head { font: 600 0.6875rem/1.2 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.inb-fline__label { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.inb-fline__remove { margin-top: 0.25rem; }
+@media (max-width: 719.98px) {
+  .inb-fline { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 0.75rem; border: 1px solid var(--line); background: var(--panel-alt); }
+  .inb-fline--head { display: none; }
+  .inb-fline__label { position: static !important; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; }
+  .inb-fline__product { grid-column: 1 / -1; }
+  .inb-fline__remove { justify-self: end; grid-column: 2; margin-top: 0; }
+}
+
+/* ---------- receiving workspace ---------- */
+.inb-work[hidden] { display: none; }
+.inb-work { gap: 0.875rem; }
+.inb-modes { display: flex; gap: 0.25rem; border-bottom: 2px solid var(--ink); overflow-x: auto; scrollbar-width: thin; }
+.inb-modes .tab .icon { width: 1.125rem; height: 1.125rem; }
+.inb-scanzone {
+  position: sticky; top: var(--topbar-h); z-index: 5;
+  display: grid; gap: 0.5rem; margin: 0 -1.25rem; padding: 0.625rem 1.25rem;
+  background: var(--panel); border-bottom: 1px solid var(--line);
+}
+.inb-scanbar { display: flex; flex-wrap: wrap; gap: 0.625rem 0.875rem; align-items: flex-end; }
+.inb-screen > *, .inb-work > *, .inb-scanzone > *, .inb-scanbar > * { min-width: 0; }
+.inb-scanbar .scan { flex: 1 1 20rem; min-width: 0; }
+.inb-scanbar .scan input { width: 0; }
+.inb-scanbar__qty { width: 8rem; }
+.inb-scanbar__qty .input { min-height: 3rem; font-size: 1.125rem; }
+.inb-scanbar__damaged { min-height: 3rem; padding: 0 0.875rem; border: 2px solid var(--line-strong); background: var(--panel); }
+.inb-scanbar__damaged:has(input:checked) { border-color: var(--danger); background: var(--danger-bg); color: var(--danger); font-weight: 700; }
+.inb-feedback {
+  display: flex; gap: 0.5rem; align-items: flex-start; padding: 0.5rem 0.75rem; min-height: 2.5rem;
+  font-weight: 600; border: 1px solid var(--line); border-left-width: 6px; background: var(--panel-alt);
+}
+.inb-feedback .icon { margin-top: 0.0625rem; }
+.inb-feedback[data-tone="ok"] { border-color: var(--ok); color: var(--ok); background: var(--ok-bg); }
+.inb-feedback[data-tone="warn"] { border-color: var(--warn); color: var(--warn); background: var(--warn-bg); }
+.inb-feedback[data-tone="danger"] { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+.inb-feedback[data-tone="info"] { color: var(--ink-2); }
+.inb-work__foot { display: flex; justify-content: flex-start; }
+.inb-work [data-region="work"] { display: grid; gap: 0.75rem; min-width: 0; }
+
+.inb-cards { display: grid; gap: 0.625rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); align-items: start; }
+.inb-card {
+  display: grid; gap: 0.625rem; min-width: 0; padding: 0.875rem 1rem;
+  background: var(--panel); border: 1px solid var(--line); border-left: 6px solid var(--line-strong);
+  scroll-margin-top: calc(var(--topbar-h) + 10rem);
+}
+.inb-card[data-state="partial"] { border-left-color: var(--hi-vis); }
+.inb-card[data-state="done"] { border-left-color: var(--ok); }
+.inb-card[data-state="over"], .inb-card[data-state="extra"] { border-left-color: var(--warn); }
+.inb-card[data-state="empty"] { opacity: 0.7; }
+.inb-card[data-active="true"] { outline: 3px solid var(--hi-vis); outline-offset: -1px; }
+.inb-card__top { display: flex; gap: 0.75rem; justify-content: space-between; align-items: flex-start; }
+.inb-card__product { display: grid; gap: 0.125rem; min-width: 0; }
+.inb-card__sku { font: 600 0.8125rem/1.2 var(--font-mono); letter-spacing: 0.02em; }
+.inb-card__name { font-weight: 700; overflow-wrap: anywhere; }
+.inb-card__codes { font: 400 0.75rem/1.3 var(--font-mono); color: var(--ink-3); overflow-wrap: anywhere; }
+.inb-card__count { display: grid; justify-items: end; text-align: right; flex: none; }
+.inb-card__count b { font: 800 1.875rem/1 var(--font-sans); font-stretch: 110%; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.inb-card__count span { font-size: 0.75rem; color: var(--ink-3); white-space: nowrap; }
+.inb-card__track { display: grid; gap: 0.5rem 0.75rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); }
+.inb-card__actions { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.inb-card .progress { height: 0.5rem; }
+
+/* putaway form */
+.inb-put { display: grid; gap: 0.625rem; padding: 0.875rem 1rem; border: 2px solid var(--ink); background: var(--panel-alt); }
+.inb-put__line { display: flex; flex-wrap: wrap; gap: 0.375rem 0.625rem; align-items: center; min-height: 1.75rem; }
+.inb-put__fields { display: flex; flex-wrap: wrap; gap: 0.625rem 0.75rem; align-items: flex-end; }
+.inb-put__loc { flex: 1 1 12rem; }
+.inb-put__qty { width: 8rem; }
+.inb-put__fields .input { min-height: 3rem; font-size: 1.0625rem; }
+.inb-put__fields .btn { min-height: 3rem; }
+.inb-put__hints { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+
+/* history */
+.inb-history { display: grid; gap: 0; }
+.inb-history li { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 0.125rem 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid var(--line); }
+.inb-history li:last-child { border-bottom: 0; }
+.inb-history li > :last-child { grid-column: 2; }
+@media (max-width: 479.98px) {
+  .inb-modes .tab { flex: 1 1 0; padding: 0 0.625rem; white-space: normal; line-height: 1.15; }
+  .inb-history li { grid-template-columns: minmax(0, 1fr); }
+  .inb-history li > :last-child { grid-column: 1; }
+  .inb-scanzone { margin: 0 -1rem; padding: 0.625rem 1rem; }
+  .inb-scanbar__qty { flex: 1 1 6rem; }
+  .inb-card__count b { font-size: 1.5rem; }
+}
+
+/* ---------- receiving report (átvételi jegyzőkönyv), print only ---------- */
+.inb-print { display: none; }
+@media print {
+  .inb-screen { display: none !important; }
+  .inb-print { display: grid; gap: 5mm; color: #000; font-size: 9.5pt; }
+  .inb-print__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 8mm; padding-bottom: 3mm; border-bottom: 2px solid #000; }
+  .inb-print__head span { display: block; font-size: 9pt; }
+  .inb-print__title { text-align: right; }
+  .inb-print__title h1 { font-size: 16pt; }
+  .inb-print__title .mono { font-size: 11pt; }
+  .inb-print__dl { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 1fr); gap: 1.5mm 5mm; margin: 0; }
+  .inb-print__dl dt { font-weight: 700; }
+  .inb-print__dl dd { margin: 0; }
+  .inb-print__table { font-size: 8.5pt; }
+  .inb-print__table th, .inb-print__table td { padding: 1.5mm 2mm; border: 1px solid #999; }
+  .inb-print__table tfoot td { background: #eee; }
+  .inb-print__sign { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10mm; margin-top: 12mm; }
+  .inb-print__sign div { display: grid; gap: 1.5mm; font-size: 8.5pt; }
+  .inb-print__sign span { display: block; height: 12mm; border-bottom: 1px solid #000; }
+}
