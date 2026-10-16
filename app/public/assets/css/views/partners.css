@@ -1,1 +1,47 @@
-/* partners view styles */
+/* Partnerek view: partner page tabs, tariff tables with highlighted differences, integrations. */
+
+.pt-tab { display: grid; gap: 1.25rem; align-content: start; min-width: 0; }
+/* Wrappers are grid items of the page section: without this a wide table would widen the page
+   instead of scrolling inside its .table-wrap. */
+.pt-box, .pt-tab .panel > * { min-width: 0; }
+.table td.pt-name { min-width: 11rem; }
+.pt-row-actions { display: flex; flex-wrap: wrap; gap: 0.375rem; justify-content: flex-end; align-items: center; min-width: 13rem; }
+.pt-pad { padding: 1rem 1.25rem; }
+.pt-pad[hidden] { display: none; }
+.pt-tab .panel--flush > .pt-pad + .table-wrap { border-top: 1px solid var(--line); }
+.pt-tab .panel__head p { margin-top: 0.25rem; max-width: 52rem; }
+.pt-static { min-height: 2.5rem; display: flex; align-items: center; font-weight: 600; }
+.pt-notes { white-space: pre-line; }
+.pt-carrier[hidden] { display: none; }
+.pt-error { display: block; min-width: 12rem; color: var(--danger); font-size: 0.8125rem; overflow-wrap: anywhere; }
+.pt-errors { margin: 0.375rem 0 0; padding-left: 1.125rem; list-style: square; color: var(--ink); font-size: 0.8125rem; }
+
+/* Tariffs: group rows, input column, differences from the defaults */
+.pt-tariffs td:first-child { min-width: 14rem; }
+.pt-tariffs label { font-weight: 600; cursor: pointer; }
+.pt-tariffs .pt-input { width: 9rem; margin-left: auto; }
+.pt-tariffs .pt-diff { width: 5.5rem; }
+.pt-tariffs tr.pt-group td {
+  padding-block: 0.4375rem; background: var(--panel-alt);
+  font: 600 0.6875rem/1.2 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3);
+}
+.pt-tariffs tbody tr.pt-group:hover td { background: var(--panel-alt); }
+.pt-tariffs tr.is-diff td { background: color-mix(in oklab, var(--hi-vis) 14%, var(--panel)); }
+.pt-tariffs tr.is-diff td:first-child { box-shadow: inset 4px 0 0 var(--hi-vis); }
+.pt-tariffs tr.is-diff .pt-input { border-color: var(--ink); font-weight: 700; }
+.pt-tariffs .pt-input[readonly] { background: transparent; border-color: transparent; }
+
+/* Integrations */
+.pt-fieldset { display: grid; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.pt-fieldset legend { float: left; width: 100%; font-weight: 800; font-size: 1rem; }
+.pt-fieldset legend + * { clear: both; }
+.pt-key { font-family: var(--font-mono); font-size: 0.875rem; letter-spacing: 0.02em; }
+
+.table.pt-tariffs td .pt-unit-sub { display: none; }
+@media (max-width: 640px) {
+  /* Narrow screens: the unit goes under the label, differences show as the highlighted row only. */
+  .pt-tariffs th:nth-child(2), .pt-tariffs td:nth-child(2), .pt-tariffs th:nth-child(5), .pt-tariffs td.pt-diff { display: none; }
+  .table.pt-tariffs td .pt-unit-sub { display: block; }
+  .pt-tariffs td:first-child { min-width: 8rem; }
+  .pt-tariffs .pt-input { width: 6.5rem; }
+}
