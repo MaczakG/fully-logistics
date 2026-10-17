@@ -8,10 +8,14 @@
  * - copies the site's self-hosted fonts and favicon (../assets) so the app looks like fully.hu
  * - inlines an SVG sprite of every icon (../src/icons and icons/) into index.html at <!-- ICONS -->;
  *   scripts use them as <svg><use href="#i-name"></svg> through FL.icon("name")
+ * - versions the scripts and stylesheets in index.html (?v=<content hash>): /assets/* is cached for
+ *   an hour, so a release would otherwise reach a browser that opened the app shortly before only
+ *   with the old code under the new page
  * - lints: every FL.icon("...") and {{icon:...}} reference exists, no em or en dashes in shipped
  *   text (house style), no file over 25 MiB
  */
 import { readFileSync, writeFileSync, readdirSync, statSync, mkdirSync, rmSync, copyFileSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -53,7 +57,13 @@ const sprite = `<svg xmlns="http://www.w3.org/2000/svg" style="display:none" ari
   .map(([name, body]) => `<symbol id="i-${name}" viewBox="0 0 256 256">${body}</symbol>`)
   .join('')}</svg>`;
 const indexPath = join(OUT, 'index.html');
-writeFileSync(indexPath, readFileSync(indexPath, 'utf8').replace('<!-- ICONS -->', sprite));
+const version = (path) => createHash('sha256').update(readFileSync(join(OUT, path))).digest('hex').slice(0, 10);
+writeFileSync(indexPath, readFileSync(indexPath, 'utf8')
+  .replace('<!-- ICONS -->', sprite)
+  .replace(/(href|src)="\/(assets\/(?:css|js)\/[^"?]+)"/g, (m, attr, path) => {
+    if (!existsSync(join(OUT, path))) { warnings.push(`index.html: missing ${path}`); return m; }
+    return `${attr}="/${path}?v=${version(path)}"`;
+  }));
 
 // ---------------------------------------------------------------- lint
 const DASHES = /[\u2013\u2014]|&mdash;|&ndash;/;
