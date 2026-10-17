@@ -1,0 +1,5 @@
+#!/bin/bash
+# Stand-in for runuser: "runuser -u fullyapp -- cmd args" runs cmd args as the current user.
+while [ "$1" != "--" ] && [ $# -gt 0 ]; do shift; done
+shift
+exec "$@"

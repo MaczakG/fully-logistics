@@ -1,0 +1,21 @@
+#!/bin/bash
+# Stand-in for systemctl in test/deploy-agent.test.mjs: runs the app as a background process.
+ROOT="$FULLY_AGENT_ROOT"; PID="$ROOT/app.pid"; LOG="$ROOT/app.log"
+echo "systemctl $*" >> "$ROOT/systemctl.log"
+running() { [ -f "$PID" ] && kill -0 "$(cat "$PID")" 2>/dev/null; }
+stop_app() { if running; then kill "$(cat "$PID")"; for i in $(seq 1 50); do running || break; sleep 0.1; done; fi; rm -f "$PID"; }
+start_app() {
+  ( cd "$ROOT/current/app" && exec setsid env -i PATH="$PATH" $(grep -v '^#' "$FULLY_AGENT_ENV_FILE" | xargs) node --no-warnings server/index.mjs ) < /dev/null >> "$LOG" 2>&1 &
+  echo $! > "$PID"
+}
+quiet=0; args=()
+for a in "$@"; do [ "$a" = "--quiet" ] && quiet=1 || args+=("$a"); done
+cmd="${args[0]}"; unit="${args[1]}"
+case "$cmd" in
+  restart) [ "$unit" = "fully-app.service" ] && { stop_app; start_app; } ;;
+  start) [ "$unit" = "fully-app.service" ] && { running || start_app; } ;;
+  stop) [ "$unit" = "fully-app.service" ] && stop_app ;;
+  is-active) [ "$unit" = "fully-app.service" ] && { running && exit 0 || exit 3; } ;;
+  *) ;;
+esac
+exit 0

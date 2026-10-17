@@ -1,0 +1,2 @@
+#!/bin/bash
+tail -n 40 "$FULLY_AGENT_ROOT/app.log" 2>/dev/null
