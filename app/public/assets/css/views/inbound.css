@@ -46,10 +46,27 @@
 .inb-screen > *, .inb-work > *, .inb-scanzone > *, .inb-scanbar > * { min-width: 0; }
 .inb-scanbar .scan { flex: 1 1 20rem; min-width: 0; }
 .inb-scanbar .scan input { width: 0; }
-.inb-scanbar__qty { width: 8rem; }
-.inb-scanbar__qty .input { min-height: 3rem; font-size: 1.125rem; }
-.inb-scanbar__damaged { min-height: 3rem; padding: 0 0.875rem; border: 2px solid var(--line-strong); background: var(--panel); }
-.inb-scanbar__damaged:has(input:checked) { border-color: var(--danger); background: var(--danger-bg); color: var(--danger); font-weight: 700; }
+
+/* quantity entry: the scanned (or chosen) product and the typed quantity */
+.inb-entrybox[hidden] { display: none; }
+.inb-entry { display: grid; gap: 0.625rem; padding: 0.75rem 0.875rem; background: var(--panel-alt); border: 2px solid var(--ink); border-top: 6px solid var(--hi-vis); }
+.inb-entry__info, .inb-entry__input { display: grid; gap: 0.625rem; align-content: start; min-width: 0; }
+@media (min-width: 900px) {
+  .inb-entry { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.25rem; }
+}
+.inb-entry__product { display: grid; gap: 0.125rem; min-width: 0; }
+.inb-entry__name { font-size: 1.0625rem; font-weight: 800; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.inb-entry__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.375rem; margin: 0; }
+.inb-entry__stats div { padding: 0.375rem 0.5rem; background: var(--panel); border: 1px solid var(--line); }
+.inb-entry__stats dt { font-size: 0.6875rem; color: var(--ink-3); }
+.inb-entry__stats dd { margin: 0; font-size: 1.125rem; font-weight: 700; }
+.inb-entry__row { display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; align-items: flex-end; }
+.inb-entry__row > .field { flex: 1 1 10rem; }
+.inb-entry__qty .input { min-height: 3.5rem; font-size: 1.75rem; font-weight: 700; text-align: right; }
+.inb-entry__damaged { min-height: 3.5rem; padding: 0 0.875rem; border: 2px solid var(--line-strong); background: var(--panel); }
+.inb-entry__damaged:has(input:checked) { border-color: var(--danger); background: var(--danger-bg); color: var(--danger); font-weight: 700; }
+.inb-entry__actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 0.5rem; }
+.inb-entry__actions .btn { min-height: 3.25rem; }
 .inb-feedback {
   display: flex; gap: 0.5rem; align-items: flex-start; padding: 0.5rem 0.75rem; min-height: 2.5rem;
   font-weight: 600; border: 1px solid var(--line); border-left-width: 6px; background: var(--panel-alt);
@@ -105,8 +122,28 @@
   .inb-history li { grid-template-columns: minmax(0, 1fr); }
   .inb-history li > :last-child { grid-column: 1; }
   .inb-scanzone { margin: 0 -1rem; padding: 0.625rem 1rem; }
-  .inb-scanbar__qty { flex: 1 1 6rem; }
   .inb-card__count b { font-size: 1.5rem; }
+}
+
+/* PDA: the scan zone stays under the top bar edge to edge, cards are full width with big buttons */
+@media (max-width: 640px) {
+  .inb-screen { gap: 0.875rem; }
+  /* The work comes right after the header, the figures and notices below it. */
+  .inb-screen > [data-region="work-shell"] { order: 1; }
+  .inb-screen > [data-region="summary"] { order: 2; }
+  .inb-screen > [data-region="lines"], .inb-screen > [data-region="info"] { order: 3; }
+  .inb-work { padding: 0 0.875rem 0.875rem; }
+  .inb-modes { margin: 0 -0.875rem; }
+  .inb-modes .tab { flex: 1 1 0; justify-content: center; padding: 0 0.5rem; white-space: normal; line-height: 1.15; }
+  .inb-scanzone { margin: 0 -0.875rem; padding: 0.5rem 0.875rem; box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.35); }
+  .inb-feedback { min-height: 0; font-size: 0.9375rem; }
+  .inb-cards { grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+  .inb-card { padding: 0.75rem 0.875rem; scroll-margin-top: calc(var(--topbar-h) + 12rem); }
+  .inb-card__actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .inb-card__actions .btn { white-space: normal; line-height: 1.15; }
+  .inb-put { padding: 0.75rem; }
+  .inb-put__qty { flex: 1 1 6rem; width: auto; }
+  .inb-put__fields .btn { flex: 1 1 100%; min-height: 3.25rem; }
 }
 
 /* ---------- receiving report (átvételi jegyzőkönyv), print only ---------- */

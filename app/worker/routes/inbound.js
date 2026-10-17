@@ -302,9 +302,11 @@ async function receiveLine(ctx, inb, line, data, { auditIt = true } = {}) {
   if (started) {
     await audit(ctx, { module: 'inbound', action: 'edit', entity: 'inbound', entityId: inb.id, summary: `${inb.number} átvétele megkezdve` });
   }
-  if (auditIt && (absolute || trackingChanged)) {
+  if (auditIt && (absolute || trackingChanged || addR || addD)) {
     const parts = [];
     if (absolute) parts.push(`átvett ${newR}, ebből sérült ${newD}`);
+    // A typed quantity on the receiving screen (scanner deltas come with auditIt false).
+    else if (addR || addD) parts.push(`${addR >= 0 ? `${addR} átvéve` : `${-addR} levonva`}${addD ? `, ebből sérült ${addD}` : ''}, összesen ${newR}`);
     if (trackingChanged) parts.push(`sarzs ${lot || 'nincs'}, lejárat ${expiry || 'nincs'}`);
     await audit(ctx, {
       module: 'inbound', action: 'edit', entity: 'inbound', entityId: inb.id,
@@ -732,6 +734,7 @@ export function register(r) {
 
   // Scanner: one scan of an EAN or SKU counts qty pieces on the matching line. Answers
   //   { result: 'counted', line, status }     counted on a line
+  //   { result: 'match', line_id }            peek: true only finds the line (the screen asks for the quantity)
   //   { result: 'unexpected', product }       product of the client but not on this inbound (send add_line: true to add it)
   //   { result: 'location', location }        the code is a location (the screen can switch to putaway)
   r.post('/api/inbound/:id/scan', async (ctx) => {
@@ -744,6 +747,7 @@ export function register(r) {
       line_id: { type: 'id', nullable: true },
       add_line: { type: 'bool', default: false },
       lot: { type: 'str', max: 80 },
+      peek: { type: 'bool', default: false },
     });
     const inb = await loadInbound(db, id);
     requireStatus(inb, OPEN, 'már nem vehető át rá áru');
@@ -768,10 +772,11 @@ export function register(r) {
     const counts = { add: data.qty, damaged_add: data.damaged ? data.qty : 0 };
     if (!line) {
       const product = products[0];
-      if (!data.add_line) return { result: 'unexpected', product: { id: product.id, sku: product.sku, name: product.name, active: !!product.active } };
+      if (!data.add_line || data.peek) return { result: 'unexpected', product: { id: product.id, sku: product.sku, name: product.name, active: !!product.active } };
       const out = await addLine(ctx, inb, product, { received_qty: data.qty, damaged_qty: counts.damaged_add, lot: data.lot || '' });
       return { result: 'counted', ...out };
     }
+    if (data.peek) return { result: 'match', line_id: line.id };
     const out = await receiveLine(ctx, inb, line, counts, { auditIt: false });
     return { result: 'counted', ...out };
   }, { perm: ['inbound', 'edit'] });

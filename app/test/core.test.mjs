@@ -1,6 +1,6 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { startServer, ADMIN, SETUP_TOKEN } from './helpers.mjs';
+import { startServer, ADMIN, SETUP_TOKEN, FIXTURE } from './helpers.mjs';
 
 let srv;
 before(async () => { srv = await startServer(); });
@@ -89,4 +89,23 @@ test('fixture data and a limited role', async () => {
   assert.equal(me.data.user.role.key, 'warehouse_operator');
   assert.deepEqual(me.data.permissions.counts, ['view', 'edit']);
   assert.deepEqual(me.data.permissions.users, []);
+});
+
+test('home screen counts: only the modules the user may open', async () => {
+  const fx = FIXTURE;
+  const admin = await srv.admin();
+  await srv.sql(`INSERT INTO inbounds (id, number, partner_id, status, expected_date) VALUES
+      (9101, 'BT-H-1', ${fx.clients.kutya}, 'expected', '2026-01-01'),
+      (9102, 'BT-H-2', ${fx.clients.kutya}, 'receiving', '2026-01-01'),
+      (9103, 'BT-H-3', ${fx.clients.kutya}, 'completed', '2026-01-01');
+    INSERT INTO counts (id, number, type, status) VALUES (9101, 'LT-H-1', 'location', 'counting');`);
+  const all = (await admin.get('/api/home')).data.counts;
+  assert.deepEqual(Object.keys(all).sort(), ['counts', 'inbound', 'orders', 'picking', 'transport']);
+  assert.ok(all.inbound.open >= 2 && all.inbound.active >= 1, JSON.stringify(all.inbound));
+  assert.ok(all.counts.open >= 1);
+  const sales = await srv.userWithRole('sales');
+  assert.deepEqual((await sales.get('/api/home')).data.counts, {}, 'sales sees none of the warehouse modules');
+  const service = await srv.userWithRole('customer_service');
+  assert.deepEqual(Object.keys((await service.get('/api/home')).data.counts).sort(), ['inbound', 'orders', 'picking', 'transport']);
+  assert.equal((await srv.client().get('/api/home')).status, 401);
 });

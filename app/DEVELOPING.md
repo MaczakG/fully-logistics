@@ -110,7 +110,8 @@ export function register(r) {
 - Routes are Hungarian slugs: `#/betarolas`, `#/megrendelesek`, `#/komissio`, `#/leltar`, `#/keszlet`, `#/rendelestortenet`, `#/fuvarszervezes`, `#/partnerek`, `#/ajanlatkeszito`, `#/elszamolas`, `#/beallitasok`, `#/felhasznalok` (`FL.routes[module]`). Sub pages: `#/partnerek/12/tarifak`. Filters in the query: `#/megrendelesek?status=new`.
 - Hide or disable what the user may not do (`FL.can`, `ui.denyAttr(module, action)`).
 - Text: Hungarian, informal (tegező) like the rest of the app, short and specific. No em or en dashes (`build.mjs` fails on them): use commas, colons, "és", "között". Numbers and money through `FL.fmt`.
-- Every screen must work at 360 px wide (tables scroll inside `.table-wrap`), in light and dark theme, with keyboard only. Warehouse screens (receiving, picking, counting) must work with a hand scanner: `FL.ui.scan` + `FL.ui.bindScan`.
+- Every screen must work at 360 px wide, in light and dark theme, with keyboard only. Warehouse screens (receiving, picking, counting) must work with a hand scanner: `FL.ui.scan` + `FL.ui.bindScan`.
+- Up to 640 px the app is a hand terminal (PDA): `#/` is a home screen of big module tiles (`renderHome` in `core/app.js`, counts from `GET /api/home`), the top bar has Back (the page's `.crumb`, else one level up) and Home instead of the side menu, and the "PDA" section of `app.css` sets the touch sizes. `FL.pda()` tells whether it is on. `ui.table` rows become cards there: the first column (or the one with `cardTitle: true`) is the title, the others are "label: value" lines; pass `cards: false` for a grid that must stay a table. A `form.toolbar[data-filters]` with three or more fields shows only its search field and a Filters button. Next to the scan field: camera reading (`FL.ui.cameraScan`, where `BarcodeDetector` exists) and an on-screen keyboard switch for devices with a built-in scanner.
 
 ## Tests
 

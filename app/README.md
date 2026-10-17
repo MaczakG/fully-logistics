@@ -12,6 +12,23 @@ Fejlesztői leírás: [DEVELOPING.md](DEVELOPING.md). Partner API dokumentáció
 
 Nyisd meg az alkalmazás címét. Az első indításkor a rendszer a telepítési kódot kéri (AWS-en a `provision.mjs` írja ki), és létrehozza az első adminisztrátort. Utána érdemes a lenti 8. pont sorrendjében haladni (Cégadatok, Raktárhelyek, Alap tarifák, Futárok és számlázó, Partnerek, Felhasználók).
 
+## Telefonon és PDA-n
+
+Telefonon (640 px szélességig) az app kézi terminálként működik. Belépés után a kezdőképernyő nagy ikonos csempéken mutatja azokat a modulokat, amelyekhez a szerepkör hozzáfér. A csempéken látszik, mennyi munka vár (például „1 átvételre vár”, „5 új”). A felső sávban a Vissza gomb egy szinttel feljebb, a négyzetes ikon a kezdőképernyőre visz. A táblázatok sorai kártyák, a szűrők a Szűrők gomb mögött vannak, a párbeszédablakok alulról nyílnak.
+
+A beolvasómező mellett két gomb van:
+
+- **Kamera:** a telefon kamerájával olvassa be a vonalkódot. Ott jelenik meg, ahol a böngésző tud vonalkódot olvasni (például Androidon a Chrome-ban, iPhone-on nem).
+- **Billentyűzet:** beépített szkennerű PDA-n kikapcsolja a képernyő-billentyűzetet, így az nem takarja el a képernyőt. A beállítást az eszköz megjegyzi.
+
+**Betárolás, átvétel:** a darabszámot be kell írni, +/− gomb nincs. Menete:
+
+1. Olvasd be a terméket, vagy koppints a tételnél a **Mennyiség beírása** gombra.
+2. Megnyílik a termék adatlapja: várt mennyiség, eddig átvett, hátralévő.
+3. Írd be a beérkezett darabszámot (ha kell, jelöld a sérültet, add meg a sarzsot és a lejáratot), és nyomd meg a **Rögzítés** gombot vagy az Entert.
+
+Amíg a mennyiséget nem rögzíted, semmi sem kerül átvételre. A termék újabb beolvasása eggyel növeli a beírt darabszámot, így darabonként is számolhatsz. Ha a vártnál több lenne az átvett mennyiség, a rendszer rákérdez. A tételnél a **Javítás** gombbal az összesített átvett és sérült mennyiség utólag átírható.
+
 ## Alternatíva: egyszeri beállítás a Cloudflare-en
 
 Most nem ezt használjuk. Ehhez Cloudflare fiók kell, amelyben a `fully.hu` domain is kezelve van (a DNS a Cloudflare-en). Ha a domain még nincs a Cloudflare-en: **Add a domain**, majd a domainregisztrálónál a névszervereket a Cloudflare által mutatottakra kell állítani.

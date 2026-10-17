@@ -300,6 +300,41 @@ test('extra lines during receiving and sztornó before putaway', async () => {
   assert.equal((await operator.post(`/api/inbound/${id}/arrive`, {})).status, 409);
 });
 
+test('receiving by typed quantity: a peek scan only finds the line, typed quantities add up and are logged', async () => {
+  const { id } = await newInbound();
+  await operator.post(`/api/inbound/${id}/arrive`, {});
+  const tap = (await admin.get(`/api/inbound/${id}`)).data.lines.find((l) => l.product_id === fx.products.tap);
+  const peek = await operator.post(`/api/inbound/${id}/scan`, { code: '5990000010015', peek: true });
+  assert.deepEqual(peek.data, { result: 'match', line_id: tap.id });
+  const unexpected = await operator.post(`/api/inbound/${id}/scan`, { code: 'KB-1003', peek: true, add_line: true });
+  assert.equal(unexpected.data.result, 'unexpected', 'a peek never adds a line');
+  assert.equal(unexpected.data.product.sku, 'KB-1003');
+  assert.equal((await operator.post(`/api/inbound/${id}/scan`, { code: 'A-01-01', peek: true })).data.result, 'location');
+  let d = (await admin.get(`/api/inbound/${id}`)).data;
+  assert.equal(d.lines.length, 2);
+  assert.equal(d.lines.find((l) => l.id === tap.id).received_qty, 0, 'nothing counted by a peek');
+  assert.equal(d.status, 'arrived');
+
+  // Two operators confirm their typed counts at the same moment: the deltas add up.
+  const [a, b] = await Promise.all([
+    operator.post(`/api/inbound/${id}/lines/${tap.id}/receive`, { add: 6, damaged_add: 0 }),
+    manager.post(`/api/inbound/${id}/lines/${tap.id}/receive`, { add: 4, damaged_add: 4 }),
+  ]);
+  assert.equal(a.status, 200, JSON.stringify(a.data));
+  assert.equal(b.status, 200, JSON.stringify(b.data));
+  d = (await admin.get(`/api/inbound/${id}`)).data;
+  const line = d.lines.find((l) => l.id === tap.id);
+  assert.equal(line.received_qty, 10);
+  assert.equal(line.damaged_qty, 4);
+  assert.equal(d.status, 'receiving');
+  // A scanner's single scans stay out of the log, typed quantities are in it.
+  await operator.post(`/api/inbound/${id}/scan`, { code: 'KB-1001' });
+  const log = (await srv.query("SELECT summary FROM audit_log WHERE entity = 'inbound' AND entity_id = ? ORDER BY id", String(id))).map((r) => r.summary);
+  assert.ok(log.some((t) => /^KB-1001: 6 átvéve, összesen (6|10)$/.test(t)), log.join(' | '));
+  assert.ok(log.some((t) => /^KB-1001: 4 átvéve, ebből sérült 4, összesen (4|10)$/.test(t)), log.join(' | '));
+  assert.equal(log.filter((t) => t.startsWith('KB-1001:')).length, 2, 'the scan is not logged');
+});
+
 test('inactive products cannot be put on a new inbound', async () => {
   await srv.sql("INSERT INTO products (id, partner_id, sku, name, active) VALUES (1901, 101, 'KB-OLD', 'Kifutott cikk', 0)");
   const r = await admin.post('/api/inbound', { partner_id: fx.clients.kutya, lines: [{ sku: 'KB-OLD', expected_qty: 1 }] });

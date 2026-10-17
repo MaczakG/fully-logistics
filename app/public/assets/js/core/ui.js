@@ -59,14 +59,17 @@
   ui.notice = (text, tone = 'info', icon = tone === 'danger' || tone === 'warn' ? 'warning-circle' : 'info') =>
     html`<div class="notice" data-tone="${tone}">${FL.icon(icon)}<div>${text}</div></div>`;
 
-  /* table({ columns, rows, empty, rowHref, rowAttrs, footer, selectable, selected, caption, cls })
-       columns: [{ key, label, align: 'r'|'c', cls, render(row) -> value|html, width }]
+  /* table({ columns, rows, empty, rowHref, rowAttrs, footer, selectable, selected, caption, cls, cards })
+       columns: [{ key, label, align: 'r'|'c', cls, render(row) -> value|html, width, cardTitle }]
        rowHref(row): makes the row clickable (the first link is the keyboard target)
-       selectable: adds checkboxes (data-action="select-row"/"select-all"), selected: Set of ids */
-  ui.table = ({ columns, rows, empty, rowHref, rowAttrs, footer, selectable, selected, caption, cls = '' }) => {
+       selectable: adds checkboxes (data-action="select-row"/"select-all"), selected: Set of ids
+       cards: on the phone every row is a card, the first column (or the one with cardTitle) its
+       title and the others "label: value" lines (default); false keeps a table that scrolls sideways. */
+  ui.table = ({ columns, rows, empty, rowHref, rowAttrs, footer, selectable, selected, caption, cls = '', cards = true }) => {
     if (!rows || !rows.length) return html`<div class="table-wrap">${ui.empty(empty)}</div>`;
     const allSel = selectable && rows.every((r) => selected && selected.has(r.id));
-    return html`<div class="table-wrap"><table class="table ${cls}">
+    const label = (c) => (typeof c.label === 'string' ? c.label : '');
+    return html`<div class="table-wrap"><table class="table ${cards ? 'table--cards' : ''} ${cls}">
       ${caption ? html`<caption class="visually-hidden">${caption}</caption>` : ''}
       <thead><tr>
         ${selectable ? html`<th class="w-check"><input type="checkbox" aria-label="Összes kijelölése" data-action="select-all" ${allSel ? raw('checked') : ''}></th>` : ''}
@@ -77,7 +80,7 @@
         const sel = selectable && selected && selected.has(r.id);
         return html`<tr ${href ? raw(`data-href="${FL.esc(href)}"`) : ''} ${sel ? raw('data-selected="true"') : ''} ${rowAttrs ? raw(rowAttrs(r)) : ''}>
           ${selectable ? html`<td class="w-check"><input type="checkbox" aria-label="Kijelölés" data-action="select-row" data-id="${r.id}" ${sel ? raw('checked') : ''}></td>` : ''}
-          ${columns.map((c) => html`<td class="${c.align || ''} ${c.cls || ''}">${c.render ? c.render(r) : r[c.key]}</td>`)}
+          ${columns.map((c) => html`<td class="${c.align || ''} ${c.cls || ''} ${c.cardTitle ? 'td-title' : ''}" data-label="${label(c)}">${c.render ? c.render(r) : r[c.key]}</td>`)}
         </tr>`;
       })}</tbody>
       ${footer ? html`<tfoot>${footer}</tfoot>` : ''}
@@ -360,24 +363,101 @@
 
   /* ------------------------------------------------------------ barcode scanning
      scan({ id, label, placeholder }) renders the input; bindScan(root, id, onScan) handles Enter.
-     Hand scanners act as keyboards: they type the code and send Enter. */
+     Hand scanners act as keyboards: they type the code and send Enter. On the phone (PDA) two
+     buttons sit next to the field: the camera reads the code where the browser can (BarcodeDetector,
+     e.g. Chrome on Android), and the keyboard button hides the on-screen keyboard for devices with
+     a built-in scanner (remembered on the device). */
+  const canCamera = () => 'BarcodeDetector' in window && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  const keyboardOff = () => { try { return localStorage.getItem('fl-scan-keyboard') === 'off'; } catch { return false; } };
   ui.scan = ({ id = 'scan', label = 'Vonalkód vagy kód beolvasása', placeholder = 'Olvasd be a vonalkódot, vagy írd be és nyomj Entert' } = {}) => html`
     <div class="scan">${FL.icon('barcode')}<label class="visually-hidden" for="${id}">${label}</label>
-      <input id="${id}" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${placeholder}"></div>`;
+      <input id="${id}" type="text" inputmode="${keyboardOff() ? 'none' : 'text'}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${placeholder}">
+      <button class="scan__btn scan__kbd" type="button" data-scan-keyboard aria-pressed="${String(!keyboardOff())}" aria-label="Képernyő-billentyűzet">${FL.icon('keyboard')}</button>
+      ${canCamera() ? html`<button class="scan__btn scan__cam" type="button" data-scan-camera aria-label="Beolvasás kamerával">${FL.icon('camera')}</button>` : ''}</div>`;
   ui.bindScan = (root, id, onScan) => {
     const input = root.querySelector(`#${id}`);
     if (!input) return null;
-    input.addEventListener('keydown', async (e) => {
-      if (e.key !== 'Enter') return;
-      e.preventDefault();
-      const code = input.value.trim();
+    const submit = async (raw) => {
+      const code = raw.trim();
       input.value = '';
       if (code) await onScan(code);
       // Back to the scan field, unless the handler moved focus on purpose (quantity, tracking ...).
       if (!document.activeElement || document.activeElement === document.body || document.activeElement === input) input.focus();
+    };
+    input.addEventListener('keydown', async (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      await submit(input.value);
     });
+    const box = input.closest('.scan');
+    const kbd = box.querySelector('[data-scan-keyboard]');
+    if (kbd) {
+      kbd.addEventListener('click', () => {
+        const off = !keyboardOff();
+        try { localStorage.setItem('fl-scan-keyboard', off ? 'off' : 'on'); } catch { /* storage blocked */ }
+        input.setAttribute('inputmode', off ? 'none' : 'text');
+        kbd.setAttribute('aria-pressed', String(!off));
+        input.blur();
+        input.focus();
+        ui.toast(off ? 'Képernyő-billentyűzet kikapcsolva: a beépített szkenner olvas.' : 'Képernyő-billentyűzet bekapcsolva.', 'info');
+      });
+    }
+    const cam = box.querySelector('[data-scan-camera]');
+    if (cam) cam.addEventListener('click', async () => { const code = await ui.cameraScan(); if (code) await submit(code); else input.focus(); });
     return input;
   };
+
+  // Full screen camera view that resolves with the first barcode it reads (or null when closed).
+  ui.cameraScan = () => new Promise((resolve) => {
+    const d = document.createElement('dialog');
+    d.className = 'camscan';
+    d.setAttribute('aria-label', 'Beolvasás kamerával');
+    d.innerHTML = String(html`<video class="camscan__video" playsinline muted></video>
+      <div class="camscan__frame" aria-hidden="true"></div>
+      <p class="camscan__status" role="status">Tartsd a vonalkódot a keretbe.</p>
+      <button class="btn btn--primary btn--lg camscan__close" type="button" data-close>${FL.icon('x')}Mégse</button>`);
+    document.body.appendChild(d);
+    const video = d.querySelector('video');
+    const status = d.querySelector('.camscan__status');
+    let stream = null;
+    let timer = null;
+    let result = null;
+    const finish = (code) => { result = code; if (d.open) d.close(); };
+    d.addEventListener('close', () => {
+      clearTimeout(timer);
+      if (stream) stream.getTracks().forEach((t) => t.stop());
+      d.remove();
+      resolve(result);
+    });
+    d.querySelector('[data-close]').addEventListener('click', () => finish(null));
+    d.showModal();
+    (async () => {
+      try {
+        const wanted = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'code_93', 'itf', 'codabar', 'qr_code', 'data_matrix'];
+        const supported = await window.BarcodeDetector.getSupportedFormats();
+        const detector = new window.BarcodeDetector({ formats: wanted.filter((f) => supported.includes(f)) });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+        if (!d.open) { stream.getTracks().forEach((t) => t.stop()); return; }
+        video.srcObject = stream;
+        await video.play();
+        const tick = async () => {
+          if (!d.open) return;
+          try {
+            const found = await detector.detect(video);
+            const code = found.map((b) => b.rawValue).find(Boolean);
+            if (code) { if (navigator.vibrate) navigator.vibrate(60); finish(code); return; }
+          } catch { /* frame not ready yet */ }
+          timer = setTimeout(tick, 120);
+        };
+        tick();
+      } catch (err) {
+        status.textContent = err && err.name === 'NotAllowedError'
+          ? 'A kamerához nem kaptunk engedélyt. Engedélyezd a böngésző beállításaiban, vagy írd be a kódot.'
+          : 'A kamera nem indítható ezen az eszközön. Írd be a kódot.';
+        d.dataset.error = 'true';
+      }
+    })();
+  });
 
   /* ------------------------------------------------------------ CSV import
      csvImport({ title, endpoint, help, templateName, templateColumns: [label...], extra: {...}, unit: 'tétel' })

@@ -6,13 +6,13 @@ import { validate } from '../lib/validate.js';
 import {
   checkLogin, clearCookie, createSession, destroySession, hashPassword, passwordProblem, safeEqual, userCount, verifyPassword,
 } from '../lib/auth.js';
-import { ACTIONS, MODULES, permissionMap } from '../lib/perm.js';
+import { ACTIONS, MODULES, can, permissionMap } from '../lib/perm.js';
 import {
   CARRIERS, LOCATION_KINDS, MOVEMENT_TYPES, PARTNER_TYPES, STATUSES, TARIFFS, WEBSHOP_PLATFORMS,
 } from '../lib/constants.js';
 import { audit } from '../lib/audit.js';
 import { sendDocument } from '../lib/files.js';
-import { nowIso } from '../lib/time.js';
+import { budapestDate, nowIso } from '../lib/time.js';
 
 async function me(ctx) {
   const company = await getSetting(ctx.env.DB, 'company', {});
@@ -116,6 +116,26 @@ export function register(r) {
   });
 
   // ---------------------------------------------------------------- metadata
+  // Work waiting in each module, for the tiles of the phone (PDA) home screen. Only the modules
+  // the user may open; a module without a count is left out.
+  r.get('/api/home', async (ctx) => {
+    const db = ctx.env.DB;
+    const today = budapestDate();
+    const queries = {
+      inbound: () => first(db, `SELECT COUNT(*) AS open, COALESCE(SUM(status IN ('arrived', 'receiving')), 0) AS active
+        FROM inbounds WHERE status IN ('expected', 'arrived', 'receiving')`),
+      orders: () => first(db, `SELECT COALESCE(SUM(status = 'new'), 0) AS new, COALESCE(SUM(status = 'hold'), 0) AS hold
+        FROM orders WHERE status IN ('new', 'hold')`),
+      picking: () => first(db, `SELECT COALESCE(SUM(status IN ('open', 'picking')), 0) AS active, COALESCE(SUM(status = 'picked'), 0) AS picked
+        FROM waves WHERE status IN ('open', 'picking', 'picked')`),
+      counts: () => first(db, "SELECT COUNT(*) AS open FROM counts WHERE status IN ('open', 'counting')"),
+      transport: () => first(db, "SELECT COUNT(*) AS today FROM carrier_pickups WHERE status IN ('planned', 'arrived') AND date <= ?", today),
+    };
+    const keys = Object.keys(queries).filter((m) => can(ctx.user, m, 'view'));
+    const rows = await Promise.all(keys.map((m) => queries[m]()));
+    return { counts: Object.fromEntries(keys.map((m, i) => [m, rows[i]])) };
+  });
+
   r.get('/api/meta', async (ctx) => ({
     modules: MODULES,
     actions: ACTIONS,

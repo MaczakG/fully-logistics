@@ -142,7 +142,7 @@
         rowAttrs: (r) => (r.status === 'ok' ? '' : `class="stk-row--${r.status}"`),
         columns: [
           { key: 'partner_code', label: 'Ügyfél', render: (r) => html`<span class="tag">${r.partner_code}</span>` },
-          { key: 'sku', label: 'Cikk', render: (r) => html`<a class="mono stk-code" href="${ROUTE}/termek/${r.product_id}">${r.sku}</a><span class="sub">${r.name}${r.active ? '' : ', inaktív'}</span>` },
+          { key: 'sku', label: 'Cikk', cardTitle: true, render: (r) => html`<a class="mono stk-code" href="${ROUTE}/termek/${r.product_id}">${r.sku}</a><span class="sub">${r.name}${r.active ? '' : ', inaktív'}</span>` },
           { key: 'on_hand', label: 'Készleten', align: 'r', cls: 'num', render: (r) => fmt.int(r.on_hand) },
           { key: 'reserved', label: 'Foglalt', align: 'r', cls: 'num', render: (r) => (r.reserved ? fmt.int(r.reserved) : html`<span class="muted">0</span>`) },
           { key: 'blocked', label: 'Zárolt', align: 'r', cls: 'num', render: (r) => (r.blocked ? html`<span class="diff-neg">${fmt.int(r.blocked)}</span>` : html`<span class="muted">0</span>`) },
@@ -531,7 +531,7 @@
         rowHref: (r) => `${ROUTE}/termek/${r.id}`,
         columns: [
           { key: 'partner_code', label: 'Ügyfél', render: (r) => html`<span class="tag">${r.partner_code}</span>` },
-          { key: 'sku', label: 'Cikkszám', render: (r) => html`<a class="mono stk-code" href="${ROUTE}/termek/${r.id}">${r.sku}</a>` },
+          { key: 'sku', label: 'Cikkszám', cardTitle: true, render: (r) => html`<a class="mono stk-code" href="${ROUTE}/termek/${r.id}">${r.sku}</a>` },
           { key: 'name', label: 'Megnevezés', cls: 'stk-name', render: (r) => r.name },
           { key: 'ean', label: 'EAN', cls: 'nowrap', render: (r) => (r.ean ? html`<span class="mono">${r.ean}</span>${r.ean_warning ? html` <span class="stk-warn" role="img" aria-label="${r.ean_warning}" title="${r.ean_warning}">${FL.icon('warning')}</span>` : ''}` : html`<span class="muted">nincs</span>`) },
           { key: 'unit', label: 'Egység', render: (r) => r.unit },

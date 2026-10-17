@@ -2,7 +2,10 @@
      #/betarolas           list with status tabs, KPIs, filters, new inbound, CSV import
      #/betarolas/<id>      detail: arrival, receiving by hand scanner, putaway, closing, receiving report
    The receiving screen keeps the scan input in place while the lines below it are redrawn, and
-   handles scans one after the other, so fast scanning never loses a code. */
+   handles scans one after the other, so fast scanning never loses a code. Receiving works by typed
+   quantity: a scan (or the line's button) opens the quantity entry of the product, and nothing is
+   counted until the typed quantity is confirmed. Scanning the same product again while its entry is
+   open adds one piece to the typed quantity. */
 (() => {
   'use strict';
   const FL = window.FL;
@@ -315,9 +318,9 @@
     let d = await api.get(`/api/inbound/${id}`);
     const st = {
       mode: initialMode(d),
-      qty: 1,
-      damaged: false,
       activeLine: null,
+      // Quantity entry while receiving: { lineId, qty, damaged, lot, expiry } (typed, not saved yet).
+      entry: null,
       put: { lineId: null, location: null, qty: '' },
     };
     let queue = Promise.resolve();
@@ -454,34 +457,92 @@
       const receive = st.mode === 'receive';
       shell.innerHTML = String(html`
         <div class="inb-modes" role="tablist" aria-label="Munkafolyamat lépései">
-          <button class="tab" type="button" role="tab" id="inb-tab-receive" aria-controls="inb-work" aria-selected="${receive}" data-action="mode" data-mode="receive">${FL.icon('barcode')}1. Átvétel</button>
-          <button class="tab" type="button" role="tab" id="inb-tab-putaway" aria-controls="inb-work" aria-selected="${!receive}" data-action="mode" data-mode="putaway">${FL.icon('stack')}2. Polcra helyezés <span class="count" data-put-count>${toPut ? `${fmt.int(toPut)} vár` : ''}</span></button>
+          <button class="tab" type="button" role="tab" id="inb-tab-receive" aria-controls="inb-work" aria-selected="${String(receive)}" data-action="mode" data-mode="receive">${FL.icon('barcode')}1. Átvétel</button>
+          <button class="tab" type="button" role="tab" id="inb-tab-putaway" aria-controls="inb-work" aria-selected="${String(!receive)}" data-action="mode" data-mode="putaway">${FL.icon('stack')}2. Polcra helyezés <span class="count" data-put-count>${toPut ? `${fmt.int(toPut)} vár` : ''}</span></button>
         </div>
         <div class="inb-scanzone">
         <div class="inb-scanbar">
           ${ui.scan({
             id: 'inb-scan',
             label: receive ? 'Termék beolvasása (EAN vagy cikkszám)' : 'Termék vagy raktárhely beolvasása',
-            placeholder: receive ? 'Olvasd be a termék EAN kódját vagy cikkszámát' : 'Olvasd be a terméket, majd a raktárhelyet',
+            placeholder: receive ? 'EAN vagy cikkszám' : 'Termék vagy hely',
           })}
-          ${receive ? html`
-            <div class="field inb-scanbar__qty"><label for="inb-qty">Db / beolvasás</label>
-              <input class="input input--num" id="inb-qty" type="number" min="1" max="100000" step="1" inputmode="numeric" value="${st.qty}" data-action="qty"></div>
-            <label class="check inb-scanbar__damaged"><input type="checkbox" data-action="damaged" ${st.damaged ? raw('checked') : ''}><span>Sérült</span></label>` : ''}
         </div>
         <p class="inb-feedback" data-feedback data-tone="info" aria-live="polite">${FL.icon('info')}<span>${receive
-          ? 'Egy beolvasás egy darab. Kartonhoz írd be a darabszámot a beolvasás előtt.'
+          ? 'Olvasd be a terméket (vagy válaszd ki lent), írd be a beérkezett mennyiséget, és rögzítsd.'
           : 'Olvasd be a termék kódját (vagy válassz tételt), utána a raktárhely kódját, és erősítsd meg a mennyiséget.'}</span></p>
+        ${receive ? html`<div class="inb-entrybox" data-entry hidden></div>` : ''}
         </div>
         <div id="inb-work" role="tabpanel" aria-labelledby="${receive ? 'inb-tab-receive' : 'inb-tab-putaway'}" data-region="work"></div>`);
-      // Quantity, damage flag and step are taken at the moment of the scan, not when the queued
-      // request is sent, so changing the carton quantity right after fast scans changes nothing.
+      // The mode is taken at the moment of the scan, not when the queued request is sent.
       const scan = ui.bindScan(shell, 'inb-scan', (code) => {
-        const at = { mode: st.mode, qty: Math.max(parseInt(st.qty, 10) || 1, 1), damaged: st.damaged };
+        const at = { mode: st.mode };
         queue = queue.then(() => onScan(code, at)).catch(() => {});
       });
       if (scan) scan.setAttribute('data-autofocus', '');
+      paintEntry();
       paintWork();
+    }
+
+    // The quantity entry of the product being received. Typed values live in st.entry, so a redraw
+    // (another scanner's change, a reload) keeps them.
+    function paintEntry() {
+      const box = root.querySelector('[data-entry]');
+      if (!box) return;
+      const l = st.entry && d.lines.find((x) => x.id === st.entry.lineId);
+      if (!l) { st.entry = null; box.hidden = true; box.innerHTML = ''; return; }
+      const e = st.entry;
+      const lots = d.lines.filter((x) => x.product_id === l.product_id);
+      const left = Math.max(l.expected_qty - l.received_qty, 0);
+      const needLot = l.track_lot && !l.lot && l.putaway_qty === 0;
+      const needExp = l.track_expiry && !l.expiry && l.putaway_qty === 0;
+      box.hidden = false;
+      box.innerHTML = String(html`<form class="inb-entry" data-entry-form novalidate aria-label="Mennyiség: ${l.sku}">
+        <div class="inb-entry__info">
+        <div class="inb-entry__product">
+          <span class="inb-card__sku">${l.sku}</span>
+          <span class="inb-entry__name">${l.name}</span>
+          <span class="inb-card__codes">${codesLine(l)}</span>
+        </div>
+        <dl class="inb-entry__stats">
+          <div><dt>Várt</dt><dd class="num">${fmt.int(l.expected_qty)}</dd></div>
+          <div><dt>Eddig átvéve</dt><dd class="num">${fmt.int(l.received_qty)}</dd></div>
+          <div><dt>Hátra</dt><dd class="num">${fmt.int(left)}</dd></div>
+        </dl>
+        </div>
+        <div class="inb-entry__input">
+        ${lots.length > 1 ? html`<div class="field"><label for="inb-entry-line">Sarzs</label>
+          <select class="select" id="inb-entry-line" data-action="entry-line">${lots.map((x) => html`<option value="${x.id}" ${x.id === l.id ? raw('selected') : ''}>${x.lot || 'sarzs nélkül'}${x.expiry ? `, lejárat ${fmt.date(x.expiry)}` : ''} (${fmt.int(x.received_qty)} / ${fmt.int(x.expected_qty)})</option>`)}</select></div>` : ''}
+        <div class="inb-entry__row">
+          <div class="field inb-entry__qty"><label for="inb-entry-qty">Beérkezett mennyiség (${unitOf(l)})</label>
+            <input class="input input--num" id="inb-entry-qty" name="qty" type="text" inputmode="numeric" autocomplete="off" enterkeyhint="done" value="${e.qty}" aria-describedby="inb-entry-qty-err">
+            <p class="field__error" id="inb-entry-qty-err" hidden></p></div>
+          <label class="check inb-entry__damaged"><input type="checkbox" name="damaged" ${e.damaged ? raw('checked') : ''}><span>Sérült</span></label>
+        </div>
+        ${needLot || needExp ? html`<div class="inb-entry__row">
+          ${needLot ? html`<div class="field"><label for="inb-entry-lot">Sarzs</label>
+            <input class="input input--code" id="inb-entry-lot" name="lot" value="${e.lot}" autocomplete="off" aria-describedby="inb-entry-lot-err"><p class="field__error" id="inb-entry-lot-err" hidden></p></div>` : ''}
+          ${needExp ? html`<div class="field"><label for="inb-entry-exp">Lejárat</label>
+            <input class="input" type="date" id="inb-entry-exp" name="expiry" value="${e.expiry}" aria-describedby="inb-entry-exp-err"><p class="field__error" id="inb-entry-exp-err" hidden></p></div>` : ''}
+        </div>` : ''}
+        <div class="inb-entry__actions">
+          <button class="btn" type="button" data-action="entry-cancel">${FL.icon('x')}Mégse</button>
+          <button class="btn btn--primary" type="submit">${FL.icon('check')}Rögzítés</button>
+        </div>
+        </div>
+      </form>`);
+    }
+
+    const focusQty = () => { const q = root.querySelector('#inb-entry-qty'); if (q) { q.focus(); q.select(); } };
+
+    // A scan opens the entry with 1 piece (selected, so typing a number replaces it; every further
+    // scan of the product adds one); the line's button opens it empty.
+    function openEntry(l, { scanned = false } = {}) {
+      st.entry = { lineId: l.id, qty: scanned ? '1' : '', damaged: false, lot: '', expiry: '' };
+      st.activeLine = l.id;
+      paintEntry();
+      paintWork();
+      focusQty();
     }
 
     function lineState(l) {
@@ -518,9 +579,8 @@
           ${l.track_expiry ? html`<div class="field"><label for="exp-${l.id}">Lejárat</label><input class="input" type="date" id="exp-${l.id}" data-action="track" data-field="expiry" data-id="${l.id}" value="${l.expiry}" ${needExp ? raw('aria-invalid="true"') : ''}></div>` : ''}
         </div>` : ''}
         <div class="inb-card__actions">
-          <button class="btn btn--sm btn--icon" type="button" data-action="step" data-step="-1" data-id="${l.id}" aria-label="Egy darabbal kevesebb: ${l.sku}" ${l.received_qty <= l.putaway_qty ? raw('disabled') : ''}>${FL.icon('minus')}</button>
-          <button class="btn btn--sm btn--icon" type="button" data-action="step" data-step="1" data-id="${l.id}" aria-label="Egy darabbal több: ${l.sku}">${FL.icon('plus')}</button>
-          <button class="btn btn--sm" type="button" data-action="edit-line" data-id="${l.id}">${FL.icon('pencil-simple')}Mennyiség, sérült</button>
+          <button class="btn btn--sm ${st.entry && st.entry.lineId === l.id ? 'btn--dark' : ''}" type="button" data-action="entry" data-id="${l.id}" aria-label="Mennyiség beírása: ${l.sku}">${FL.icon('tray-arrow-down')}Mennyiség beírása</button>
+          <button class="btn btn--sm" type="button" data-action="edit-line" data-id="${l.id}">${FL.icon('pencil-simple')}Javítás</button>
           ${l.expected_qty === 0 && l.putaway_qty === 0 ? html`<button class="btn btn--sm btn--ghost" type="button" data-action="delete-line" data-id="${l.id}">${FL.icon('trash')}Törlés</button>` : ''}
         </div>
       </li>`;
@@ -550,7 +610,7 @@
           ${(l.track_lot && !l.lot) || (l.track_expiry && !l.expiry) ? chip('sarzs vagy lejárat hiányzik', 'warn') : ''}
         </div>
         ${open > 0 ? html`<div class="inb-card__actions">
-          <button class="btn btn--sm ${selected ? 'btn--dark' : ''}" type="button" data-action="select-line" data-id="${l.id}" aria-pressed="${selected}">${FL.icon(selected ? 'check' : 'arrow-right')}${selected ? 'Kiválasztva' : 'Kiválaszt'}</button>
+          <button class="btn btn--sm ${selected ? 'btn--dark' : ''}" type="button" data-action="select-line" data-id="${l.id}" aria-pressed="${String(selected)}">${FL.icon(selected ? 'check' : 'arrow-right')}${selected ? 'Kiválasztva' : 'Kiválaszt'}</button>
         </div>` : ''}
       </li>`;
     }
@@ -562,7 +622,7 @@
       return html`<form class="inb-put" data-put-form novalidate>
         <div class="inb-put__line">${l
           ? html`<b class="mono">${l.sku}</b> ${l.name}${l.lot ? html` <span class="tag">sarzs ${l.lot}</span>` : ''} <span class="muted">${fmt.int(open)} ${unitOf(l)} vár polcra</span>`
-          : html`<span class="muted">Válassz tételt: olvasd be a termék kódját, vagy kattints lent a Kiválaszt gombra.</span>`}</div>
+          : html`<span class="muted">Válassz tételt: olvasd be a termék kódját, vagy válaszd ki lent.</span>`}</div>
         <div class="inb-put__fields">
           <div class="field inb-put__loc"><label for="inb-put-loc">Raktárhely</label>
             <input class="input input--code" id="inb-put-loc" name="location_code" value="${st.put.location ? st.put.location.code : ''}" placeholder="A-01-03" autocomplete="off" ${l ? '' : raw('disabled')}></div>
@@ -712,9 +772,9 @@
     async function reload({ keepFocus = true } = {}) {
       const wasWorking = working();
       d = await api.get(`/api/inbound/${id}`);
-      if (wasWorking && working()) { paintAfterChange(); paintInfo(); } else paintAll();
+      if (wasWorking && working()) { paintAfterChange(); paintEntry(); paintInfo(); } else paintAll();
       if (lastFeedback && working()) feedback(lastFeedback.text, lastFeedback.tone);
-      if (keepFocus) focusScan();
+      if (keepFocus) { if (st.entry) focusQty(); else focusScan(); }
     }
 
     function mergeLine(line, status) {
@@ -727,55 +787,169 @@
     /* ---------------------------------------------------------- scanning */
 
     async function onScan(code, at) {
-      if (at.mode === 'receive') return scanReceive(code, at);
+      if (at.mode === 'receive') return scanReceive(code);
       return scanPutaway(code);
     }
 
-    async function scanReceive(code, at, addLine = false) {
-      const { qty, damaged } = at;
+    function matchLines(code) {
+      const c = code.trim().toUpperCase();
+      const numeric = /^\d+$/.test(c);
+      return d.lines.filter((l) => l.sku.toUpperCase() === c || (l.ean && (l.ean === c || (numeric && strip0(l.ean) === strip0(c)))));
+    }
+
+    // Receiving: a product code opens its quantity entry; a location switches to putaway; a product of
+    // the client that is not on the inbound can be added as a new line.
+    async function scanReceive(code) {
+      const matches = matchLines(code);
+      if (matches.length) return productScanned(matches);
       try {
-        const r = await api.post(`/api/inbound/${id}/scan`, { code, qty, damaged, line_id: st.activeLine, add_line: addLine });
+        const r = await api.post(`/api/inbound/${id}/scan`, { code, peek: true });
         if (r.result === 'location') {
           beep('warn');
           st.mode = 'putaway';
+          st.entry = null;
           st.put.location = { id: r.location.id, code: r.location.code };
           paintShell();
           feedback(`${r.location.code} raktárhely: átváltottunk polcra helyezésre. Válaszd ki a tételt.`, 'info');
           focusScan();
           return;
         }
+        if (r.result === 'match') {
+          await reload({ keepFocus: false });
+          const l = d.lines.find((x) => x.id === r.line_id);
+          if (l) await productScanned([l]);
+          return;
+        }
         if (r.result === 'unexpected') {
           beep('warn');
           const yes = await ui.confirm({
             title: 'Nem várt termék',
-            text: `A(z) ${r.product.sku} ${r.product.name} nem szerepel ebben a betárolásban. Felveszed új tételként ${qty} darabbal?`,
+            text: `A(z) ${r.product.sku} ${r.product.name} nem szerepel ebben a betárolásban. Felveszed új tételként?`,
             confirmLabel: 'Felveszem',
           });
-          if (yes) await scanReceive(code, at, true);
-          else { feedback(`${r.product.sku} nem került rögzítésre.`, 'warn'); focusScan(); }
-          return;
+          if (!yes) { feedback(`${r.product.sku} nem került rögzítésre.`, 'warn'); focusScan(); return; }
+          if (st.entry && Number(st.entry.qty) > 0 && !(await commitEntry())) return;
+          const added = await api.post(`/api/inbound/${id}/lines`, { product_id: r.product.id, received_qty: 0 });
+          await reload({ keepFocus: false });
+          const l = d.lines.find((x) => x.id === added.line.id);
+          if (l) openEntry(l, { scanned: true });
+          feedback(`${r.product.sku} új tételként felvéve. Írd be a beérkezett mennyiséget.`, 'info');
         }
-        const wasStatus = d.status;
-        mergeLine(r.line, r.status);
-        st.activeLine = r.line.id;
-        const l = d.lines.find((x) => x.id === r.line.id);
-        const over = l.received_qty > l.expected_qty;
-        beep(over ? 'warn' : 'ok');
-        feedback(`+${fmt.int(qty)}${damaged ? ' sérült' : ''} ${l.sku} ${l.name}: ${fmt.int(l.received_qty)} / ${fmt.int(l.expected_qty)} ${unitOf(l)}${over ? ', több a vártnál' : l.received_qty === l.expected_qty ? ', kész' : ''}`, over ? 'warn' : 'ok');
-        if (addLine) await reload(); else paintAfterChange();
-        if (wasStatus !== d.status) paintInfo();
-        const card = root.querySelector(`[data-region="work"] [data-line="${l.id}"]`);
-        if (card) card.scrollIntoView({ block: 'nearest' });
-        if ((l.track_lot && !l.lot) || (l.track_expiry && !l.expiry)) {
-          const input = root.querySelector(`[data-action="track"][data-id="${l.id}"]${l.track_lot && !l.lot ? '[data-field="lot"]' : '[data-field="expiry"]'}`);
-          if (input && l.received_qty === qty) { input.focus(); return; }
-        }
-        focusScan();
       } catch (err) {
         beep('error');
         feedback(err.message, 'danger');
         focusScan();
       }
+    }
+
+    async function productScanned(matches) {
+      const cur = st.entry && d.lines.find((x) => x.id === st.entry.lineId);
+      if (cur && matches.some((x) => x.id === cur.id)) {
+        // The same product again: one more piece in the typed quantity (counting by scanning).
+        st.entry.qty = String((parseInt(st.entry.qty, 10) || 0) + 1);
+        paintEntry();
+        focusQty();
+        beep('ok');
+        feedback(`${cur.sku}: ${fmt.int(Number(st.entry.qty))} ${unitOf(cur)} beolvasva. Rögzítsd, vagy írd át a mennyiséget.`, 'ok');
+        return;
+      }
+      // Another product while a quantity is typed: that quantity is recorded first.
+      if (cur && Number(st.entry.qty) > 0 && !(await commitEntry())) return;
+      const l = matches.find((x) => x.received_qty < x.expected_qty) || matches[matches.length - 1];
+      openEntry(l, { scanned: true });
+      beep('ok');
+      feedback(`${l.sku} ${l.name}${matches.length > 1 ? ' (több sarzs: válaszd ki, melyik)' : ''}: írd be a mennyiséget, vagy olvasd be darabonként.`, 'info');
+      const card = root.querySelector(`[data-region="work"] [data-line="${l.id}"]`);
+      if (card) card.scrollIntoView({ block: 'nearest' });
+    }
+
+    // A scan that went into the quantity field: the code is at the end. Digits typed before it stay;
+    // when the scan replaced the selected quantity, the quantity from before the scan counts.
+    async function scanInQty(value) {
+      const up = value.toUpperCase();
+      const codes = d.lines.flatMap((l) => [l.ean, l.sku].filter(Boolean).map((c) => String(c).toUpperCase()));
+      const hit = codes.filter((c) => up.endsWith(c)).sort((a, b) => b.length - a.length)[0];
+      const typed = hit ? value.slice(0, value.length - hit.length) : '';
+      if (st.entry) st.entry.qty = /^\d{1,6}$/.test(typed) ? typed : typed === '' && /^\d{1,6}$/.test(st.entry.qtyAtFocus || '') ? st.entry.qtyAtFocus : '';
+      const q = root.querySelector('#inb-entry-qty');
+      if (q) q.value = st.entry ? st.entry.qty : '';
+      await scanReceive(hit || value);
+    }
+
+    // Records the typed quantity on the line (a delta, so two scanners on one inbound add up).
+    async function commitEntry() {
+      const e = st.entry;
+      const l = e && d.lines.find((x) => x.id === e.lineId);
+      if (!l) return false;
+      const form = root.querySelector('[data-entry-form]');
+      const raw = String(e.qty).trim();
+      const qty = /^\d{1,6}$/.test(raw) ? parseInt(raw, 10) : NaN;
+      const needLot = l.track_lot && !l.lot && l.putaway_qty === 0;
+      const needExp = l.track_expiry && !l.expiry && l.putaway_qty === 0;
+      const fields = {};
+      if (!(qty >= 1 && qty <= 100000)) fields.qty = 'Írd be a beérkezett darabszámot.';
+      if (needLot && !e.lot.trim()) fields.lot = 'Add meg a sarzsot.';
+      if (needExp && !e.expiry) fields.expiry = 'Add meg a lejáratot.';
+      if (Object.keys(fields).length) {
+        beep('error');
+        if (form) entryErrors(form, fields);
+        feedback(`${l.sku}: ${Object.values(fields).join(' ')}`, 'danger');
+        return false;
+      }
+      const total = l.received_qty + qty;
+      if (l.expected_qty > 0 && total > l.expected_qty) {
+        beep('warn');
+        const yes = await ui.confirm({
+          title: 'Több a vártnál',
+          text: `${l.sku}: a várt ${fmt.int(l.expected_qty)} ${unitOf(l)} helyett összesen ${fmt.int(total)} ${unitOf(l)} lesz átvéve. Rögzíted?`,
+          confirmLabel: 'Rögzítem',
+        });
+        if (!yes) { focusQty(); return false; }
+      }
+      const body = { add: qty, damaged_add: e.damaged ? qty : 0 };
+      if (needLot) body.lot = e.lot.trim();
+      if (needExp) body.expiry = e.expiry;
+      const btn = form && form.querySelector('[type="submit"]');
+      if (btn) btn.setAttribute('aria-busy', 'true');
+      try {
+        const r = await api.post(`/api/inbound/${id}/lines/${l.id}/receive`, body);
+        const wasStatus = d.status;
+        mergeLine(r.line, r.status);
+        st.entry = null;
+        st.activeLine = l.id;
+        const after = d.lines.find((x) => x.id === l.id);
+        const over = after.received_qty > after.expected_qty;
+        beep(over ? 'warn' : 'ok');
+        feedback(`${fmt.int(qty)} ${unitOf(l)}${e.damaged ? ' sérült' : ''} rögzítve: ${l.sku} ${l.name}, átvett ${fmt.int(after.received_qty)} / ${fmt.int(after.expected_qty)}${over ? ', több a vártnál' : after.received_qty === after.expected_qty ? ', kész' : ''}.`, over ? 'warn' : 'ok');
+        paintEntry();
+        paintAfterChange();
+        if (wasStatus !== d.status) paintInfo();
+        const card = root.querySelector(`[data-region="work"] [data-line="${l.id}"]`);
+        if (card) card.scrollIntoView({ block: 'nearest' });
+        return true;
+      } catch (err) {
+        beep('error');
+        if (btn) btn.removeAttribute('aria-busy');
+        const f = err.fields || {};
+        if (form) entryErrors(form, { qty: f.received_qty || f.damaged_qty, lot: f.lot, expiry: f.expiry });
+        feedback(err.message, 'danger');
+        return false;
+      }
+    }
+
+    // Marks the entry's fields without a toast: the message is in the feedback line above.
+    function entryErrors(form, fields) {
+      ui.clearErrors(form);
+      let firstEl = null;
+      for (const [name, msg] of Object.entries(fields)) {
+        const el = msg && form.querySelector(`[name="${name}"]`);
+        if (!el) continue;
+        el.setAttribute('aria-invalid', 'true');
+        const box = el.closest('.field') && el.closest('.field').querySelector('.field__error');
+        if (box) { box.hidden = false; box.textContent = msg; }
+        firstEl ||= el;
+      }
+      if (firstEl) firstEl.focus();
     }
 
     function selectLine(l) {
@@ -915,7 +1089,7 @@
             <div class="field span-all"><label for="add-prod">Termék</label>
               <input class="input" id="add-prod" name="product" placeholder="Cikkszám, név vagy EAN" autocomplete="off" required aria-describedby="add-prod-err">
               <p class="field__error" id="add-prod-err" hidden></p></div>
-            ${ui.field({ name: 'received_qty', label: 'Átvett mennyiség', type: 'number', int: true, min: 0, value: st.qty || 1 })}
+            ${ui.field({ name: 'received_qty', label: 'Átvett mennyiség', type: 'number', int: true, min: 0, value: '' })}
             ${ui.field({ name: 'damaged_qty', label: 'Ebből sérült', type: 'number', int: true, min: 0, value: 0 })}
             ${ui.field({ name: 'lot', label: 'Sarzs', type: 'code', optional: true })}
             ${ui.field({ name: 'expiry', label: 'Lejárat', type: 'date', optional: true })}
@@ -1034,23 +1208,30 @@
         paintShell();
         focusScan();
       },
-      qty: (el) => { st.qty = Math.max(parseInt(el.value, 10) || 1, 1); el.value = st.qty; },
-      damaged: (el) => {
-        st.damaged = el.checked;
-        feedback(el.checked ? 'Sérült mód: a beolvasott darabok sérültként számolódnak, amíg ki nem kapcsolod.' : 'Sérült mód kikapcsolva.', el.checked ? 'warn' : 'info');
+      entry: async (el) => {
+        const l = d.lines.find((x) => x.id === Number(el.dataset.id));
+        if (!l) return;
+        if (st.entry && st.entry.lineId !== l.id && Number(st.entry.qty) > 0 && !(await commitEntry())) return;
+        openEntry(l);
+        feedback(`${l.sku} ${l.name}: írd be a beérkezett mennyiséget.`, 'info');
+        const zone = root.querySelector('.inb-scanzone');
+        if (zone) zone.scrollIntoView({ block: 'nearest' });
+      },
+      'entry-cancel': () => {
+        st.entry = null;
+        paintEntry();
+        paintWork();
+        feedback('Mennyiség beírása megszakítva, semmi sem került rögzítésre.', 'info');
         focusScan();
       },
-      step: async (el) => {
-        const lineId = Number(el.dataset.id);
-        await ui.run(el, async () => {
-          const r = await api.post(`/api/inbound/${id}/lines/${lineId}/receive`, { add: Number(el.dataset.step) });
-          const wasStatus = d.status;
-          mergeLine(r.line, r.status);
-          st.activeLine = lineId;
-          if (wasStatus !== d.status) await reload(); else paintAfterChange();
-        });
-        const again = root.querySelector(`[data-action="step"][data-step="${el.dataset.step}"][data-id="${lineId}"]`);
-        if (again && !again.disabled) again.focus();
+      'entry-line': (el) => {
+        const l = d.lines.find((x) => x.id === Number(el.value));
+        if (!l || !st.entry) return;
+        st.entry = { ...st.entry, lineId: l.id, lot: '', expiry: '' };
+        st.activeLine = l.id;
+        paintEntry();
+        paintWork();
+        focusQty();
       },
       'edit-line': (el) => editLineDialog(d.lines.find((l) => l.id === Number(el.dataset.id))),
       'delete-line': async (el) => {
@@ -1086,6 +1267,17 @@
       },
     });
     root.addEventListener('submit', (e) => {
+      const entryForm = e.target.closest('[data-entry-form]');
+      if (entryForm) {
+        e.preventDefault();
+        const value = entryForm.qty.value.trim();
+        queue = queue.then(async () => {
+          if (value && !/^\d{1,6}$/.test(value)) { await scanInQty(value); return; }
+          if (st.entry) st.entry.qty = value;
+          if (await commitEntry()) focusScan();
+        }).catch(() => {});
+        return;
+      }
       const form = e.target.closest('[data-put-form]');
       if (!form) return;
       e.preventDefault();
@@ -1099,6 +1291,17 @@
     });
     root.addEventListener('input', (e) => {
       if (e.target.matches('#inb-put-qty')) st.put.qty = e.target.value;
+      if (!st.entry || !e.target.closest('[data-entry-form]')) return;
+      // A scanner typing into the quantity field is not a quantity (see scanInQty).
+      if (e.target.name === 'qty' && /^\d{0,6}$/.test(e.target.value.trim())) st.entry.qty = e.target.value.trim();
+      if (['lot', 'expiry'].includes(e.target.name)) st.entry[e.target.name] = e.target.value;
+    });
+    root.addEventListener('focusin', (e) => {
+      if (st.entry && e.target.matches('#inb-entry-qty')) st.entry.qtyAtFocus = e.target.value.trim();
+    });
+    root.addEventListener('change', (e) => {
+      if (st.entry && e.target.closest('[data-entry-form]') && e.target.name === 'damaged') st.entry.damaged = e.target.checked;
+      if (st.entry && e.target.closest('[data-entry-form]') && e.target.name === 'expiry') st.entry.expiry = e.target.value;
     });
 
     paintAll();
