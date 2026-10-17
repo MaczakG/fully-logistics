@@ -4,6 +4,7 @@
 //   releases/current.json   { version, sha256 }  the release that should run
 //   releases/<version>.tar.gz                    the bundle (app/ with dist, worker, server, migrations)
 //   deploy/config.json      { hostnames: [...] } the names Caddy serves with HTTPS certificates
+//   tasks/current.json      { id, task }          a one-off job (demo data, backup), see TASKS
 //   status/agent.json       written here: what runs, whether the last install worked, and why not
 //
 // Installing a release: download and check it, back up the database, apply the migrations, switch
@@ -13,6 +14,7 @@
 //   node agent.mjs              one reconcile run (the timer)
 //   node agent.mjs --bootstrap  first run on a new server: installs the systemd units, then reconciles
 
+import { realpathSync } from 'node:fs';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, readdir, readlink, rename, rm, stat, statfs, symlink, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
@@ -66,8 +68,8 @@ async function getJson(bucket, key) {
 }
 
 // Runs a node script of a release as the app's user, with the app's environment.
-function asApp(env, script, args = []) {
-  return sh('runuser', ['-u', 'fullyapp', '--', process.execPath, '--no-warnings', script, ...args], { env: { ...env, PATH: process.env.PATH } });
+function asApp(env, script, args = [], opts = {}) {
+  return sh('runuser', ['-u', 'fullyapp', '--', process.execPath, '--no-warnings', script, ...args], { env: { ...env, PATH: process.env.PATH }, ...opts });
 }
 
 async function healthy(seconds = HEALTH_SECONDS) {
@@ -122,10 +124,28 @@ async function download(bucket, wanted) {
   return dir;
 }
 
+// A server without a database (a new or rebuilt one) starts from the newest backup in the bucket,
+// if there is one; the migrations of the release then bring it up to date.
+async function restoreLatest(bucket, env, app) {
+  let latest = null;
+  let cursor;
+  do {
+    const page = await bucket.list({ prefix: 'backups/db/', cursor });
+    for (const o of page.objects) if (/\.sqlite\.gz$/.test(o.key) && (!latest || o.key > latest)) latest = o.key;
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+  if (!latest) return null;
+  const r = asApp(env, join(app, 'server/backup.mjs'), ['--restore', latest, '--to', env.DB_PATH]);
+  if (!r.ok) throw new Error(`restoring ${latest} failed: ${r.out.slice(-500)}`);
+  return latest;
+}
+
 async function install(bucket, env, wanted) {
   const dir = await download(bucket, wanted);
   const app = join(dir, 'app');
-  if (existsSync(env.DB_PATH)) {
+  const restored = existsSync(env.DB_PATH) ? null : await restoreLatest(bucket, env, app);
+  if (restored) log(`database restored from ${restored}`);
+  if (existsSync(env.DB_PATH) && !restored) {
     const b = asApp(env, join(app, 'server/backup.mjs'));
     if (!b.ok) throw new Error(`backup before install failed: ${b.out.slice(-500)}`);
   }
@@ -150,7 +170,7 @@ async function install(bucket, env, wanted) {
   const keep = new Set([dir, previous].filter(Boolean).map((p) => resolve(p)));
   const all = (await readdir(RELEASES)).filter((n) => !n.endsWith('.part')).sort().reverse();
   for (const name of all.slice(3)) if (!keep.has(resolve(RELEASES, name))) await rm(join(RELEASES, name), { recursive: true, force: true });
-  return `version ${wanted.version} installed`;
+  return `version ${wanted.version} installed${restored ? ` (database restored from ${restored})` : ''}`;
 }
 
 export function caddyfile(hostnames) {
@@ -195,6 +215,35 @@ async function syncCaddy(bucket) {
   return `hostnames: ${conf.hostnames.join(', ')}`;
 }
 
+// One-off jobs, asked for through the bucket (tasks/current.json: { id, task }). Only the scripts
+// named here can run, from the installed release, as the app's user, each id once; the result
+// goes to status/task-<id>.json. deploy/aws/task.mjs publishes a task and waits for the result.
+const TASKS = {
+  'demo-seed': ['server/demo-seed.mjs'],
+  'demo-remove': ['server/demo-seed.mjs', '--remove'],
+  backup: ['server/backup.mjs'],
+};
+const TASK_TIMEOUT_MS = 15 * 60 * 1000;
+
+async function runTask(bucket, env, state) {
+  const t = await getJson(bucket, 'tasks/current.json');
+  if (!t || !t.id || (state.doneTasks || []).includes(t.id)) return null;
+  // Marked done before it runs: a task that brings the agent down is not repeated every minute.
+  state.doneTasks = [...(state.doneTasks || []), t.id].slice(-20);
+  await writeFile(STATE, JSON.stringify(state));
+  const spec = Object.prototype.hasOwnProperty.call(TASKS, t.task) ? TASKS[t.task] : null;
+  let result;
+  if (!/^[A-Za-z0-9_-]{6,64}$/.test(String(t.id)) || !spec) result = { ok: false, output: `unknown task: ${String(t.task).slice(0, 40)}` };
+  else if (!existsSync(join(CURRENT, 'app', spec[0]))) result = { ok: false, output: `this release has no ${spec[0]}` };
+  else {
+    const r = asApp(env, join(CURRENT, 'app', spec[0]), spec.slice(1), { timeout: TASK_TIMEOUT_MS });
+    result = { ok: r.ok, output: r.out.slice(-6000) };
+  }
+  const report = { id: t.id, task: t.task, at: new Date().toISOString(), ...result };
+  await bucket.put(`status/task-${t.id}.json`, JSON.stringify(report, null, 2), { httpMetadata: { contentType: 'application/json' } });
+  return `task ${t.task} (${t.id}): ${result.ok ? 'done' : 'failed'}`;
+}
+
 async function reconcile({ bootstrap = false } = {}) {
   const env = await loadEnv();
   const bucket = bucketOf(env);
@@ -224,6 +273,14 @@ async function reconcile({ bootstrap = false } = {}) {
   } catch (err) {
     status.ok = false;
     status.messages.push(String(err.message || err));
+  }
+  if (status.installed) {
+    try {
+      const t = await runTask(bucket, env, state);
+      if (t) status.messages.push(t);
+    } catch (err) {
+      status.messages.push(`task failed: ${err.message || err}`);
+    }
   }
   if (status.installed && !sh('systemctl', ['is-active', '--quiet', 'fully-app.service']).ok) {
     sh('systemctl', ['start', 'fully-app.service']);
@@ -260,7 +317,8 @@ async function withLock(fn) {
   try { return await fn(); } finally { await rm(LOCK, { recursive: true, force: true }); }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// realpath: the file may be started through a symlink (/opt/fully-app/current, /opt/fully-app/agent).
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const bootstrap = process.argv.includes('--bootstrap');
   withLock(async () => {
     // Until a release is installed the timer runs the agent from the bootstrap copy.

@@ -3,6 +3,7 @@
 //
 //   node server/migrate.mjs [--db path] [--dir migrations]   (DB_PATH from the environment otherwise)
 
+import { realpathSync } from 'node:fs';
 import { mkdir, readdir, readFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,7 +44,8 @@ export async function migrate(dbPath, { dir = MIGRATIONS_DIR, log = console.log 
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// realpath: the file may be started through a symlink (/opt/fully-app/current, /opt/fully-app/agent).
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const arg = (name) => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : undefined; };
   const dbPath = arg('--db') || process.env.DB_PATH;
   if (!dbPath) { console.error('DB_PATH or --db is required'); process.exit(2); }

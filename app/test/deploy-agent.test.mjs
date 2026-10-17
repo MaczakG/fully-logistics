@@ -13,6 +13,9 @@ import { join } from 'node:path';
 import { startFakeS3 } from './fake-s3.mjs';
 import { S3Bucket } from '../server/bucket.mjs';
 import { APP, buildBundle, putHostnames } from '../deploy/aws/lib.mjs';
+import { migrate } from '../server/migrate.mjs';
+import { DatabaseSync } from 'node:sqlite';
+import { gzipSync } from 'node:zlib';
 
 const creds = { accessKeyId: 'AKIASERVER', secretAccessKey: 'szerver-titok' };
 const root = mkdtempSync(join(tmpdir(), 'fl-agent-'));
@@ -27,8 +30,11 @@ const freePort = () => new Promise((resolve) => {
 });
 
 // Async on purpose: the fake S3 server lives in this process and must keep answering.
+// After the bootstrap the agent is started like systemd does it: through the /opt/fully-app/agent symlink.
 async function runAgent(extra = []) {
-  const child = spawn(process.execPath, ['--no-warnings', join(APP, 'deploy/aws/agent.mjs'), ...extra], {
+  const viaLink = join(root, 'agent', 'app', 'deploy', 'aws', 'agent.mjs');
+  const script = extra.includes('--bootstrap') || !existsSync(viaLink) ? join(APP, 'deploy/aws/agent.mjs') : viaLink;
+  const child = spawn(process.execPath, ['--no-warnings', script, ...extra], {
     stdio: ['ignore', 'pipe', 'pipe'],
     env: {
       ...process.env,
@@ -95,7 +101,15 @@ after(async () => {
 });
 
 test('first install, a release that does not start, a failing migration, then a good release', { timeout: 120000 }, async () => {
-  // 1. Bootstrap: units installed, release unpacked, migrations, app started, Caddy configured.
+  // 1. Bootstrap: units installed, release unpacked, the newest backup restored (a rebuilt server),
+  // migrations, app started, Caddy configured.
+  const saved = join(mkdtempSync(join(tmpdir(), 'fl-agent-bk-')), 'saved.sqlite');
+  await migrate(saved, { log: () => {} });
+  const savedDb = new DatabaseSync(saved);
+  savedDb.prepare("INSERT INTO users (email, name, role_id, password_hash) VALUES ('mentett@example.com', 'Mentett Admin', 1, 'x')").run();
+  savedDb.close();
+  await bucket.put('backups/db/2026-10-16/2215.sqlite.gz', gzipSync(Buffer.from('régebbi, nem ez kell')));
+  await bucket.put('backups/db/2026-10-16/2315.sqlite.gz', gzipSync(readFileSync(saved)));
   await publish(good);
   await putHostnames(bucket, ['10-0-0-1.sslip.io']);
   let st = await runAgent(['--bootstrap']);
@@ -107,8 +121,9 @@ test('first install, a release that does not start, a failing migration, then a 
   assert.deepEqual(readdirSync(join(root, 'systemd')).sort(), ['fully-app-agent.service', 'fully-app-agent.timer', 'fully-app.service']);
   assert.match(readFileSync(join(root, 'Caddyfile'), 'utf8'), /^10-0-0-1\.sslip\.io \{$/m);
   assert.ok(await health());
+  assert.match(st.messages.join('\n'), /database restored from backups\/db\/2026-10-16\/2315\.sqlite\.gz/);
   const setup = await (await fetch(`http://127.0.0.1:${port}/api/setup`)).json();
-  assert.equal(setup.needsSetup, true);
+  assert.equal(setup.needsSetup, false, 'the restored database already has its administrator');
 
   // 2. Nothing new: the agent leaves everything as it is.
   const restarts = () => readFileSync(join(root, 'systemctl.log'), 'utf8').split('\n').filter((l) => l.startsWith('systemctl restart fully-app')).length;
@@ -148,5 +163,23 @@ test('first install, a release that does not start, a failing migration, then a 
   assert.equal(st.installed, next.version);
   assert.equal(readlinkSync(join(root, 'current')), join(root, 'releases', next.version));
   assert.match(readFileSync(join(root, 'Caddyfile'), 'utf8'), /^app\.fully\.hu, 10-0-0-1\.sslip\.io \{$/m);
+  assert.ok(await health());
+
+  // 6. One-off tasks: a known one runs once as the app, an unknown one is refused.
+  const task = async (id, name) => {
+    await bucket.put('tasks/current.json', JSON.stringify({ id, task: name }), { httpMetadata: { contentType: 'application/json' } });
+    await runAgent();
+    return s3.json(`status/task-${id}.json`);
+  };
+  const done = await task('feladat-1', 'backup');
+  assert.equal(done.ok, true, JSON.stringify(done));
+  const stored = done.output.match(/backup stored: (backups\/db\/\S+\.sqlite\.gz)/);
+  assert.ok(stored && s3.objects.has(stored[1]), done.output);
+  s3.objects.delete('status/task-feladat-1.json');
+  await runAgent();
+  assert.equal(s3.json('status/task-feladat-1.json'), null, 'the same task id does not run again');
+  const refused = await task('feladat-2', 'rm -rf /');
+  assert.equal(refused.ok, false);
+  assert.match(refused.output, /unknown task/);
   assert.ok(await health());
 });

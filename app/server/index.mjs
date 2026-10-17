@@ -5,6 +5,7 @@
 //   node server/index.mjs
 
 import { createServer } from 'node:http';
+import { realpathSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -97,7 +98,8 @@ export async function startApp(config = loadConfig()) {
   };
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+// realpath: systemd starts this through the /opt/fully-app/current symlink.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const app = await startApp();
   console.log(`fully-app listening on http://${app.server.address().address}:${app.port}`);
   let stopping = false;

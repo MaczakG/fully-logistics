@@ -5,11 +5,12 @@
 //   node server/backup.mjs           one backup now (DB_PATH and the S3_* settings from the environment)
 //   node server/backup.mjs --restore backups/db/2026-10-16/1415.sqlite.gz --to /path/new.sqlite
 
+import { realpathSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const KEEP_ALL_MS = 48 * 3600 * 1000;
@@ -66,11 +67,13 @@ export async function pruneBackups(bucket, { now = new Date(), log = console.log
 export async function restoreBackup(bucket, key, toPath) {
   const obj = await bucket.get(key);
   if (!obj) throw new Error(`No backup at ${key}`);
+  await mkdir(dirname(resolve(toPath)), { recursive: true });
   await writeFile(toPath, gunzipSync(Buffer.from(await obj.arrayBuffer())), { flag: 'wx' });
   return toPath;
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// realpath: the file may be started through a symlink (/opt/fully-app/current, /opt/fully-app/agent).
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { loadConfig, backupBucket } = await import('./config.mjs');
   const config = loadConfig();
   const bucket = backupBucket(config);
