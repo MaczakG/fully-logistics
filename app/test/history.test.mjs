@@ -198,3 +198,50 @@ test('return photos: images only, readable with history view', async () => {
   assert.equal(file.headers.get('content-type'), 'image/png');
   assert.equal((await cs.post('/api/history/returns/99999/photos', form(new Blob([png], { type: 'image/png' }), 'x.png'))).status, 404);
 });
+
+test('return keeps the lot and expiry the order was picked from', async () => {
+  // 3 pieces of the lot-tracked dog food left the warehouse with this order: 2 from L2409, 1 from L2410.
+  const o = await ship([{ product_id: fx.products.tap, qty: 3 }], {}, 'GLS-LOT-1');
+  const [line] = await srv.query('SELECT id FROM order_lines WHERE order_id = ?', o.id);
+  await srv.sql(`INSERT INTO waves (id, number, status) VALUES (9001, 'H-LOT-1', 'completed');
+    INSERT INTO picks (wave_id, order_id, order_line_id, product_id, location_id, lot, expiry, qty, picked_qty) VALUES
+      (9001, ${o.id}, ${line.id}, ${fx.products.tap}, 19, 'L2409', '2027-01-31', 2, 2),
+      (9001, ${o.id}, ${line.id}, ${fx.products.tap}, 18, 'L2410', '2027-03-31', 1, 1);`);
+  const opts = (await admin.get(`/api/history/${o.id}/return-options`)).data;
+  assert.deepEqual(opts.lines[0].lots, [
+    { lot: 'L2409', expiry: '2027-01-31', shipped: 2, returned: 0, returnable: 2 },
+    { lot: 'L2410', expiry: '2027-03-31', shipped: 1, returned: 0, returnable: 1 },
+  ]);
+
+  const sellable = { product_id: fx.products.tap, condition: 'sellable', location_code: 'B-01-01' };
+  const unchosen = await cs.post(`/api/history/${o.id}/returns`, { lines: [{ ...sellable, qty: 1 }] });
+  assert.equal(unchosen.status, 400);
+  assert.match(unchosen.data.error.fields['lines.0.lot'], /több tételből ment ki/);
+  const foreign = await cs.post(`/api/history/${o.id}/returns`, { lines: [{ ...sellable, qty: 1, lot: 'IDEGEN', expiry: '2027-01-31' }] });
+  assert.match(foreign.data.error.fields['lines.0.lot'], /nem ezzel a rendeléssel/);
+  const tooMany = await cs.post(`/api/history/${o.id}/returns`, { lines: [{ ...sellable, qty: 2, lot: 'L2410', expiry: '2027-03-31' }] });
+  assert.match(tooMany.data.error.fields['lines.0.qty'], /L2410, 2027-03-31.*legfeljebb 1/);
+
+  const before = await srv.query("SELECT qty FROM stock WHERE product_id = ? AND location_id = 18 AND lot = 'L2410'", fx.products.tap);
+  const ok = await cs.post(`/api/history/${o.id}/returns`, { lines: [
+    { ...sellable, qty: 1, lot: 'L2410', expiry: '2027-03-31', location_code: 'B-01-01' },
+    { product_id: fx.products.tap, qty: 1, condition: 'damaged', lot: 'L2409', expiry: '2027-01-31' },
+  ] });
+  assert.equal(ok.status, 200, JSON.stringify(ok.data));
+  // Back into the same stock row (B-01-01 is location 18), not into a new row without lot.
+  const after = await srv.query("SELECT qty FROM stock WHERE product_id = ? AND location_id = 18 AND lot = 'L2410' AND expiry = '2027-03-31'", fx.products.tap);
+  assert.equal(after[0].qty, before[0].qty + 1);
+  assert.deepEqual(await srv.query("SELECT COUNT(*) AS n FROM stock WHERE product_id = ? AND lot = ''", fx.products.tap), [{ n: 0 }]);
+  const moves = await srv.query("SELECT lot, expiry, qty FROM movements WHERE type = 'return' AND ref_id = ? ORDER BY lot", ok.data.id);
+  assert.deepEqual(moves, [{ lot: 'L2409', expiry: '2027-01-31', qty: 1 }, { lot: 'L2410', expiry: '2027-03-31', qty: 1 }]);
+  const shown = (await admin.get(`/api/history/${o.id}/returns`)).data.items[0].lines;
+  assert.deepEqual(shown.map((l) => [l.lot, l.expiry, l.condition]), [['L2410', '2027-03-31', 'sellable'], ['L2409', '2027-01-31', 'damaged']]);
+
+  // Only L2409 has pieces left now: no choice needed, and the rest of it is all that can come back.
+  const rest = await cs.post(`/api/history/${o.id}/returns`, { lines: [{ ...sellable, qty: 1 }] });
+  assert.equal(rest.status, 200, JSON.stringify(rest.data));
+  const [last] = await srv.query('SELECT lot, expiry FROM return_lines WHERE return_id = ?', rest.data.id);
+  assert.deepEqual(last, { lot: 'L2409', expiry: '2027-01-31' });
+  const none = await cs.post(`/api/history/${o.id}/returns`, { lines: [{ ...sellable, qty: 1 }] });
+  assert.equal(none.status, 400);
+});

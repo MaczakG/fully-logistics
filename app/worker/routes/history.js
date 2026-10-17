@@ -3,7 +3,7 @@
 //   GET  /api/history                       list with filters and KPIs [history view]
 //   GET  /api/history/export                CSV export of the same filters [history view]
 //   GET  /api/history/:id/returns           returns of one order [history view]
-//   GET  /api/history/:id/return-options    returnable lines and target locations for the dialog [history view]
+//   GET  /api/history/:id/return-options    returnable lines (with the lots picked), target locations [history view]
 //   POST /api/history/:id/delivered         mark delivered [history edit]
 //   POST /api/history/:id/notes             timeline note [history edit]
 //   POST /api/history/:id/returns           record a return (VR), goods back into stock [history create]
@@ -100,6 +100,27 @@ async function returnedByProduct(db, orderId) {
 
 const zones = (db, kind) => all(db, 'SELECT id, code FROM locations WHERE kind = ? AND active = 1 ORDER BY pick_sequence, code', kind);
 
+const lotKey = (lot, expiry) => `${lot}\u0000${expiry}`;
+
+// What left the warehouse with this order, per product and lot/expiry (from the picks), and how
+// much of each came back already: product_id -> [{ lot, expiry, shipped, returned, returnable }].
+async function pickedLots(db, orderId) {
+  const picked = await all(db,
+    `SELECT product_id, lot, expiry, SUM(picked_qty - restocked_qty) AS qty FROM picks
+     WHERE order_id = ? GROUP BY product_id, lot, expiry HAVING SUM(picked_qty - restocked_qty) > 0 ORDER BY product_id, expiry, lot`, orderId);
+  const back = await all(db,
+    `SELECT rl.product_id, rl.lot, rl.expiry, SUM(rl.qty) AS qty FROM return_lines rl JOIN returns r ON r.id = rl.return_id
+     WHERE r.order_id = ? GROUP BY rl.product_id, rl.lot, rl.expiry`, orderId);
+  const backBy = new Map(back.map((b) => [`${b.product_id}:${lotKey(b.lot, b.expiry)}`, b.qty]));
+  const out = new Map();
+  for (const p of picked) {
+    const returned = backBy.get(`${p.product_id}:${lotKey(p.lot, p.expiry)}`) || 0;
+    if (!out.has(p.product_id)) out.set(p.product_id, []);
+    out.get(p.product_id).push({ lot: p.lot, expiry: p.expiry, shipped: p.qty, returned, returnable: Math.max(p.qty - returned, 0) });
+  }
+  return out;
+}
+
 async function returnsOf(db, orderId) {
   const returns = await all(db,
     `SELECT r.id, r.number, r.received_at, r.received_date, r.reason, r.note, u.name AS created_by_name
@@ -107,7 +128,7 @@ async function returnsOf(db, orderId) {
   if (!returns.length) return [];
   const ids = returns.map((r) => r.id);
   const lines = await allIn(db,
-    `SELECT rl.id, rl.return_id, rl.product_id, rl.qty, rl.condition, p.sku, p.name, l.code AS location_code
+    `SELECT rl.id, rl.return_id, rl.product_id, rl.qty, rl.condition, rl.lot, rl.expiry, p.sku, p.name, l.code AS location_code
      FROM return_lines rl JOIN products p ON p.id = rl.product_id LEFT JOIN locations l ON l.id = rl.location_id
      WHERE rl.return_id IN (?) ORDER BY rl.id`, ids);
   const photos = await allIn(db,
@@ -153,6 +174,8 @@ async function recordReturn(ctx, orderId, body) {
     condition: { type: 'enum', values: ['sellable', 'damaged'], required: true },
     location_id: { type: 'id', nullable: true },
     location_code: { type: 'str', max: 60, default: '' },
+    lot: { type: 'str', max: 60 },
+    expiry: { type: 'str', max: 10 },
   }, { max: 200 });
   const o = await loadOrder(db, orderId);
   if (!RETURNABLE.includes(o.status)) {
@@ -162,14 +185,43 @@ async function recordReturn(ctx, orderId, body) {
     'SELECT ol.product_id, SUM(ol.qty) AS qty, p.sku, p.unit FROM order_lines ol JOIN products p ON p.id = ol.product_id WHERE ol.order_id = ? GROUP BY ol.product_id', orderId))
     .map((r) => [r.product_id, r]));
   const returned = await returnedByProduct(db, orderId);
+  const lots = await pickedLots(db, orderId);
   const defaults = { returns: (await zones(db, 'returns'))[0] || null, quarantine: (await zones(db, 'quarantine'))[0] || null };
 
   const errors = {};
   const used = new Map();
+  const usedLot = new Map();
   const resolved = [];
   for (const [i, l] of lines.entries()) {
     const ord = ordered.get(l.product_id);
     if (!ord) { errors[`lines.${i}.product_id`] = 'Ez a termék nem szerepel a rendelésben.'; continue; }
+    // Which lot came back: the one given, or the only one picked for the order. Orders without
+    // picks (packed before the WMS) take the lot as given.
+    const picked = lots.get(l.product_id) || [];
+    const given = l.lot !== undefined || l.expiry !== undefined;
+    let lot = l.lot || '';
+    let expiry = l.expiry || '';
+    if (expiry && !isDate(expiry)) { errors[`lines.${i}.expiry`] = 'Dátumot várunk (ÉÉÉÉ-HH-NN).'; continue; }
+    if (picked.length) {
+      const left = (p) => p.returnable - (usedLot.get(`${l.product_id}:${lotKey(p.lot, p.expiry)}`) || 0);
+      let hit;
+      if (given) {
+        hit = picked.find((p) => p.lot === lot && p.expiry === expiry);
+        if (!hit) { errors[`lines.${i}.lot`] = 'Ez a tétel nem ezzel a rendeléssel ment ki.'; continue; }
+      } else {
+        const open = picked.filter((p) => left(p) > 0);
+        if (open.length > 1) { errors[`lines.${i}.lot`] = `A(z) ${ord.sku} több tételből ment ki: válaszd ki, melyik jött vissza.`; continue; }
+        hit = open[0] || picked[0];
+      }
+      if (left(hit) < l.qty) {
+        const name = [hit.lot, hit.expiry].filter(Boolean).join(', ') || 'tétel nélkül';
+        errors[`lines.${i}.qty`] = `Ebből a tételből (${name}) legfeljebb ${Math.max(left(hit), 0)} ${ord.unit} küldhető vissza.`;
+        continue;
+      }
+      lot = hit.lot;
+      expiry = hit.expiry;
+      usedLot.set(`${l.product_id}:${lotKey(lot, expiry)}`, (usedLot.get(`${l.product_id}:${lotKey(lot, expiry)}`) || 0) + l.qty);
+    }
     const sofar = (returned.get(l.product_id) || 0) + (used.get(l.product_id) || 0);
     if (sofar + l.qty > ord.qty) {
       const left = Math.max(ord.qty - sofar, 0);
@@ -186,7 +238,7 @@ async function recordReturn(ctx, orderId, body) {
       errors[`lines.${i}.location_id`] = err.message;
       continue;
     }
-    resolved.push({ ...l, loc: t.loc, sku: ord.sku, unit: ord.unit });
+    resolved.push({ ...l, lot, expiry, loc: t.loc, sku: ord.sku, unit: ord.unit });
   }
   if (Object.keys(errors).length) throw badRequest('Ellenőrizd a visszáru tételeit.', errors);
 
@@ -196,26 +248,26 @@ async function recordReturn(ctx, orderId, body) {
   await batch(db, [
     stmt(db, 'INSERT INTO returns (number, order_id, partner_id, received_at, received_date, reason, note, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       number, orderId, o.partner_id, at, budapestDate(), data.reason, data.note, ctx.user ? ctx.user.id : null),
-    ...resolved.map((l) => stmt(db, `INSERT INTO return_lines (return_id, product_id, qty, condition, location_id) VALUES (${ref}, ?, ?, ?, ?)`,
-      number, l.product_id, l.qty, l.condition, l.loc.id)),
+    ...resolved.map((l) => stmt(db, `INSERT INTO return_lines (return_id, product_id, qty, condition, location_id, lot, expiry) VALUES (${ref}, ?, ?, ?, ?, ?, ?)`,
+      number, l.product_id, l.qty, l.condition, l.loc.id, l.lot, l.expiry)),
   ]);
   const ret = await first(db, 'SELECT id FROM returns WHERE number = ?', number);
   for (const l of resolved) {
     await addStock(ctx, {
-      productId: l.product_id, locationId: l.loc.id, qty: l.qty, type: 'return', refType: 'return', refId: ret.id,
+      productId: l.product_id, locationId: l.loc.id, qty: l.qty, lot: l.lot, expiry: l.expiry, type: 'return', refType: 'return', refId: ret.id,
       note: `${number} (${o.number}${l.condition === 'damaged' ? ', sérült' : ''})`,
     });
   }
   const pieces = resolved.reduce((s, l) => s + l.qty, 0);
   const damaged = resolved.filter((l) => l.condition === 'damaged').reduce((s, l) => s + l.qty, 0);
   const text = `Visszáru rögzítve: ${number}, ${pieces} db${damaged ? ` (ebből sérült ${damaged})` : ''}: ${resolved
-    .map((l) => `${l.sku} ${l.qty} ${l.unit} (${l.loc.code})`).join(', ')}${data.reason ? `. Ok: ${data.reason}` : ''}`;
+    .map((l) => `${l.sku}${l.lot ? ` ${l.lot}` : ''} ${l.qty} ${l.unit} (${l.loc.code})`).join(', ')}${data.reason ? `. Ok: ${data.reason}` : ''}`;
   if (o.status !== 'returned') await setOrderStatus(ctx, orderId, 'returned', text);
   else await addOrderEvent(ctx, orderId, 'return', text);
   await audit(ctx, {
     module: 'history', action: 'create', entity: 'return', entityId: ret.id,
     summary: `${number} rögzítve (${o.number}, ${pieces} db)`,
-    details: { order: o.number, lines: resolved.map((l) => ({ sku: l.sku, qty: l.qty, condition: l.condition, location: l.loc.code })) },
+    details: { order: o.number, lines: resolved.map((l) => ({ sku: l.sku, lot: l.lot, expiry: l.expiry, qty: l.qty, condition: l.condition, location: l.loc.code })) },
   });
   return { id: ret.id, number, pieces };
 }
@@ -286,6 +338,7 @@ export function register(r) {
     const id = idParam(ctx);
     const o = await loadOrder(db, id);
     const returned = await returnedByProduct(db, id);
+    const lots = await pickedLots(db, id);
     const lines = await all(db,
       `SELECT ol.product_id, SUM(ol.qty) AS qty, p.sku, p.name, p.ean, p.unit FROM order_lines ol JOIN products p ON p.id = ol.product_id
        WHERE ol.order_id = ? GROUP BY ol.product_id ORDER BY MIN(ol.id)`, id);
@@ -294,6 +347,7 @@ export function register(r) {
       l.returnable = Math.max(l.qty - l.returned, 0);
       const s = await suggestLocation(db, l.product_id);
       l.suggested_location = s ? { id: s.id, code: s.code } : null;
+      l.lots = lots.get(l.product_id) || [];
     }
     return {
       order: { id: o.id, number: o.number, status: o.status, partner_id: o.partner_id },

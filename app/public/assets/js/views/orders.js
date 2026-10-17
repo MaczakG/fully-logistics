@@ -511,6 +511,7 @@
           <header><b class="mono">${r.number}</b> <span class="muted small">${fmt.dateTime(r.received_at)}${r.created_by_name ? `, ${r.created_by_name}` : ''}</span></header>
           ${r.reason || r.note ? html`<p>${r.reason}${r.reason && r.note ? ': ' : ''}${r.note}</p>` : ''}
           <ul class="ol-return__lines">${r.lines.map((l) => html`<li><span class="mono">${l.sku}</span> ${l.name} <b class="num">${fmt.int(l.qty)} db</b>
+            ${l.lot || l.expiry ? html`<span class="muted small">${l.lot ? html`tétel <span class="mono">${l.lot}</span>` : ''}${l.lot && l.expiry ? ', ' : ''}${l.expiry ? `lejárat ${fmt.date(l.expiry)}` : ''}</span>` : ''}
             <span class="chip" data-tone="${l.condition === 'damaged' ? 'danger' : 'ok'}">${l.condition === 'damaged' ? 'Sérült' : 'Értékesíthető'}</span>
             <span class="muted small">${FL.icon('arrow-right')}<span class="mono">${l.location_code || ''}</span></span></li>`)}</ul>
           ${r.photos.length ? html`<p class="ol-return__photos">${r.photos.map((p) => html`<a class="btn btn--sm" href="${api.documentUrl(p.id, true)}" target="_blank" rel="noopener">${FL.icon('eye')}${p.filename}</a>`)}</p>` : ''}

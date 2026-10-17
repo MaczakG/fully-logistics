@@ -187,7 +187,7 @@ export async function orderDetail(ctx, id) {
   if (returns.length) {
     const rids = returns.map((r) => r.id);
     const rlines = await allIn(db,
-      `SELECT rl.id, rl.return_id, rl.product_id, rl.qty, rl.condition, p.sku, p.name, l.code AS location_code
+      `SELECT rl.id, rl.return_id, rl.product_id, rl.qty, rl.condition, rl.lot, rl.expiry, p.sku, p.name, l.code AS location_code
        FROM return_lines rl JOIN products p ON p.id = rl.product_id LEFT JOIN locations l ON l.id = rl.location_id
        WHERE rl.return_id IN (?) ORDER BY rl.id`, rids);
     const photos = await allIn(db,

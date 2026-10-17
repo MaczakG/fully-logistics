@@ -12,6 +12,21 @@
   /* ------------------------------------------------------------ return dialog */
 
   let rowSeq = 0;
+  // The lots the order shipped with: a choice only when there is something to choose or show.
+  const lotValue = (l) => JSON.stringify([l.lot, l.expiry]);
+  const hasLots = (line) => line.lots.length > 1 || line.lots.some((l) => l.lot || l.expiry);
+  const lotLabel = (l) => `${l.lot || 'Tétel nélkül'}${l.expiry ? `, lejárat ${fmt.date(l.expiry)}` : ''} (visszaküldhető ${fmt.int(l.returnable)})`;
+  function lotField(line, n, chosen) {
+    if (!hasLots(line)) return '';
+    const open = line.lots.filter((l) => l.returnable > 0);
+    const value = chosen || (open[0] ? lotValue(open[0]) : '');
+    return FL.html`<div class="field rt-line__lot">
+        <label for="rt-t-${n}">Tétel</label>
+        <select class="select" id="rt-t-${n}" data-rt-lot aria-describedby="rt-t-${n}-err">${ui.options(open.map((l) => ({ value: lotValue(l), label: lotLabel(l) })), value)}</select>
+        <p class="field__error" id="rt-t-${n}-err" hidden></p>
+      </div>`;
+  }
+
   function returnRow(line, opts, row = {}) {
     const n = ++rowSeq;
     const condition = row.condition || 'sellable';
@@ -25,6 +40,7 @@
         <input class="input input--num" id="rt-q-${n}" type="number" min="0" max="${line.returnable}" step="1" value="${row.qty ?? 0}" data-rt-qty aria-describedby="rt-q-${n}-err">
         <p class="field__error" id="rt-q-${n}-err" hidden></p>
       </div>
+      ${lotField(line, n, row.lot)}
       <div class="field rt-line__cond">
         <label for="rt-c-${n}">Állapot</label>
         <select class="select" id="rt-c-${n}" data-rt-cond>${ui.options([['sellable', 'Értékesíthető'], ['damaged', 'Sérült']], condition)}</select>
@@ -116,7 +132,15 @@
             const seen = new Set();
             box.querySelectorAll('[data-rt-line]').forEach((row) => {
               const pid = Number(row.dataset.productId);
-              row.querySelector('[data-rt-qty]').value = seen.has(pid) ? 0 : byProduct.get(pid).returnable;
+              const line = byProduct.get(pid);
+              const open = line.lots.filter((l) => l.returnable > 0);
+              if (open.length > 1) {
+                // One row per lot, each with what is left of it.
+                if (!seen.has(pid)) {
+                  row.insertAdjacentHTML('beforebegin', open.map((l) => String(returnRow(line, opts, { qty: l.returnable, lot: lotValue(l) }))).join(''));
+                }
+                row.remove();
+              } else row.querySelector('[data-rt-qty]').value = seen.has(pid) ? 0 : line.returnable;
               seen.add(pid);
             });
           }
@@ -133,9 +157,19 @@
           locEl.name = `lines.${payload.length}.location_id`;
           const qty = parseInt(qtyEl.value, 10) || 0;
           if (qty < 0) fields[`r${i}`] = true;
-          if (!qty) { qtyEl.removeAttribute('name'); locEl.removeAttribute('name'); return; }
+          if (!qty) {
+            qtyEl.removeAttribute('name');
+            locEl.removeAttribute('name');
+            row.querySelector('[data-rt-lot]')?.removeAttribute('name');
+            return;
+          }
           const loc = locEl.value;
           const item = { product_id: Number(row.dataset.productId), qty, condition: row.querySelector('[data-rt-cond]').value };
+          const lotEl = row.querySelector('[data-rt-lot]');
+          if (lotEl && lotEl.value) {
+            lotEl.name = `lines.${payload.length}.lot`;
+            [item.lot, item.expiry] = JSON.parse(lotEl.value);
+          }
           if (loc === 'other') {
             const code = row.querySelector('[data-rt-code]').value.trim();
             if (!code) fields[`lines.${payload.length}.location_id`] = 'Add meg a raktárhely kódját.';

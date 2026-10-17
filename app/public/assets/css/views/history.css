@@ -15,8 +15,11 @@
 .rt-line__loc { display: grid; gap: 0.375rem; }
 .rt-line__loc .input[hidden] { display: none; }
 .rt-line__split { margin-top: 1.5rem; }
+/* The lot choice sits under quantity, condition and target. */
+.rt-line__lot { grid-row: 2; grid-column: 2 / span 3; }
 @media (max-width: 899.98px) {
   .rt-line { grid-template-columns: 6rem minmax(0, 1fr); }
-  .rt-line__prod, .rt-line__loc, .rt-line__split { grid-column: 1 / -1; }
+  .rt-line__prod, .rt-line__loc, .rt-line__split, .rt-line__lot { grid-column: 1 / -1; }
+  .rt-line__lot { grid-row: auto; }
   .rt-line__split { margin-top: 0; justify-self: start; }
 }
