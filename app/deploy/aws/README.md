@@ -73,6 +73,19 @@ node deploy/aws/release.mjs
    ```
    Ellenőrzi, hogy a domain már a szerverre mutat, és beállítja. Egy percen belül tanúsítvány is lesz rá. Az ideiglenes cím is működik tovább; a `--only` kapcsolóval csak az új név marad.
 
+## Mintaadatok
+
+A kipróbáláshoz mintaadatok tölthetők a szerverre: 3 ügyfél, futárok, beszállító, raktárhelyek, 12 termék készlettel, betárolások, 17 rendelés minden állapotban, komissió, futárátvétel, leltár, ajánlatok és elszámolás. Minden minta partner kódja és cikkszáma `DEMO-` kezdetű.
+
+```bash
+node deploy/aws/task.mjs demo-seed     # betöltés (ha már van, nem csinál semmit)
+node deploy/aws/task.mjs demo-remove   # törlés; a valódi adatokhoz nem nyúl
+```
+
+Élesítés előtt töröld a mintaadatokat, főleg mielőtt valódi futár-hozzáférést állítasz be: a minta rendelések kitalált csomagszámait a futár nyomkövetése is lekérdezné.
+
+`node deploy/aws/task.mjs backup` azonnali adatbázis-mentést készít.
+
 ## Állapot
 
 ```bash
