@@ -1,0 +1,149 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Stock"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Stock.StockMapView"
+             x:DataType="local:StockMapViewModel">
+  <UserControl.Styles>
+    <!-- Map cells (web app: .map-cell): occupied dark with the client's code, free light,
+         kept-for-a-client hatched yellow, inactive faded, highlighted client framed in hi-vis. -->
+    <Style Selector="Button.cell">
+      <Setter Property="MinWidth" Value="44" />
+      <Setter Property="MinHeight" Value="34" />
+      <Setter Property="Padding" Value="4,2" />
+      <Setter Property="Margin" Value="0,0,3,3" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LineStrong}" />
+      <Setter Property="Background" Value="{DynamicResource Panel}" />
+      <Setter Property="FontWeight" Value="Normal" />
+    </Style>
+    <Style Selector="Button.cell TextBlock">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.cell.occupied">
+      <Setter Property="Background" Value="{DynamicResource Ink2}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Ink}" />
+    </Style>
+    <Style Selector="Button.cell.occupied TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource Paper}" />
+    </Style>
+    <Style Selector="Button.cell.dedicated">
+      <Setter Property="Background" Value="{DynamicResource WarnBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Warn}" />
+    </Style>
+    <Style Selector="Button.cell.inactive">
+      <Setter Property="Opacity" Value="0.4" />
+    </Style>
+    <Style Selector="Button.cell.quarantine">
+      <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="Button.cell.hl">
+      <Setter Property="BorderBrush" Value="{StaticResource HiVis}" />
+      <Setter Property="BorderThickness" Value="3" />
+    </Style>
+    <Style Selector="Button.cell.dim">
+      <Setter Property="Opacity" Value="0.22" />
+    </Style>
+    <Style Selector="Border.swatch">
+      <Setter Property="Width" Value="16" />
+      <Setter Property="Height" Value="12" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LineStrong}" />
+      <Setter Property="Margin" Value="0,0,6,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="12">
+      <local:StockTabsBar Active="map" Command="{Binding TabCommand}" />
+      <TextBlock Text="{Binding TotalsText}" FontWeight="SemiBold" TextWrapping="Wrap" />
+      <WrapPanel>
+        <StackPanel Margin="0,0,10,8" Width="170">
+          <TextBlock Classes="label" Text="Hely kódja" />
+          <TextBox Text="{Binding Code}" Watermark="pl. A-01" />
+        </StackPanel>
+        <StackPanel Margin="0,0,10,8" Width="250">
+          <TextBlock Classes="label" Text="Ügyfél kiemelése" />
+          <Grid ColumnDefinitions="*,Auto">
+            <ComboBox ItemsSource="{Binding Holders}" SelectedItem="{Binding Highlight}" PlaceholderText="Nincs">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="m:MapPartner"><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Grid.Column="1" Classes="ghost" Command="{Binding ClearHighlightCommand}" ToolTip.Tip="Kiemelés törlése" Margin="4,0,0,0">
+              <PathIcon Data="{StaticResource IconClose}" Width="14" Height="14" />
+            </Button>
+          </Grid>
+        </StackPanel>
+        <StackPanel Margin="0,0,10,8" Width="140">
+          <TextBlock Classes="label" Text="Foglaltság" />
+          <ComboBox ItemsSource="{Binding StateLabels}" SelectedIndex="{Binding StateIndex}" />
+        </StackPanel>
+        <StackPanel Margin="0,0,10,8" Width="170">
+          <TextBlock Classes="label" Text="Méret" />
+          <ComboBox ItemsSource="{Binding Sizes}" SelectedItem="{Binding Size}" PlaceholderText="Minden méret">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="m:SizeInfo"><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+      </WrapPanel>
+      <WrapPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,14,4"><Border Classes="swatch" Background="{DynamicResource Ink2}" /><TextBlock Classes="small" Text="Foglalt (ügyfélkóddal)" /></StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,14,4"><Border Classes="swatch" Background="{DynamicResource Panel}" /><TextBlock Classes="small" Text="Szabad" /></StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,14,4"><Border Classes="swatch" Background="{DynamicResource WarnBg}" BorderBrush="{DynamicResource Warn}" /><TextBlock Classes="small" Text="Fix hely, üres" /></StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,14,4"><Border Classes="swatch" Background="{DynamicResource Panel}" Opacity="0.4" /><TextBlock Classes="small" Text="Inaktív" /></StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,14,4"><Border Classes="swatch" BorderBrush="{DynamicResource Danger}" BorderThickness="2" /><TextBlock Classes="small" Text="Karantén" /></StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,14,4"><Border Classes="swatch" BorderBrush="{StaticResource HiVis}" BorderThickness="3" /><TextBlock Classes="small" Text="Kiemelt ügyfél" /></StackPanel>
+        <TextBlock Classes="muted small" Text="A számok: szint (és pozíció). A szintek alulról felfelé, az állvány száma alul." TextWrapping="Wrap" />
+      </WrapPanel>
+      <TextBlock Text="{Binding Focus}" FontWeight="SemiBold" TextWrapping="Wrap" IsVisible="{Binding Focus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+      <ItemsControl ItemsSource="{Binding Zones}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="local:MapZone">
+            <Border Classes="card" Margin="0,0,0,12">
+              <StackPanel Spacing="8">
+                <WrapPanel>
+                  <TextBlock Text="{Binding Name}" Classes="h2" Margin="0,0,12,0" />
+                  <TextBlock Text="{Binding Summary}" Classes="muted small" VerticalAlignment="Center" />
+                </WrapPanel>
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                  <ItemsControl ItemsSource="{Binding Racks}">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="local:MapRack">
+                        <StackPanel Margin="0,0,14,0" VerticalAlignment="Bottom">
+                          <ItemsControl ItemsSource="{Binding Levels}">
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate x:DataType="local:MapLevel">
+                                <ItemsControl ItemsSource="{Binding Cells}">
+                                  <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                  <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:MapCell">
+                                      <Button Classes="cell" Classes.occupied="{Binding IsOccupied}" Classes.dedicated="{Binding IsDedicated}" Classes.inactive="{Binding IsInactive}"
+                                              Classes.quarantine="{Binding IsQuarantine}" Classes.hl="{Binding IsHighlighted}" Classes.dim="{Binding IsDimmed}"
+                                              Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Label}" AutomationProperties.Name="{Binding Label}">
+                                        <StackPanel>
+                                          <TextBlock Text="{Binding Number}" FontWeight="Bold" />
+                                          <TextBlock Text="{Binding Who}" FontSize="9" IsVisible="{Binding IsOccupied}" />
+                                        </StackPanel>
+                                      </Button>
+                                    </DataTemplate>
+                                  </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                          <TextBlock Text="{Binding Name}" Classes="mono small" HorizontalAlignment="Center" FontWeight="Bold" />
+                        </StackPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </ScrollViewer>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

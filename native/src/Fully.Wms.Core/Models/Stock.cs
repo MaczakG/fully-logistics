@@ -70,3 +70,39 @@ public sealed record PartnerLookup(int Id, string Type, string Code, string Name
 {
     public string Display => $"{Name} ({Code})";
 }
+
+// GET /api/stock/locations: occupancy of the locations, and the summary by size and by client.
+public sealed record LocationRow(
+    int Id, string Code, string? Zone, string Kind, bool Active, int SizeId, string SizeCode, string? SizeName,
+    int? DedicatedPartnerId, string? DedicatedPartnerCode, string? DedicatedPartnerName, int? OccupantId, string? OccupantCode,
+    string? OccupantName, int Products, int Qty, string? KindLabel);
+
+public sealed record LocationsPage(List<LocationRow> Items, int Total, LocationsSummary Summary);
+
+public sealed record LocationsSummary(
+    [property: System.Text.Json.Serialization.JsonPropertyName("bySize")] List<SizeOccupancy> BySize,
+    [property: System.Text.Json.Serialization.JsonPropertyName("byPartner")] List<PartnerOccupancy> ByPartner);
+
+public sealed record SizeOccupancy(int SizeId, string Code, string Name, int Total, int Occupied, int Empty, int EmptyDedicated);
+
+public sealed record PartnerOccupancy(int PartnerId, string Code, string Name, Dictionary<string, int> Sizes, int Total);
+
+// GET /api/stock/map: compact rows [id, code, zone, size, kind, active, dedicated, occupant, products, qty].
+public sealed record StockMapData(List<string> Columns, List<List<System.Text.Json.JsonElement>> Rows, List<MapPartner> Partners);
+
+public sealed record MapPartner(int Id, string Code, string Name);
+
+// GET /api/stock/movements
+public sealed record MovementsPage(List<Movement> Items, int Total, MovementSums Sums);
+
+public sealed record MovementSums(int In, int Out);
+
+// GET /api/products and /api/products/:id
+public sealed record ProductRow(
+    int Id, int PartnerId, string PartnerCode, string PartnerName, string Sku, string Name, string? Ean, string? Unit,
+    decimal? WeightKg, decimal? WidthCm, decimal? DepthCm, decimal? HeightCm, int MinStock, bool TrackLot, bool TrackExpiry,
+    bool Active, string? Notes, int OnHand, string? EanWarning, bool CanDeactivate = false);
+
+public sealed record ProductsPage(List<ProductRow> Items, int Total);
+
+public sealed record ProductSaved(int Id, List<string>? Warnings);

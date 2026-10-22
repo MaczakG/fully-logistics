@@ -26,6 +26,9 @@
         </Grid>
       </Border>
 
+      <Button Command="{Binding MovementsCommand}" HorizontalAlignment="Left">
+        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconTransfer}" /><TextBlock Text="Mozgások ezen a helyen" /></StackPanel>
+      </Button>
       <TextBlock Classes="section" Text="A helyen lévő áru" />
       <Border Classes="notice ok" IsVisible="{Binding IsEmpty}">
         <TextBlock Text="A hely üres." />

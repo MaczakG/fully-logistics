@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Stock"
+             x:Class="Fully.Wms.Modules.Stock.StockTabsBar"
+             x:DataType="local:StockTabsBar">
+  <!-- The tabs of Készlet (web app: ui.tabs on every stock page) -->
+  <UserControl.Styles>
+    <Style Selector="ToggleButton.tab">
+      <Setter Property="MinHeight" Value="40" />
+      <Setter Property="Padding" Value="12,0" />
+      <Setter Property="Margin" Value="0,0,4,0" />
+      <Setter Property="BorderThickness" Value="0,0,0,3" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style Selector="ToggleButton.tab:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{StaticResource HiVis}" />
+      <Setter Property="Foreground" Value="{DynamicResource Ink}" />
+    </Style>
+  </UserControl.Styles>
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+    <Border BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1">
+      <StackPanel Orientation="Horizontal">
+        <ToggleButton Classes="tab" x:Name="Stock" Tag="stock">
+          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconStock}" /><TextBlock Text="Készlet" /></StackPanel>
+        </ToggleButton>
+        <ToggleButton Classes="tab" x:Name="Catalog" Tag="catalog">
+          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconPackage}" /><TextBlock Text="Cikktörzs" /></StackPanel>
+        </ToggleButton>
+        <ToggleButton Classes="tab" x:Name="Movements" Tag="movements">
+          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconTransfer}" /><TextBlock Text="Mozgások" /></StackPanel>
+        </ToggleButton>
+        <ToggleButton Classes="tab" x:Name="Map" Tag="map">
+          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconMap}" /><TextBlock Text="Térkép" /></StackPanel>
+        </ToggleButton>
+        <ToggleButton Classes="tab" x:Name="Locations" Tag="locations">
+          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconList}" /><TextBlock Text="Helyek" /></StackPanel>
+        </ToggleButton>
+      </StackPanel>
+    </Border>
+  </ScrollViewer>
+</UserControl>

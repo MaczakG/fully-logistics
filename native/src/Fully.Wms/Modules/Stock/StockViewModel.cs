@@ -94,6 +94,9 @@ public sealed partial class StockViewModel(ShellViewModel shell) : ListPageViewM
     }
 
     [RelayCommand]
+    Task TabAsync(string tab) => StockTabs.Open(Shell, tab);
+
+    [RelayCommand]
     Task ExportAsync() => RunAsync(async () =>
     {
         var file = await Api.DownloadAsync(Query.Build("api/stock/export", ("q", Search.Trim()), ("partner_id", Partner?.Id),

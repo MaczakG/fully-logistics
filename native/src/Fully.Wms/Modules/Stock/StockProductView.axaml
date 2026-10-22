@@ -27,6 +27,18 @@
         <Button Command="{Binding AdjustCommand}" CommandParameter="{x:Null}" IsVisible="{Binding CanApprove}" Margin="0,0,10,8">
           <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconEdit}" /><TextBlock Text="Készletkorrekció" /></StackPanel>
         </Button>
+        <Button Command="{Binding EditCommand}" IsVisible="{Binding CanEdit}" Margin="0,0,10,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPackage}" /><TextBlock Text="Cikkadatok" /></StackPanel>
+        </Button>
+        <Button Command="{Binding MovementsCommand}" Margin="0,0,10,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconList}" /><TextBlock Text="Összes mozgás" /></StackPanel>
+        </Button>
+        <Button Classes="danger" Command="{Binding DeactivateCommand}" IsVisible="{Binding CanDeactivate}" Margin="0,0,10,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconEyeSlash}" /><TextBlock Text="Inaktiválás" /></StackPanel>
+        </Button>
+        <Button Command="{Binding ActivateCommand}" IsVisible="{Binding CanActivate}" Margin="0,0,10,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconEye}" /><TextBlock Text="Újraaktiválás" /></StackPanel>
+        </Button>
       </WrapPanel>
 
       <!-- Availability -->

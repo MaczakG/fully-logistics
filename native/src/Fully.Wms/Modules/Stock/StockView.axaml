@@ -8,6 +8,7 @@
              x:DataType="local:StockViewModel">
   <DockPanel>
     <StackPanel DockPanel.Dock="Top" Margin="16,16,16,6" Spacing="10">
+      <local:StockTabsBar Active="stock" Command="{Binding TabCommand}" />
       <ctl:ScanField Command="{Binding ScanCommand}" Placeholder="Cikkszám, EAN vagy raktárhely" />
 
       <!-- Key figures (desktop) -->

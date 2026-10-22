@@ -198,6 +198,13 @@ public sealed partial class ShellViewModel : ViewModelBase
 
     public Task NavigateAsync(PageViewModel page) => ShowAsync(page);
 
+    // Another page in place of the current one (the tabs of a module): Back goes where it went.
+    public async Task ReplaceAsync(PageViewModel page)
+    {
+        if (stack.Count > 1) stack.RemoveAt(stack.Count - 1);
+        await ShowAsync(page);
+    }
+
     async Task ShowAsync(PageViewModel page)
     {
         stack.Add(page);

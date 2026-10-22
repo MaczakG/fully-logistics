@@ -25,4 +25,8 @@ public sealed partial class StockLocationViewModel(ShellViewModel shell, int loc
 
     [RelayCommand]
     Task OpenProductAsync(LocationStockRow row) => Shell.NavigateAsync(new StockProductViewModel(Shell, row.ProductId));
+
+    [RelayCommand]
+    Task MovementsAsync() => Location is null ? Task.CompletedTask
+        : Shell.NavigateAsync(new MovementsViewModel(Shell, locationId: Location.Id, locationText: Location.Code));
 }

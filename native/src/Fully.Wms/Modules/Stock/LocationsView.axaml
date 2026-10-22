@@ -1,0 +1,109 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Stock"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Stock.LocationsView"
+             x:DataType="local:LocationsViewModel">
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Margin="16,16,16,6" Spacing="10">
+      <local:StockTabsBar Active="locations" Command="{Binding TabCommand}" />
+      <TextBlock Classes="muted small" TextWrapping="Wrap" Text="Aktív tárolóhelyek méret szerint. Egy helyen mindig csak egy ügyfél áruja lehet." />
+      <ItemsControl ItemsSource="{Binding Summary.BySize, FallbackValue={x:Null}}">
+        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="m:SizeOccupancy">
+            <Button Classes="ghost" Padding="0" Margin="0,0,8,8" Command="{Binding $parent[local:LocationsView].((local:LocationsViewModel)DataContext).ShowEmptyCommand}" CommandParameter="{Binding}"
+                    ToolTip.Tip="A szabad helyek listája">
+              <Border Classes="kpi" Margin="0" MinWidth="170">
+                <StackPanel>
+                  <TextBlock Classes="kpilabel" Text="{Binding Name, StringFormat='{}{0}'}" />
+                  <TextBlock Classes="kpivalue" Text="{Binding Empty, StringFormat='{}{0} szabad'}" FontSize="20" />
+                  <TextBlock Classes="kpihint" Text="{Binding Converter={x:Static local:StockTabsFormat.Occupancy}}" />
+                </StackPanel>
+              </Border>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <Expander Header="Szűrők" IsExpanded="{Binding !IsCompact, Mode=OneWay}" HorizontalAlignment="Stretch">
+        <WrapPanel>
+          <StackPanel Margin="0,0,10,8" Width="180">
+            <TextBlock Classes="label" Text="Hely kódja" />
+            <TextBox Text="{Binding Search}" Watermark="pl. A-01">
+              <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding ApplyCommand}" /></TextBox.KeyBindings>
+            </TextBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="150">
+            <TextBlock Classes="label" Text="Foglaltság" />
+            <ComboBox ItemsSource="{Binding StateLabels}" SelectedIndex="{Binding StateIndex}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="190">
+            <TextBlock Classes="label" Text="Méret" />
+            <ComboBox ItemsSource="{Binding Sizes}" SelectedItem="{Binding Size}" PlaceholderText="Minden méret">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="m:SizeInfo"><TextBlock Text="{Binding Name, StringFormat='{}{0}'}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="230">
+            <TextBlock Classes="label" Text="Ügyfél" />
+            <ComboBox ItemsSource="{Binding Partners}" SelectedItem="{Binding Partner}" PlaceholderText="Minden ügyfél">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="m:PartnerLookup"><TextBlock Text="{Binding Display}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="200">
+            <TextBlock Classes="label" Text="Típus" />
+            <ComboBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding Kind}" PlaceholderText="Tárolóhely">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="local:KindChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom" Margin="0,0,0,8">
+            <Button Classes="dark" Content="Szűrés" Command="{Binding ApplyCommand}" />
+            <Button Content="Törlés" Command="{Binding ClearFiltersCommand}" />
+          </StackPanel>
+        </WrapPanel>
+      </Expander>
+    </StackPanel>
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="16,6,16,12">
+      <TextBlock Text="{Binding TotalText}" Classes="muted" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Továbbiak" Command="{Binding MoreCommand}" IsVisible="{Binding HasMore}" />
+    </Grid>
+    <Panel Margin="16,0">
+      <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
+        <TextBlock Text="Nincs a szűrésnek megfelelő raktárhely." />
+      </Border>
+      <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False">
+        <DataGrid.Columns>
+          <DataGridTextColumn x:DataType="m:LocationRow" Header="Hely" Binding="{Binding Code}" Width="120" FontFamily="{StaticResource MonoFont}" FontWeight="Bold" />
+          <DataGridTextColumn x:DataType="m:LocationRow" Header="Zóna" Binding="{Binding Zone}" Width="70" />
+          <DataGridTextColumn x:DataType="m:LocationRow" Header="Méret" Binding="{Binding SizeCode}" Width="75" />
+          <DataGridTextColumn x:DataType="m:LocationRow" Header="Típus" Binding="{Binding KindLabel}" Width="150" />
+          <DataGridTemplateColumn Header="Ügyfél" Width="*" MinWidth="160">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:LocationRow">
+                <TextBlock Margin="10,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding Converter={x:Static local:StockTabsFormat.Occupant}}" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn x:DataType="m:LocationRow" Header="Fix hely" Binding="{Binding DedicatedPartnerCode}" Width="120" />
+          <DataGridTextColumn x:DataType="m:LocationRow" Header="Cikkek" Binding="{Binding Products}" Width="75" />
+          <DataGridTextColumn x:DataType="m:LocationRow" Header="Mennyiség" Binding="{Binding Qty}" Width="100" />
+        </DataGrid.Columns>
+      </DataGrid>
+      <ListBox Classes="rows" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding IsCompact}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="m:LocationRow">
+            <Grid ColumnDefinitions="*,Auto" Margin="14,10">
+              <StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="{Binding Code}" Classes="mono" FontWeight="Bold" FontSize="16" />
+                  <Border Classes="tag"><TextBlock Text="{Binding SizeCode}" /></Border>
+                </StackPanel>
+                <TextBlock Classes="muted small" Text="{Binding Converter={x:Static local:StockTabsFormat.Occupant}}" />
+              </StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding Qty}" Classes="big" VerticalAlignment="Center" />
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Panel>
+  </DockPanel>
+</UserControl>
