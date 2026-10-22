@@ -39,28 +39,59 @@ jobs:
       - name: Unit and screen tests
         run: dotnet test native/tests/Fully.Wms.Tests -c Release
 
+  # One downloadable file per platform (build/package-desktop.sh). The macOS app is built and
+  # ad-hoc signed on a Mac: Apple Silicon does not start unsigned code.
   desktop:
     name: Desktop (${{ matrix.rid }})
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rid: [win-x64, osx-arm64, osx-x64, linux-x64]
+        include:
+          - { rid: win-x64, os: ubuntu-latest }
+          - { rid: linux-x64, os: ubuntu-latest }
+          - { rid: osx-arm64, os: macos-26 }
+          - { rid: osx-x64, os: macos-26 }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: native/global.json
-      - name: Publish
-        run: >
-          dotnet publish native/src/Fully.Wms.Desktop -c Release -r ${{ matrix.rid }} --self-contained
-          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
-          -o out/FullyWms-${{ matrix.rid }}
+      - name: Build and pack
+        working-directory: native
+        run: build/package-desktop.sh ${{ matrix.rid }} ../out 1.0.${{ github.run_number }}
       - uses: actions/upload-artifact@v4
         with:
           name: FullyWms-${{ matrix.rid }}
-          path: out/FullyWms-${{ matrix.rid }}
+          path: out/*
           retention-days: 30
+
+  # On main: the packages as the "Fully WMS asztali alkalmazás" release, replaced by every new build,
+  # so the download links stay the same (Releases > latest).
+  release:
+    name: Desktop downloads (release)
+    needs: desktop
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: FullyWms-*
+          path: dist
+          merge-multiple: true
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          VERSION: 1.0.${{ github.run_number }}
+        run: |
+          ls -l dist
+          gh release delete fully-wms-desktop --repo "$REPO" --cleanup-tag --yes || true
+          gh release create fully-wms-desktop dist/* --repo "$REPO" --target "$GITHUB_SHA" --latest \
+            --title "Fully WMS asztali alkalmazás $VERSION" \
+            --notes "Töltsd le a géped szerinti fájlt: Windows: FullyWms-windows-x64.zip; Mac (M1-től): FullyWms-macos-arm64.zip; régebbi, Intel processzoros Mac: FullyWms-macos-x64.zip; Linux: FullyWms-linux-x64.tar.gz. Telepítés: native/README.md."
 
   ios:
     name: iOS (PDA)

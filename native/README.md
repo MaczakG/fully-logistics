@@ -12,22 +12,43 @@ bejelentkezésnél a „módosítás” linkkel átírható). Az adatbázis, a j
 futárkapcsolatok és a naplózás a szerveren vannak, az alkalmazások ugyanazt az API-t hívják, mint
 korábban a böngészős felület. Ugyanazokkal a felhasználókkal és jelszavakkal lehet belépni.
 
+## Mi van az alkalmazásokban
+
+| Modul | Asztali | PDA (iPhone) |
+|---|---|---|
+| Betárolás, Megrendelések, Komissió (csomagolóállomással), Leltár, Készlet (térképpel), Rendeléstörténet (visszáruval), Fuvarszervezés | igen | igen, nagy gombokkal és vonalkódolvasással |
+| Partnerek, Ajánlatkészítő, Elszámolás | igen | nem |
+| Beállítások, Felhasználók (jogosultságok) | igen | nem |
+
+Ki mit lát, azt a szerepköre jogosultságai döntik el, ugyanúgy, mint a böngészőben.
+
+Az asztali alkalmazás a klasszikus Windows-programok szerint működik: a listák a főablakban vannak,
+egy rekord (rendelés, partner, ajánlat, elszámolás ...) a saját ablakában nyílik meg, így több is
+lehet nyitva egymás mellett. A kisebb szerkesztések kis párbeszédablakban jelennek meg. Billentyűk:
+**Esc** bezárja a párbeszédablakot, **Ctrl+W** a rekord ablakát, **F5** frissít, az Ajánlatkészítőben
+**Ctrl+S** ment. Ha egy ablakban nem mentett módosítás van, bezárás előtt rákérdez.
+
 ## Asztali alkalmazás letöltése
 
-1. GitHubon: **Actions** > **Native apps** > a legutóbbi zöld futás > **Artifacts**.
-2. Töltsd le a géped szerintit:
-   - `FullyWms-win-x64`: Windows;
-   - `FullyWms-osx-arm64`: Mac M1-től;
-   - `FullyWms-osx-x64`: régebbi, Intel processzoros Mac;
-   - `FullyWms-linux-x64`: Linux.
-3. Csomagold ki, és indítsd el a `FullyWms` (Windowson `FullyWms.exe`) fájlt. Telepíteni nem kell, a
-   .NET is benne van.
+1. GitHubon a repó oldalán: **Releases** > **Fully WMS asztali alkalmazás** (a legfrissebb). Minden
+   `main` ágra kerülő módosítás után magától frissül.
+2. Töltsd le a géped szerinti fájlt:
+   - `FullyWms-windows-x64.zip`: Windows 10 és 11;
+   - `FullyWms-macos-arm64.zip`: Mac M1 vagy újabb processzorral;
+   - `FullyWms-macos-x64.zip`: régebbi, Intel processzoros Mac;
+   - `FullyWms-linux-x64.tar.gz`: Linux.
+3. Indítás:
+   - **Windows:** csomagold ki, és indítsd el a `FullyWms\FullyWms.exe` fájlt. Telepíteni nem kell, a
+     .NET is benne van. A SmartScreen első indításkor figyelmeztet, mert a fájl nincs digitálisan
+     aláírva: kattints a „További információ”, majd a „Futtatás mindenképp” gombra.
+   - **Mac:** a letöltött zip kicsomagolásával megjelenik a `Fully WMS` alkalmazás; húzd az
+     Alkalmazások (Applications) mappába. Az első indításnál a macOS jelzi, hogy nem tudja
+     ellenőrizni a fejlesztőt: zárd be az üzenetet, majd Rendszerbeállítások > Adatvédelem és
+     biztonság > lent a „Megnyitás mindenképp” gomb. Ezt csak egyszer kell megtenni.
+   - **Linux:** `tar xzf FullyWms-linux-x64.tar.gz`, majd `./FullyWms/FullyWms`.
 
-A fájl nincs digitálisan aláírva, ezért első indításkor:
-
-- **Windows:** a SmartScreen figyelmeztet; kattints a „További információ”, majd a „Futtatás
-  mindenképp” gombra.
-- **macOS:** jobb klikk > Megnyitás.
+Egy pull requesthez tartozó változat is letölthető: **Actions** > **Native apps** > a futás >
+**Artifacts** (30 napig érhető el).
 
 ## iPhone-os PDA telepítése (TestFlight)
 
@@ -105,8 +126,16 @@ FL_TEST_SERVER=http://localhost:8899 FL_SCREENSHOTS=/tmp/kepek dotnet test tests
 
 ### Megjelenés
 
-- **Széles ablak:** bal oldalt a menü.
-- **Keskeny ablak és telefon:** a kezdőképernyőn nagy csempék, fent Vissza és Kezdőlap gomb.
+- **Széles ablak:** bal oldalt a menü; a rekordok saját ablakban, a szerkesztések párbeszédablakban
+  (`Services/WindowPresenter.cs`).
+- **Keskeny ablak és telefon:** a kezdőképernyőn nagy csempék, fent Vissza és Kezdőlap gomb, minden
+  oldal ugyanabban a nézetben, egymás után.
+
+### Csomagolás
+
+`build/package-desktop.sh <rid> <mappa> [verzió]` egy platform letölthető fájlját készíti el
+(`win-x64`, `linux-x64`, `osx-arm64`, `osx-x64`). A macOS-es változathoz Mac kell, mert az
+alkalmazást alá kell írni; a GitHub Actions ezt Mac gépen végzi.
 
 A modulok a saját fájljukból jelentkeznek be (`AppModules.Use`, `PageLocator.Register`), így egy új
 modul felvételéhez nem kell a közös listákat szerkeszteni.
