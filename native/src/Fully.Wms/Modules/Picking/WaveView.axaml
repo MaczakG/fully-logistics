@@ -1,0 +1,315 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Picking"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Picking.WaveView"
+             x:DataType="local:WaveViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Picking/PickingStyles.axaml" />
+  </UserControl.Styles>
+  <UserControl.Resources>
+    <!-- The three cells of the current task, laid out in one row on the desktop and in two on the phone -->
+    <DataTemplate x:Key="LocationCell" x:DataType="local:WaveViewModel">
+      <Border Classes="cell" Classes.current="{Binding LocCurrent}" Classes.done="{Binding LocDone}">
+        <StackPanel Spacing="4">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Border Classes="stepno"><TextBlock Text="1" /></Border>
+            <TextBlock Classes="cellabel" Text="Hely" />
+          </StackPanel>
+          <TextBlock Classes="big" Text="{Binding Current.Location.Code, FallbackValue=''}" />
+        </StackPanel>
+      </Border>
+    </DataTemplate>
+    <DataTemplate x:Key="ProductCell" x:DataType="local:WaveViewModel">
+      <Border Classes="cell" Classes.current="{Binding ProductCurrent}" Classes.done="{Binding ProductDone}">
+        <StackPanel Spacing="2">
+          <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,2">
+            <Border Classes="stepno"><TextBlock Text="2" /></Border>
+            <TextBlock Classes="cellabel" Text="Termék" />
+          </StackPanel>
+          <TextBlock Classes="mid" Text="{Binding Current.Product.Sku, FallbackValue=''}" />
+          <TextBlock Text="{Binding Current.Product.Name, FallbackValue=''}" TextWrapping="Wrap" FontWeight="SemiBold" />
+          <TextBlock Classes="muted small mono" Text="{Binding LotLine}" TextWrapping="Wrap" IsVisible="{Binding LotLine, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </StackPanel>
+      </Border>
+    </DataTemplate>
+    <DataTemplate x:Key="QtyCell" x:DataType="local:WaveViewModel">
+      <Border Classes="cell" Classes.current="{Binding QtyCurrent}">
+        <StackPanel Spacing="4">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Border Classes="stepno"><TextBlock Text="3" /></Border>
+            <TextBlock Classes="cellabel" Text="Mennyiség" />
+          </StackPanel>
+          <TextBlock Classes="big" Text="{Binding RemainingText}" />
+          <TextBlock Classes="muted small" Text="{Binding OrdersLine}" TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <ScrollViewer x:Name="Scroller">
+    <Grid Margin="16" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" IsVisible="{Binding Data, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+      <!-- Head -->
+      <StackPanel Spacing="4" Margin="0,0,0,12">
+        <WrapPanel>
+          <TextBlock Text="{Binding Data.Number, FallbackValue=''}" Classes="h1 mono" Margin="0,0,10,4" VerticalAlignment="Center" />
+          <ctl:StatusTag Group="wave" Status="{Binding Status}" Margin="0,0,6,4" VerticalAlignment="Center" />
+        </WrapPanel>
+        <TextBlock Text="{Binding Lead}" Classes="muted" TextWrapping="Wrap" />
+      </StackPanel>
+
+      <!-- Actions and progress: above the work on the desktop, below it on the phone -->
+      <StackPanel Grid.Row="{Binding IsCompact, Converter={x:Static local:PickingFormat.RowOfSummary}}" Spacing="10" Margin="0,0,0,12">
+        <WrapPanel>
+          <Button Command="{Binding PrintCommand}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPrinter}" /><TextBlock Text="Kiszedési lista" /></StackPanel>
+          </Button>
+          <Button Command="{Binding PackingCommand}" IsVisible="{Binding ShowPackingButton}" Classes.primary="{Binding PackingPrimary}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPackage}" /><TextBlock Text="{Binding PackingText}" /></StackPanel>
+          </Button>
+          <Button Command="{Binding CompleteCommand}" IsVisible="{Binding CanComplete}" IsEnabled="{Binding !CompleteNeedsApproval}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheckCircle}" /><TextBlock Text="Lezárás" /></StackPanel>
+          </Button>
+          <Button Classes="danger" Command="{Binding CancelWaveCommand}" IsVisible="{Binding CanCancel}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconClose}" /><TextBlock Text="Megszakítás" /></StackPanel>
+          </Button>
+        </WrapPanel>
+        <TextBlock Classes="muted small" Text="{Binding CompleteHint}" IsVisible="{Binding CompleteHint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <Border Classes="panel">
+          <StackPanel Spacing="8">
+            <ProgressBar Classes="line big" Classes.done="{Binding ProgressDone}" Value="{Binding ProgressRatio}" />
+            <TextBlock Text="{Binding ProgressText}" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <WrapPanel>
+              <PathIcon Data="{StaticResource IconUser}" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" />
+              <TextBlock Text="{Binding PickerText}" VerticalAlignment="Center" Margin="0,0,8,0" />
+              <Button Classes="link" Content="módosítás" Command="{Binding PickerCommand}" IsVisible="{Binding CanChangePicker}" VerticalAlignment="Center" />
+            </WrapPanel>
+            <WrapPanel IsVisible="{Binding ShowStart}">
+              <TextBlock Classes="muted small" Text="A hullám az első beolvasott tétellel indul." VerticalAlignment="Center" Margin="0,0,8,0" />
+              <Button Classes="link" Content="Indítás most" Command="{Binding StartCommand}" VerticalAlignment="Center" />
+            </WrapPanel>
+            <TextBlock Classes="small" Text="{Binding Data.Note, FallbackValue=''}" TextWrapping="Wrap" IsVisible="{Binding HasNote}" />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- Work: scan, the current task, the quantity -->
+      <StackPanel Grid.Row="2" Spacing="10" Margin="0,0,0,12" IsVisible="{Binding Working}">
+        <ctl:ScanField x:Name="Scan" Command="{Binding ScanCommand}" Placeholder="{Binding ScanPlaceholder}" />
+        <Border Classes="feedback" Classes.ok="{Binding FeedbackTone, Converter={x:Static local:PickingFormat.IsOk}}"
+                Classes.warn="{Binding FeedbackTone, Converter={x:Static local:PickingFormat.IsWarn}}"
+                Classes.danger="{Binding FeedbackTone, Converter={x:Static local:PickingFormat.IsDanger}}"
+                IsVisible="{Binding Feedback, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding Feedback}" />
+        </Border>
+
+        <Border Classes="entry" IsVisible="{Binding HasCurrent}">
+          <StackPanel Spacing="10">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Classes="cellabel" Text="{Binding TaskPosition}" />
+              <Border Grid.Column="1" Classes="tag warn" IsVisible="{Binding Current.Express, FallbackValue={x:False}}"><TextBlock Text="Expressz" /></Border>
+            </Grid>
+            <Grid ColumnDefinitions="*,2*,*" IsVisible="{Binding !IsCompact}">
+              <ContentControl Content="{Binding}" ContentTemplate="{StaticResource LocationCell}" Margin="0,0,8,0" />
+              <ContentControl Grid.Column="1" Content="{Binding}" ContentTemplate="{StaticResource ProductCell}" Margin="0,0,8,0" />
+              <ContentControl Grid.Column="2" Content="{Binding}" ContentTemplate="{StaticResource QtyCell}" />
+            </Grid>
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" IsVisible="{Binding IsCompact}">
+              <ContentControl Content="{Binding}" ContentTemplate="{StaticResource LocationCell}" Margin="0,0,6,6" />
+              <ContentControl Grid.Column="1" Content="{Binding}" ContentTemplate="{StaticResource QtyCell}" Margin="0,0,0,6" />
+              <ContentControl Grid.Row="1" Grid.ColumnSpan="2" Content="{Binding}" ContentTemplate="{StaticResource ProductCell}" />
+            </Grid>
+
+            <!-- The counted quantity -->
+            <StackPanel Spacing="6" IsVisible="{Binding IsQtyStep}">
+              <TextBlock Classes="label" Text="Kiszedett mennyiség" />
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <Button Classes="square" Command="{Binding QtyMinusCommand}" ToolTip.Tip="Eggyel kevesebb">
+                  <PathIcon Data="{StaticResource IconMinus}" />
+                </Button>
+                <TextBox x:Name="QtyBox" Grid.Column="1" Classes="qty" Margin="8,0" Text="{Binding Qty}" TextInputOptions.ContentType="Digits">
+                  <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding QuantityEnterCommand}" />
+                    <KeyBinding Gesture="Escape" Command="{Binding CancelQtyCommand}" />
+                  </TextBox.KeyBindings>
+                </TextBox>
+                <Button Grid.Column="2" Classes="square" Command="{Binding QtyPlusCommand}" ToolTip.Tip="Eggyel több">
+                  <PathIcon Data="{StaticResource IconPlus}" />
+                </Button>
+              </Grid>
+              <Button Classes="primary" HorizontalAlignment="Stretch" MinHeight="52" Command="{Binding ConfirmCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheck}" /><TextBlock Text="Megerősítés" /></StackPanel>
+              </Button>
+            </StackPanel>
+
+            <WrapPanel>
+              <Button Command="{Binding ShortCommand}" Margin="0,0,8,0" MinHeight="44">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconWarningCircle}" /><TextBlock Text="Hiány" /></StackPanel>
+              </Button>
+              <Button Classes="ghost" Command="{Binding SkipCommand}" IsVisible="{Binding ShowSkip}" Margin="0,0,8,0" MinHeight="44">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCaretRight}" /><TextBlock Text="Kihagyás" /></StackPanel>
+              </Button>
+              <Button Classes="ghost" Command="{Binding RestartCommand}" IsVisible="{Binding ShowRestart}" MinHeight="44">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconRefresh}" /><TextBlock Text="Újrakezdés" /></StackPanel>
+              </Button>
+            </WrapPanel>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- Everything done, closed or cancelled -->
+      <Border Grid.Row="4" Classes="notice" Margin="0,0,0,12"
+              Classes.ok="{Binding FinishTone, Converter={x:Static local:PickingFormat.IsOk}}"
+              Classes.warn="{Binding FinishTone, Converter={x:Static local:PickingFormat.IsWarn}}"
+              IsVisible="{Binding FinishNotice, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding FinishNotice}" TextWrapping="Wrap" />
+      </Border>
+
+      <!-- The pick list -->
+      <StackPanel Grid.Row="5" Margin="0,0,0,16" Spacing="6">
+        <WrapPanel>
+          <TextBlock Classes="section" Text="Kiszedési lista" Margin="0,0,10,0" VerticalAlignment="Center" />
+          <TextBlock Classes="muted small" Text="Bejárási sorrendben, helyenként" VerticalAlignment="Center" />
+        </WrapPanel>
+        <Border Classes="notice" IsVisible="{Binding !HasTasks}">
+          <TextBlock Text="Ebben a hullámban nincs kiszedendő tétel." />
+        </Border>
+        <Border Classes="panel" Padding="0" IsVisible="{Binding !IsCompact}">
+          <StackPanel IsVisible="{Binding HasTasks}">
+            <Grid ColumnDefinitions="110,*,70,100,90,100" Margin="10,8">
+              <TextBlock Classes="dt" Text="Hely" />
+              <TextBlock Grid.Column="1" Classes="dt" Text="Termék" />
+              <TextBlock Grid.Column="2" Classes="dt" Text="Kell" TextAlignment="Right" />
+              <TextBlock Grid.Column="3" Classes="dt" Text="Kiszedve" TextAlignment="Right" />
+              <TextBlock Grid.Column="4" Classes="dt" Text="Állapot" Margin="12,0,0,0" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding Tasks}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="local:PickTaskItem">
+                  <Border Classes="taskrow" Classes.group="{Binding FirstOfLocation}" Classes.current="{Binding IsCurrent}">
+                    <Grid ColumnDefinitions="110,*,70,100,90,100">
+                      <TextBlock Classes="mono" FontWeight="Bold" Text="{Binding LocationText}" VerticalAlignment="Center" />
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Classes="mono" Text="{Binding Task.Product.Sku}" />
+                        <TextBlock Classes="muted small" Text="{Binding Task.Product.Name}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Classes="muted small mono" Text="{Binding LotText}" IsVisible="{Binding HasLot}" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Task.Qty, Converter={x:Static local:PickingFormat.Int}}" TextAlignment="Right" VerticalAlignment="Center" />
+                      <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                        <TextBlock Classes="mono" Text="{Binding Task.Picked, Converter={x:Static local:PickingFormat.Int}}" TextAlignment="Right" />
+                        <TextBlock Classes="small neg" Text="{Binding ShortText}" TextAlignment="Right" IsVisible="{Binding ShortText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                      </StackPanel>
+                      <Border Grid.Column="4" Classes="tag" Classes.ok="{Binding IsDone}" Classes.danger="{Binding IsShort}" Classes.hi="{Binding IsCurrent}"
+                              Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding StateText}" />
+                      </Border>
+                      <Button Grid.Column="5" Classes="ghost" Content="Ez jön" Command="{Binding ChooseCommand}" IsVisible="{Binding CanChoose}" HorizontalAlignment="Right" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <ItemsControl ItemsSource="{Binding Tasks}" IsVisible="{Binding IsCompact}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:PickTaskItem">
+              <Border Classes="linecard" Classes.active="{Binding IsCurrent}" Classes.done="{Binding IsDone}">
+                <StackPanel Spacing="4">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Classes="sku" Text="{Binding Task.Location.Code}" />
+                    <Border Grid.Column="1" Classes="tag" Classes.ok="{Binding IsDone}" Classes.danger="{Binding IsShort}" Classes.hi="{Binding IsCurrent}">
+                      <TextBlock Text="{Binding StateText}" />
+                    </Border>
+                  </Grid>
+                  <TextBlock Classes="mono" FontWeight="SemiBold" Text="{Binding Task.Product.Sku}" />
+                  <TextBlock Text="{Binding Task.Product.Name}" TextWrapping="Wrap" />
+                  <TextBlock Classes="muted small" Text="{Binding CardLine}" TextWrapping="Wrap" />
+                  <Button Content="Ez jön" Command="{Binding ChooseCommand}" IsVisible="{Binding CanChoose}" HorizontalAlignment="Left" MinHeight="44" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <!-- The orders of the wave -->
+      <StackPanel Grid.Row="6" Spacing="6">
+        <TextBlock Classes="section" Text="Rendelések a hullámban" />
+        <Border Classes="panel" Padding="0" IsVisible="{Binding !IsCompact}">
+          <StackPanel>
+            <Grid ColumnDefinitions="150,*,90,100,170,130" Margin="10,8">
+              <TextBlock Classes="dt" Text="Rendelés" />
+              <TextBlock Grid.Column="1" Classes="dt" Text="Vevő" />
+              <TextBlock Grid.Column="2" Classes="dt" Text="Fuvarozó" />
+              <TextBlock Grid.Column="3" Classes="dt" Text="Kiszedve" TextAlignment="Right" />
+              <TextBlock Grid.Column="4" Classes="dt" Text="Állapot" Margin="12,0,0,0" />
+              <TextBlock Grid.Column="5" Classes="dt" Text="Csomagolás" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding OrdersInWave}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="local:WaveOrderItem">
+                  <Border Classes="taskrow">
+                    <Grid ColumnDefinitions="150,*,90,100,170,130">
+                      <StackPanel VerticalAlignment="Center">
+                        <TextBlock Classes="mono" FontWeight="Bold" Text="{Binding Order.Number}" />
+                        <TextBlock Classes="muted small" Text="{Binding Order.ExternalNumber}" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Order.CustomerName}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Classes="muted small" Text="{Binding Order, Converter={x:Static local:PickingFormat.OrderCustomer}}" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="2" Text="{Binding Order, Converter={x:Static local:PickingFormat.OrderCarrier}}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                      <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                        <TextBlock Classes="mono" Classes.pos="{Binding Order, Converter={x:Static local:PickingFormat.OrderAllPicked}}" TextAlignment="Right"
+                                   Text="{Binding Order, Converter={x:Static local:PickingFormat.OrderPicked}}" />
+                        <TextBlock Classes="small neg" TextAlignment="Right" Text="{Binding Order, Converter={x:Static local:PickingFormat.OrderShort}}" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="4" Margin="12,0,0,0" VerticalAlignment="Center" Spacing="2">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                          <ctl:StatusTag Group="order" Status="{Binding Order.Status}" />
+                          <Border Classes="tag warn" IsVisible="{Binding Order.IsExpress}"><TextBlock Text="Expressz" /></Border>
+                        </StackPanel>
+                        <TextBlock Classes="muted small" Text="már nincs a hullámban" IsVisible="{Binding NotInWave}" />
+                      </StackPanel>
+                      <Panel Grid.Column="5" VerticalAlignment="Center">
+                        <Button Command="{Binding PackCommand}" IsVisible="{Binding CanPack}" HorizontalAlignment="Left">
+                          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconPackage}" /><TextBlock Text="Csomagolás" /></StackPanel>
+                        </Button>
+                        <TextBlock Classes="mono small" Text="{Binding Order.TrackingNumber}" IsVisible="{Binding ShowTracking}" TextTrimming="CharacterEllipsis" />
+                      </Panel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <ItemsControl ItemsSource="{Binding OrdersInWave}" IsVisible="{Binding IsCompact}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:WaveOrderItem">
+              <Border Classes="linecard">
+                <StackPanel Spacing="4">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Classes="sku" Text="{Binding Order.Number}" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                      <Border Classes="tag warn" IsVisible="{Binding Order.IsExpress}"><TextBlock Text="Expressz" /></Border>
+                      <ctl:StatusTag Group="order" Status="{Binding Order.Status}" />
+                    </StackPanel>
+                  </Grid>
+                  <TextBlock Text="{Binding Order.CustomerName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                  <TextBlock Classes="muted small" Text="{Binding Order, Converter={x:Static local:PickingFormat.OrderCardLine}}" TextWrapping="Wrap" />
+                  <TextBlock Classes="mono small" Text="{Binding Order.TrackingNumber}" IsVisible="{Binding ShowTracking}" />
+                  <Button Command="{Binding PackCommand}" IsVisible="{Binding CanPack}" HorizontalAlignment="Left" MinHeight="44">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconPackage}" /><TextBlock Text="Csomagolás" /></StackPanel>
+                  </Button>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Grid>
+  </ScrollViewer>
+</UserControl>

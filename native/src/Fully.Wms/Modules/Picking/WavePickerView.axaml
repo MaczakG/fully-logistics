@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Picking"
+             x:Class="Fully.Wms.Modules.Picking.WavePickerView"
+             x:DataType="local:WavePickerViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14">
+      <StackPanel>
+        <TextBlock Classes="label" Text="Ki szedi ki a hullámot?" />
+        <ComboBox ItemsSource="{Binding Users}" SelectedItem="{Binding Picker}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="local:Choice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+      </StackPanel>
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="Mentés" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
