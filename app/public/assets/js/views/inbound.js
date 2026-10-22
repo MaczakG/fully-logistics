@@ -605,7 +605,7 @@
         ${bar(l.putaway_qty, l.received_qty, l.received_qty > 0 && open === 0, `Polcon ${l.putaway_qty}, átvett ${l.received_qty}`)}
         <div class="inb-chips">
           ${l.putaways.map((p) => html`<span class="tag">${p.location_code}: ${fmt.int(p.qty)}</span>`)}
-          ${open > 0 && l.suggested ? chip(`javasolt: ${l.suggested.code}`, 'info') : ''}
+          ${open > 0 && l.suggested ? html`<span class="chip" data-tone="info" title="${l.suggested.reason}">javasolt: ${l.suggested.code}</span>` : ''}
           ${damagedLeft(l) ? chip(`${fmt.int(damagedLeft(l))} sérült, karanténba`, 'danger') : ''}
           ${(l.track_lot && !l.lot) || (l.track_expiry && !l.expiry) ? chip('sarzs vagy lejárat hiányzik', 'warn') : ''}
         </div>
@@ -631,7 +631,8 @@
           <button class="btn btn--primary" type="submit" ${l ? '' : raw('disabled')}>${FL.icon('tray-arrow-down')}Polcra helyezés</button>
         </div>
         ${l ? html`<div class="inb-put__hints">
-          ${l.suggested ? html`<button class="btn btn--sm" type="button" data-action="use-loc" data-id="${l.suggested.id}" data-code="${l.suggested.code}">${FL.icon('map-pin')}Javasolt hely: ${l.suggested.code}</button>` : html`<span class="muted small">Nincs javasolt szabad hely.</span>`}
+          ${l.suggested ? html`<button class="btn btn--sm" type="button" data-action="use-loc" data-id="${l.suggested.id}" data-code="${l.suggested.code}">${FL.icon('map-pin')}Javasolt hely: ${l.suggested.code}</button>
+            <span class="inb-put__why small">${l.suggested.reason}</span>` : html`<span class="muted small">Nincs javasolt szabad hely.</span>`}
           ${dmg && d.quarantine ? html`<button class="btn btn--sm btn--danger" type="button" data-action="use-quarantine">${FL.icon('warning')}${fmt.int(Math.min(dmg, open))} sérült karanténba (${d.quarantine.code})</button>` : ''}
           ${dmg && !d.quarantine ? html`<span class="inb-warn">${FL.icon('warning')}Nincs szabad karanténhely ennek az ügyfélnek (egy helyen csak egy ügyfél áruja lehet). Vegyél fel karanténhelyet a Beállításokban.</span>` : ''}
         </div>` : ''}
@@ -1020,8 +1021,8 @@
           st.put.location = null;
           if (left > 0) { st.put.qty = left; } else { st.put.lineId = null; st.put.qty = ''; }
           paintAfterChange();
-          paintInfo();
-          focusScan();
+          // The suggestions follow what is on the shelves now (room left, the next empty location).
+          await reload();
         } catch (err) {
           beep('error');
           feedback(err.message, 'danger');
@@ -1202,11 +1203,13 @@
       cancel: cancelDialog,
       arrive: arriveDialog,
       complete: completeDialog,
-      mode: (el) => {
+      mode: async (el) => {
         if (st.mode === el.dataset.mode) return;
         st.mode = el.dataset.mode;
         paintShell();
         focusScan();
+        // Received quantities changed the suggestions (they depend on how much is to be put away).
+        if (st.mode === 'putaway') await reload();
       },
       entry: async (el) => {
         const l = d.lines.find((x) => x.id === Number(el.dataset.id));

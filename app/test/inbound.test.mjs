@@ -335,6 +335,71 @@ test('receiving by typed quantity: a peek scan only finds the line, typed quanti
   assert.equal(log.filter((t) => t.startsWith('KB-1001:')).length, 2, 'the scan is not logged');
 });
 
+test('putaway suggestion: size from the product and the quantity, room where it is, one empty location per product', async () => {
+  // Inner sizes of the location sizes (the fixture has none) and three new products of KUTYA.
+  await srv.sql(`UPDATE location_sizes SET width_cm = 50, depth_cm = 40, height_cm = 50, max_kg = 110 WHERE code = 'M';
+    UPDATE location_sizes SET width_cm = 60, depth_cm = 60, height_cm = 60, max_kg = 200 WHERE code = 'L';
+    UPDATE location_sizes SET width_cm = 100, depth_cm = 60, height_cm = 60, max_kg = 300 WHERE code = 'XL';
+    INSERT INTO products (id, partner_id, sku, name, weight_kg, width_cm, depth_cm, height_cm) VALUES
+      (1201, ${fx.clients.kutya}, 'KB-K20', 'Kocka 20 cm', 1, 20, 20, 20),
+      (1202, ${fx.clients.kutya}, 'KB-NAGY', 'Hosszú doboz', 5, 70, 50, 40),
+      (1203, ${fx.clients.kutya}, 'KB-K20B', 'Másik kocka 20 cm', 1, 20, 20, 20);`);
+  const suggest = async (productId, opts) => {
+    const r = await srv.call('stock.suggestLocation', [productId, opts]);
+    assert.equal(r.ok, true, JSON.stringify(r));
+    return r.result;
+  };
+  const isEmpty = async (id) => (await srv.query('SELECT COUNT(*) AS n FROM stock WHERE location_id = ? AND qty > 0', id))[0].n === 0;
+
+  // 10 cubes fill 85% of an M (8 000 cm³ each, 100 000 x 0.85); 11 need an L.
+  const ten = await suggest(1201, { qty: 10 });
+  assert.equal(ten.kind, 'empty');
+  assert.equal(ten.size_code, 'M');
+  assert.equal(ten.room, 10);
+  assert.ok(await isEmpty(ten.id));
+  assert.match(ten.reason, /üres M hely, a 10 db elfér rajta/);
+  const eleven = await suggest(1201, { qty: 11 });
+  assert.equal(eleven.size_code, 'L');
+  // 70 cm does not fit in an M or an L at all; the PAL size has no dimensions, so it may.
+  const big = await suggest(1202, { qty: 1 });
+  assert.equal(big.size_code, 'XL');
+  const bigMany = await suggest(1202, { qty: 5 });
+  assert.equal(bigMany.size_code, 'PAL', 'two fit an XL by volume, a size without dimensions comes before splitting');
+  assert.match(bigMany.reason, /nincs megadva a hely mérete/);
+  // Without product dimensions every size will do, as before (the alom has none).
+  assert.ok(await suggest(1002, { qty: 1 }));
+
+  // Where it already is: room left, partly, then full.
+  await srv.call('stock.addStock', [{ productId: 1201, locationId: ten.id, qty: 5, type: 'inbound' }], { as: 1 });
+  const there = await suggest(1201, { qty: 3 });
+  assert.deepEqual([there.kind, there.id, there.room], ['existing', ten.id, 5]);
+  assert.match(there.reason, /elfér még 3 db/);
+  const partly = await suggest(1201, { qty: 8 });
+  assert.equal(partly.id, ten.id);
+  assert.match(partly.reason, /csak kb\. 5 db fér még/);
+  await srv.call('stock.addStock', [{ productId: 1201, locationId: ten.id, qty: 5, type: 'inbound' }], { as: 1 });
+  const full = await suggest(1201, { qty: 3 });
+  assert.equal(full.kind, 'empty', 'a full location is not suggested again');
+  assert.notEqual(full.id, ten.id);
+
+  // The client's own dedicated empty location comes first.
+  const free = await srv.query("SELECT l.id FROM locations l JOIN location_sizes z ON z.id = l.size_id WHERE z.code = 'M' AND l.kind = 'storage' AND l.partner_id IS NULL AND NOT EXISTS (SELECT 1 FROM stock s WHERE s.location_id = l.id AND s.qty > 0) ORDER BY l.code DESC LIMIT 1");
+  await srv.sql(`UPDATE locations SET partner_id = ${fx.clients.kutya} WHERE id = ${free[0].id}`);
+  const own = await suggest(1203, { qty: 2 });
+  assert.equal(own.id, free[0].id);
+  assert.match(own.reason, /^az ügyfél fix helye/);
+
+  // On an inbound, two new products do not get the same empty location.
+  const { id } = await newInbound(admin, { lines: [{ product_id: 1203, expected_qty: 2 }, { sku: 'KB-NAGY', expected_qty: 1 }, { sku: 'KB-K20', expected_qty: 30 }] });
+  const lines = (await admin.get(`/api/inbound/${id}`)).data.lines;
+  const ids = lines.map((l) => l.suggested && l.suggested.id);
+  assert.ok(ids.every(Boolean), JSON.stringify(lines.map((l) => l.suggested)));
+  const emptyOnes = lines.filter((l) => l.suggested.kind === 'empty').map((l) => l.suggested.id);
+  assert.equal(new Set(emptyOnes).size, emptyOnes.length, JSON.stringify(lines.map((l) => [l.sku, l.suggested])));
+  assert.ok(lines.every((l) => typeof l.suggested.reason === 'string' && l.suggested.reason));
+  await srv.sql(`UPDATE locations SET partner_id = NULL WHERE id = ${free[0].id}`);
+});
+
 test('inactive products cannot be put on a new inbound', async () => {
   await srv.sql("INSERT INTO products (id, partner_id, sku, name, active) VALUES (1901, 101, 'KB-OLD', 'Kifutott cikk', 0)");
   const r = await admin.post('/api/inbound', { partner_id: fx.clients.kutya, lines: [{ sku: 'KB-OLD', expected_qty: 1 }] });

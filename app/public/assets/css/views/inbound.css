@@ -111,6 +111,7 @@
 .inb-put__fields .input { min-height: 3rem; font-size: 1.0625rem; }
 .inb-put__fields .btn { min-height: 3rem; }
 .inb-put__hints { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.inb-put__why { flex: 1 1 14rem; color: var(--ink-2); }
 
 /* history */
 .inb-history { display: grid; gap: 0; }

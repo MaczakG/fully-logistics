@@ -39,6 +39,15 @@ Amíg a mennyiséget nem rögzíted, semmi sem kerül átvételre. A termék új
 
 A mintától eltérő kódú helyek (pl. `KARANTEN`, `RAMPA-BE`) az „Egyéb helyek” részbe kerülnek.
 
+## Polcra helyezés: javasolt hely
+
+Betárolásnál a polcra helyezés minden tételhez raktárhelyet javasol, és mellé írja, miért azt. A javaslat a termék méreteiből és súlyából (Készlet > Cikktörzs), a hely méretének belső méreteiből és teherbírásából (Beállítások > Raktárhelyek > méretek) és a mennyiségből számol. Egy helyet legfeljebb 85%-ig tölt.
+
+1. **Ahol a termék már van**, ha fér még oda (az ugyanolyan sarzsú hely előre kerül). Ha csak egy része fér, kiírja, mennyi.
+2. **Üres hely abból a méretből, amelyikre az egész mennyiség felfér, a legkisebbtől kezdve.** Az ügyfél fix helyei előre kerülnek. Ezután jönnek azok a méretek, amelyeknek nincs megadva a mérete, végül a legnagyobb, amelyikre legalább egy része felfér (ilyenkor kiírja, hány hely kell).
+
+Egy betárolásban két különböző termék nem kapja ugyanazt az üres helyet, és minden polcra helyezés után a javaslat frissül. Ahol a termék vagy a helyméret méretei hiányoznak, ott a méretet nem tudja figyelembe venni, és bármelyik méret jöhet.
+
 ## Ajánlatkészítő: belső fedezetszámítás
 
 Az ajánlat alatti „Belső fedezetszámítás” rész nem kerül az ajánlatba. Megmutatja, hány raktáros kell az ajánlott forgalomhoz, mekkora területet foglal az ügyfél áruja, mennyi raktárbérleti díj esik rá, és mennyi a havi fedezet (profit). Az alapadatokat egyszer kell megadni: **Beállítások > Raktár > Költségkalkuláció**.

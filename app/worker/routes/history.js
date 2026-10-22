@@ -345,7 +345,7 @@ export function register(r) {
     for (const l of lines) {
       l.returned = returned.get(l.product_id) || 0;
       l.returnable = Math.max(l.qty - l.returned, 0);
-      const s = await suggestLocation(db, l.product_id);
+      const s = l.returnable > 0 ? await suggestLocation(db, l.product_id, { qty: l.returnable }) : null;
       l.suggested_location = s ? { id: s.id, code: s.code } : null;
       l.lots = lots.get(l.product_id) || [];
     }

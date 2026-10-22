@@ -589,15 +589,15 @@ export function register(r) {
        FROM inbound_putaways pa JOIN locations lo ON lo.id = pa.location_id LEFT JOIN users u ON u.id = pa.user_id
        WHERE pa.inbound_id = ? ORDER BY pa.id`, id);
     const open = OPEN.includes(inb.status);
-    const suggestions = new Map();
+    // One suggestion per line for what is still to be put away; an empty location suggested to one
+    // product is not suggested to another (taken).
+    const taken = new Map();
     const lines = [];
     for (const row of rows) {
       const l = shapeLine(row);
       l.putaways = putaways.filter((p) => p.line_id === l.id).map(({ line_id, ...p }) => p);
-      if (open && l.putaway_qty < Math.max(l.received_qty, l.expected_qty)) {
-        if (!suggestions.has(l.product_id)) suggestions.set(l.product_id, await suggestLocation(db, l.product_id));
-        l.suggested = suggestions.get(l.product_id) || null;
-      } else l.suggested = null;
+      const left = Math.max(l.received_qty, l.expected_qty) - l.putaway_qty;
+      l.suggested = open && left > 0 ? await suggestLocation(db, l.product_id, { qty: left, lot: l.lot, expiry: l.expiry, taken }) : null;
       lines.push(l);
     }
     const totals = { lines: lines.length, expected: 0, received: 0, damaged: 0, putaway: 0 };

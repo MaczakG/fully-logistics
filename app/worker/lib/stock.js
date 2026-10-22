@@ -196,27 +196,115 @@ export async function allocate(db, productId, qty) {
   return { plan, missing: Math.max(left, 0) };
 }
 
-// Suggests a putaway location for a product: where it already is, else an empty active location
-// of the wanted size (or any size), dedicated to the partner or free.
-export async function suggestLocation(db, productId, sizeId = null) {
-  const p = await product(db, productId);
-  const existing = await first(
-    db,
-    `SELECT l.id, l.code FROM stock s JOIN locations l ON l.id = s.location_id
-     WHERE s.product_id = ? AND l.kind = 'storage' AND l.active = 1 ORDER BY s.qty DESC LIMIT 1`,
-    productId,
-  );
-  if (existing) return existing;
-  return first(
-    db,
-    `SELECT l.id, l.code FROM locations l
-     WHERE l.kind = 'storage' AND l.active = 1 AND (l.partner_id IS NULL OR l.partner_id = ?)
+// ---------------------------------------------------------------- putaway suggestion
+// Where qty pieces of a product (of a lot) should go. Returns { id, code, size_code, kind, reason,
+// room } or null:
+//  1. kind 'existing': a storage location that already holds the product, the same lot first,
+//     if at least one more piece fits there (room: how many, null when it cannot be told);
+//  2. kind 'empty': an empty active storage location, the client's own dedicated ones first, of
+//     the size the pieces fit best: the smallest size that takes all of them, then sizes without
+//     dimensions (they may), then the largest that takes some (room: per location).
+// What fits comes from the product's dimensions and weight and the size's inner dimensions and
+// maximum weight; goods use FILL of a location's volume. Without dimensions any size will do.
+// taken (Map location id -> product id) keeps one empty location for one product while several
+// lines are suggested together (an inbound): the next product gets the next empty location.
+const FILL = 0.85;
+const sides = (o) => [o.width_cm, o.depth_cm, o.height_cm];
+const hasDims = (o) => sides(o).every((v) => Number(v) > 0);
+const volumeOf = (o) => (hasDims(o) ? o.width_cm * o.depth_cm * o.height_cm : null);
+// Whether one piece fits in the box at all: sides largest to smallest against the box's.
+function fitsOne(item, box) {
+  const a = sides(item).map(Number).sort((x, y) => y - x);
+  const b = sides(box).map(Number).sort((x, y) => y - x);
+  return a.every((v, i) => v <= b[i]);
+}
+// Pieces of the product an empty location of this size takes (null: cannot be told).
+function piecesPerLocation(prod, size) {
+  if (!hasDims(prod) || !hasDims(size)) return null;
+  if (!fitsOne(prod, size)) return 0;
+  let n = Math.floor((volumeOf(size) * FILL) / volumeOf(prod));
+  if (prod.weight_kg > 0 && size.max_kg > 0) n = Math.min(n, Math.floor(size.max_kg / prod.weight_kg));
+  return Math.max(n, 0);
+}
+// Pieces of the product that still fit in a location next to what is there (null: cannot be told).
+async function roomIn(db, prod, loc) {
+  if (!hasDims(prod) || !hasDims(loc)) return null;
+  if (!fitsOne(prod, loc)) return 0;
+  const there = await all(db,
+    `SELECT s.qty, p.width_cm, p.depth_cm, p.height_cm, p.weight_kg FROM stock s JOIN products p ON p.id = s.product_id
+     WHERE s.location_id = ? AND s.qty > 0`, loc.id);
+  if (there.some((r) => !hasDims(r))) return null;
+  const used = there.reduce((a, r) => a + r.qty * volumeOf(r), 0);
+  let n = Math.floor((volumeOf(loc) * FILL - used) / volumeOf(prod));
+  if (prod.weight_kg > 0 && loc.max_kg > 0 && there.every((r) => r.weight_kg != null)) {
+    n = Math.min(n, Math.floor((loc.max_kg - there.reduce((a, r) => a + r.qty * r.weight_kg, 0)) / prod.weight_kg));
+  }
+  return Math.max(n, 0);
+}
+
+export async function suggestLocation(db, productId, { qty = 1, lot = '', expiry = '', taken = null } = {}) {
+  const prod = await first(db, 'SELECT id, partner_id, sku, width_cm, depth_cm, height_cm, weight_kg FROM products WHERE id = ?', productId);
+  if (!prod) throw badRequest('Ismeretlen termék.');
+  const want = Math.max(Number(qty) || 1, 1);
+  const takenBy = taken instanceof Map ? taken : new Map(Object.entries(taken || {}).map(([k, v]) => [Number(k), v]));
+  const unit = (n) => `${n} db`;
+
+  // 1. Where it already is, if there is room.
+  const existing = await all(db,
+    `SELECT l.id, l.code, z.code AS size_code, z.width_cm, z.depth_cm, z.height_cm, z.max_kg, MAX(s.lot = ? AND s.expiry = ?) AS same_lot, SUM(s.qty) AS qty
+     FROM stock s JOIN locations l ON l.id = s.location_id JOIN location_sizes z ON z.id = l.size_id
+     WHERE s.product_id = ? AND s.qty > 0 AND l.kind = 'storage' AND l.active = 1
+     GROUP BY l.id ORDER BY same_lot DESC, qty DESC, l.pick_sequence, l.code`, lot, expiry, productId);
+  for (const loc of existing) {
+    const room = await roomIn(db, prod, loc);
+    if (room === 0) continue;
+    const reason = room == null ? 'itt már van ebből a termékből'
+      : room >= want ? `itt már van ebből a termékből, és elfér még ${unit(want)}`
+        : `itt már van ebből a termékből, de csak kb. ${unit(room)} fér még, a többinek új hely kell`;
+    return { id: loc.id, code: loc.code, size_code: loc.size_code, kind: 'existing', reason, room };
+  }
+
+  // 2. An empty location of the size that fits best.
+  const sizes = await all(db, 'SELECT id, code, name, width_cm, depth_cm, height_cm, max_kg, sort FROM location_sizes WHERE active = 1 ORDER BY sort, code');
+  let order;
+  if (hasDims(prod)) {
+    const cap = new Map(sizes.map((z) => [z.id, piecesPerLocation(prod, z)]));
+    const whole = sizes.filter((z) => cap.get(z.id) != null && cap.get(z.id) >= want);
+    const unknown = sizes.filter((z) => cap.get(z.id) == null);
+    const part = sizes.filter((z) => cap.get(z.id) > 0 && cap.get(z.id) < want).sort((a, b) => cap.get(b.id) - cap.get(a.id));
+    order = [...whole, ...unknown, ...part].map((z) => ({ ...z, cap: cap.get(z.id) }));
+  }
+  const emptyOf = (sizeId, dedicatedOnly) => first(db,
+    `SELECT l.id, l.code, l.partner_id, z.code AS size_code FROM locations l JOIN location_sizes z ON z.id = l.size_id
+     WHERE l.kind = 'storage' AND l.active = 1 AND (l.partner_id IS NULL OR l.partner_id = ?) AND (? = 0 OR l.partner_id = ?)
        AND (? IS NULL OR l.size_id = ?)
        AND NOT EXISTS (SELECT 1 FROM stock s WHERE s.location_id = l.id AND s.qty > 0)
+       AND l.id NOT IN (SELECT value FROM json_each(?))
      ORDER BY CASE WHEN l.partner_id = ? THEN 0 ELSE 1 END, l.pick_sequence, l.code LIMIT 1`,
-    p.partner_id,
-    sizeId,
-    sizeId,
-    p.partner_id,
-  );
+    prod.partner_id, dedicatedOnly ? 1 : 0, prod.partner_id, sizeId, sizeId,
+    JSON.stringify([...takenBy].filter(([, pid]) => pid !== prod.id).map(([id]) => id)), prod.partner_id);
+  const pick = (loc, z) => {
+    takenBy.set(loc.id, prod.id);
+    const own = loc.partner_id === prod.partner_id ? 'az ügyfél fix helye, ' : '';
+    let reason;
+    if (!z) reason = `${own}üres hely (a termék méretei nincsenek megadva, ezért a méretét nem néztem)`;
+    else if (z.cap == null) reason = `${own}üres ${z.code} hely (ennél a méretnél nincs megadva a hely mérete)`;
+    else if (z.cap >= want) reason = `${own}üres ${z.code} hely, a ${unit(want)} elfér rajta (kb. ${unit(z.cap)} férne)`;
+    else reason = `${own}üres ${z.code} hely, de csak kb. ${unit(z.cap)} fér rá, összesen kb. ${Math.ceil(want / z.cap)} hely kell`;
+    return { id: loc.id, code: loc.code, size_code: loc.size_code, kind: 'empty', reason, room: z ? z.cap : null };
+  };
+  if (!order) {
+    const loc = await emptyOf(null, false);
+    return loc ? pick(loc, null) : null;
+  }
+  // The client's own empty locations of a size that takes everything (or may), then any.
+  for (const z of order.filter((x) => x.cap == null || x.cap >= want)) {
+    const loc = await emptyOf(z.id, true);
+    if (loc) return pick(loc, z);
+  }
+  for (const z of order) {
+    const loc = await emptyOf(z.id, false);
+    if (loc) return pick(loc, z);
+  }
+  return null;
 }
