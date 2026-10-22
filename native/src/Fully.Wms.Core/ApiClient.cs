@@ -72,9 +72,10 @@ public sealed class ApiClient : IDisposable
     public async Task<T> UploadAsync<T>(string path, byte[] file, string fileName, IReadOnlyDictionary<string, string>? fields = null, CancellationToken ct = default)
     {
         using var req = Request(HttpMethod.Post, path);
-        var form = new MultipartFormDataContent();
         // The server's form parser wants the names quoted (form-data; name="file"; filename="a.csv"),
-        // which .NET leaves out, so the parts get their headers by hand.
+        // which .NET leaves out, so the parts get their headers by hand. The file name goes in UTF-8,
+        // as browsers send it, so "szerződés.pdf" keeps its accents.
+        var form = new MultipartFormDataContent { HeaderEncodingSelector = (_, _) => Encoding.UTF8 };
         foreach (var (k, v) in fields ?? new Dictionary<string, string>())
         {
             var part = new StringContent(v);
@@ -83,7 +84,7 @@ public sealed class ApiClient : IDisposable
         }
         var content = new ByteArrayContent(file);
         content.Headers.ContentType = new MediaTypeHeaderValue(ContentTypeOf(fileName));
-        content.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data") { Name = Quote("file"), FileName = Quote(AsciiName(fileName)) };
+        content.Headers.TryAddWithoutValidation("Content-Disposition", $"form-data; name=\"file\"; filename={Quote(SafeName(fileName))}");
         form.Add(content);
         req.Content = form;
         using var res = await Send(req, ct).ConfigureAwait(false);
@@ -94,13 +95,11 @@ public sealed class ApiClient : IDisposable
 
     static string Quote(string s) => $"\"{s.Replace("\"", "")}\"";
 
-    // Header values are ASCII: "sérült doboz.jpg" goes as "serult doboz.jpg".
-    internal static string AsciiName(string name)
+    // No quotes or line breaks in a header value; "fajl" if nothing is left.
+    internal static string SafeName(string name)
     {
-        var plain = new string(name.Normalize(NormalizationForm.FormD)
-            .Where((c) => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
-            .Select((c) => c is >= ' ' and < (char)127 ? c : '_').ToArray());
-        return plain.Trim().Length > 0 ? plain.Trim() : "fajl";
+        var plain = new string(name.Where((c) => !char.IsControl(c) && c != '"' && c != '\\').ToArray()).Trim();
+        return plain.Length > 0 ? plain : "fajl";
     }
 
     static string ContentTypeOf(string fileName) => Path.GetExtension(fileName).ToLowerInvariant() switch

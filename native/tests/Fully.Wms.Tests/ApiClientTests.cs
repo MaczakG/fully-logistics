@@ -153,7 +153,7 @@ public class ApiClientTests
         await api.UploadAsync<System.Text.Json.JsonElement>("api/x", [1, 2, 3], "sérült doboz.jpg", new Dictionary<string, string> { ["preview"] = "1" }, TestContext.Current.CancellationToken);
         Assert.Equal("multipart/form-data", type);
         Assert.Contains("Content-Disposition: form-data; name=\"preview\"", body);
-        Assert.Contains("Content-Disposition: form-data; name=\"file\"; filename=\"serult doboz.jpg\"", body);
+        Assert.Contains("Content-Disposition: form-data; name=\"file\"; filename=\"sérült doboz.jpg\"", body);
         Assert.Contains("Content-Type: image/jpeg", body);
     }
 }

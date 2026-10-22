@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Partners"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Partners.ContactFormView"
+             x:DataType="local:ContactFormViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="10">
+      <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding Error}" />
+      </Border>
+        <UniformGrid Columns="2">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Név" />
+            <TextBox Text="{Binding Name}" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=name}" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=name}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=name}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Beosztás (nem kötelező)" />
+            <TextBox Text="{Binding Position}" PlaceholderText="pl. logisztikai vezető" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=position}" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=position}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=position}" />
+          </StackPanel>
+        </UniformGrid>
+        <UniformGrid Columns="2">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="E-mail (nem kötelező)" />
+            <TextBox Text="{Binding Email}" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=email}" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=email}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=email}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Telefon (nem kötelező)" />
+            <TextBox Text="{Binding Phone}" PlaceholderText="+36 30 123 4567" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=phone}" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=phone}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=phone}" />
+          </StackPanel>
+        </UniformGrid>
+        <StackPanel Margin="0,0,8,8">
+          <TextBlock Classes="label" Text="Megjegyzés (nem kötelező)" />
+          <TextBox Text="{Binding Notes}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="70" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=notes}" />
+          <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=notes}"
+                     IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=notes}" />
+        </StackPanel>
+        <StackPanel>
+          <CheckBox Content="Elsődleges kapcsolattartó" IsChecked="{Binding IsPrimary}" IsEnabled="{Binding !PrimaryLocked}" />
+          <TextBlock Classes="muted small" Text="{Binding PrimaryHint}" TextWrapping="Wrap" Margin="0,4,0,0" />
+        </StackPanel>
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="{Binding SubmitText}" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
