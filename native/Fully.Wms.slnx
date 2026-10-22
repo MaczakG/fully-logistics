@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Fully.Wms.Core/Fully.Wms.Core.csproj" />
+    <Project Path="src/Fully.Wms/Fully.Wms.csproj" />
+    <Project Path="src/Fully.Wms.Desktop/Fully.Wms.Desktop.csproj" />
+    <Project Path="src/Fully.Wms.iOS/Fully.Wms.iOS.csproj">
+      <Deploy />
+    </Project>
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Fully.Wms.Tests/Fully.Wms.Tests.csproj" />
+  </Folder>
+</Solution>

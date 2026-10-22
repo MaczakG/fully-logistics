@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Fully.Wms.ViewModels"
+             x:Class="Fully.Wms.Views.LoginView"
+             x:DataType="vm:LoginViewModel">
+  <ScrollViewer>
+    <Border Classes="card" MaxWidth="440" Margin="16,48" Padding="0" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+      <StackPanel>
+        <!-- Hazard stripes, like the web login -->
+        <Border Height="10">
+          <Border.Background>
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="4%,100%" SpreadMethod="Repeat">
+              <GradientStop Color="#E8BE3C" Offset="0" />
+              <GradientStop Color="#E8BE3C" Offset="0.5" />
+              <GradientStop Color="#121518" Offset="0.5" />
+              <GradientStop Color="#121518" Offset="1" />
+            </LinearGradientBrush>
+          </Border.Background>
+        </Border>
+        <StackPanel Margin="24,22,24,24" Spacing="16">
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <Border Width="40" Height="40" Background="{StaticResource HiVis}">
+              <Path Data="M8 7h17v5.5H14v3.5h9v5.5h-9V26H8z" Fill="{StaticResource InkFixed}" Stretch="Uniform" Margin="8,7" />
+            </Border>
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Fully Logistics" FontWeight="ExtraBold" FontSize="18" />
+              <TextBlock Text="WMS" Classes="muted" LetterSpacing="2" FontSize="12" />
+            </StackPanel>
+          </StackPanel>
+          <TextBlock Classes="h1" Text="Bejelentkezés" />
+
+          <StackPanel>
+            <TextBlock Classes="label" Text="E-mail cím" />
+            <TextBox x:Name="EmailBox" Text="{Binding Email}" TextInputOptions.ContentType="Email" TextInputOptions.AutoCapitalization="False" TextInputOptions.ShowSuggestions="False" AutomationProperties.Name="E-mail cím" />
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Classes="label" Text="Jelszó" />
+            <TextBox x:Name="PasswordBox" Text="{Binding Password}" PasswordChar="•" RevealPassword="False" Classes="revealPasswordButton" TextInputOptions.ContentType="Password" AutomationProperties.Name="Jelszó" />
+          </StackPanel>
+
+          <StackPanel IsVisible="{Binding ShowServer}">
+            <TextBlock Classes="label" Text="Szerver címe" />
+            <TextBox Text="{Binding Server}" TextInputOptions.ContentType="Url" TextInputOptions.AutoCapitalization="False" AutomationProperties.Name="Szerver címe" />
+          </StackPanel>
+
+          <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <TextBlock Text="{Binding Error}" />
+          </Border>
+
+          <Button Classes="primary" Content="Belépés" HorizontalAlignment="Stretch" MinHeight="48" FontSize="16" Command="{Binding LoginCommand}" IsDefault="True" />
+
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <TextBlock Classes="muted small" Text="Szerver:" VerticalAlignment="Center" />
+            <TextBlock Classes="muted small mono" Text="{Binding ServerHost}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="240" />
+            <Button Classes="link small" Content="módosítás" Command="{Binding ToggleServerCommand}" FontSize="12" VerticalAlignment="Center" />
+          </StackPanel>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+  </ScrollViewer>
+</UserControl>

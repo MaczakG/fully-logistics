@@ -1,0 +1,304 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Shared looks, by class, in the spirit of the web app's .btn, .card, .tag ... classes. -->
+
+  <Style Selector="TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource Ink}" />
+  </Style>
+  <Style Selector="TextBlock.h1">
+    <Setter Property="FontSize" Value="24" />
+    <Setter Property="FontWeight" Value="ExtraBold" />
+    <Setter Property="LetterSpacing" Value="-0.3" />
+  </Style>
+  <Style Selector="TextBlock.h2">
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="FontWeight" Value="Bold" />
+  </Style>
+  <Style Selector="TextBlock.h3">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{DynamicResource Ink3}" />
+  </Style>
+  <Style Selector="TextBlock.muted">
+    <Setter Property="Foreground" Value="{DynamicResource Ink3}" />
+  </Style>
+  <Style Selector="TextBlock.small">
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+  <Style Selector="TextBlock.mono, SelectableTextBlock.mono">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+  </Style>
+  <Style Selector="TextBlock.num">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="TextAlignment" Value="Right" />
+  </Style>
+  <Style Selector="TextBlock.big">
+    <Setter Property="FontSize" Value="28" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+  </Style>
+  <Style Selector="TextBlock.error">
+    <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <!-- Buttons -->
+  <Style Selector="Button">
+    <Setter Property="MinHeight" Value="40" />
+    <Setter Property="Padding" Value="14,0" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ink}" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource Ink}" />
+  </Style>
+  <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource PanelAlt}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ink}" />
+    <Setter Property="Foreground" Value="{DynamicResource Ink}" />
+  </Style>
+  <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Line}" />
+  </Style>
+
+  <Style Selector="Button.primary">
+    <Setter Property="Background" Value="{StaticResource HiVis}" />
+    <Setter Property="BorderBrush" Value="{StaticResource HiVis}" />
+    <Setter Property="Foreground" Value="{StaticResource OnHiVis}" />
+  </Style>
+  <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource HiVisHover}" />
+    <Setter Property="BorderBrush" Value="{StaticResource HiVisHover}" />
+    <Setter Property="Foreground" Value="{StaticResource OnHiVis}" />
+  </Style>
+  <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource HiVisPress}" />
+    <Setter Property="BorderBrush" Value="{StaticResource HiVisPress}" />
+  </Style>
+  <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource PanelAlt}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource PanelAlt}" />
+    <Setter Property="Foreground" Value="{DynamicResource Ink3}" />
+  </Style>
+
+  <Style Selector="Button.dark">
+    <Setter Property="Background" Value="{DynamicResource Ink}" />
+    <Setter Property="Foreground" Value="{DynamicResource Paper}" />
+  </Style>
+  <Style Selector="Button.dark:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Ink2}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ink2}" />
+    <Setter Property="Foreground" Value="{DynamicResource Paper}" />
+  </Style>
+
+  <Style Selector="Button.danger">
+    <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
+    <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+  </Style>
+  <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource DangerBg}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
+    <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+  </Style>
+
+  <Style Selector="Button.ghost">
+    <Setter Property="BorderBrush" Value="Transparent" />
+  </Style>
+
+  <Style Selector="Button.link">
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+  </Style>
+  <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Button.link TextBlock">
+    <Setter Property="TextDecorations" Value="Underline" />
+  </Style>
+
+  <!-- Big touch targets on phones (the shell adds "compact" to the root) -->
+  <Style Selector=":is(Control).compact Button">
+    <Setter Property="MinHeight" Value="52" />
+    <Setter Property="FontSize" Value="16" />
+  </Style>
+  <Style Selector=":is(Control).compact Button.link">
+    <Setter Property="MinHeight" Value="0" />
+  </Style>
+  <Style Selector=":is(Control).compact TextBox">
+    <Setter Property="MinHeight" Value="52" />
+    <Setter Property="FontSize" Value="18" />
+  </Style>
+
+  <!-- Icon inside a button or row -->
+  <Style Selector="PathIcon">
+    <Setter Property="Width" Value="20" />
+    <Setter Property="Height" Value="20" />
+  </Style>
+  <Style Selector="PathIcon.lg">
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="30" />
+  </Style>
+
+  <!-- Text boxes -->
+  <Style Selector="TextBox">
+    <Setter Property="MinHeight" Value="40" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LineStrong}" />
+    <Setter Property="Background" Value="{DynamicResource Panel}" />
+  </Style>
+  <Style Selector="TextBox.num">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="TextAlignment" Value="Right" />
+  </Style>
+  <Style Selector="TextBox.invalid">
+    <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
+  </Style>
+  <Style Selector="ComboBox">
+    <Setter Property="MinHeight" Value="40" />
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LineStrong}" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+  </Style>
+
+  <!-- Field label above an input -->
+  <Style Selector="TextBlock.label">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Ink2}" />
+    <Setter Property="Margin" Value="0,0,0,4" />
+  </Style>
+  <Style Selector="TextBlock.fielderror">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+    <Setter Property="Margin" Value="0,4,0,0" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <!-- Panels -->
+  <Style Selector="Border.card">
+    <Setter Property="Background" Value="{DynamicResource Panel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="16" />
+  </Style>
+  <Style Selector="Border.notice">
+    <Setter Property="Padding" Value="12,10" />
+    <Setter Property="BorderThickness" Value="0,0,0,0" />
+    <Setter Property="Background" Value="{DynamicResource InfoBg}" />
+  </Style>
+  <Style Selector="Border.notice TextBlock">
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style Selector="Border.notice.warn">
+    <Setter Property="Background" Value="{DynamicResource WarnBg}" />
+  </Style>
+  <Style Selector="Border.notice.danger">
+    <Setter Property="Background" Value="{DynamicResource DangerBg}" />
+  </Style>
+  <Style Selector="Border.notice.ok">
+    <Setter Property="Background" Value="{DynamicResource OkBg}" />
+  </Style>
+
+  <!-- Status tags (Tag control, see Controls/StatusTag) -->
+  <Style Selector="Border.tag">
+    <Setter Property="Padding" Value="6,2" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LineStrong}" />
+    <Setter Property="Background" Value="{DynamicResource PanelAlt}" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.tag TextBlock">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="Bold" />
+  </Style>
+  <Style Selector="Border.tag.ok">
+    <Setter Property="Background" Value="{DynamicResource OkBg}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ok}" />
+  </Style>
+  <Style Selector="Border.tag.ok TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource Ok}" />
+  </Style>
+  <Style Selector="Border.tag.warn">
+    <Setter Property="Background" Value="{DynamicResource WarnBg}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Warn}" />
+  </Style>
+  <Style Selector="Border.tag.warn TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource Warn}" />
+  </Style>
+  <Style Selector="Border.tag.danger">
+    <Setter Property="Background" Value="{DynamicResource DangerBg}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
+  </Style>
+  <Style Selector="Border.tag.danger TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+  </Style>
+  <Style Selector="Border.tag.info">
+    <Setter Property="Background" Value="{DynamicResource InfoBg}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Info}" />
+  </Style>
+  <Style Selector="Border.tag.info TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource Info}" />
+  </Style>
+  <Style Selector="Border.tag.hi">
+    <Setter Property="Background" Value="{StaticResource HiVis}" />
+    <Setter Property="BorderBrush" Value="{StaticResource InkFixed}" />
+  </Style>
+  <Style Selector="Border.tag.hi TextBlock">
+    <Setter Property="Foreground" Value="{StaticResource OnHiVis}" />
+  </Style>
+
+  <!-- List rows that open something -->
+  <Style Selector="ListBox">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="ListBoxItem">
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Margin" Value="0,0,0,6" />
+  </Style>
+  <Style Selector="ListBox.rows ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Panel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="ListBox.rows ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource RowHover}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ink2}" />
+  </Style>
+  <Style Selector="ListBox.rows ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Panel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ink}" />
+    <Setter Property="BorderThickness" Value="2" />
+  </Style>
+
+  <!-- Tabs: underline in hi-vis -->
+  <Style Selector="TabItem">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="MinHeight" Value="44" />
+  </Style>
+
+  <!-- Data grids -->
+  <Style Selector="DataGrid">
+    <Setter Property="Background" Value="{DynamicResource Panel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="GridLinesVisibility" Value="Horizontal" />
+    <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Line}" />
+    <Setter Property="CanUserReorderColumns" Value="False" />
+    <Setter Property="IsReadOnly" Value="True" />
+    <Setter Property="SelectionMode" Value="Single" />
+    <Setter Property="HeadersVisibility" Value="Column" />
+  </Style>
+  <Style Selector="DataGridColumnHeader">
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource Ink3}" />
+  </Style>
+</Styles>

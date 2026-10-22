@@ -1,0 +1,72 @@
+# The native apps in native/: tests, desktop downloads (Windows, macOS, Linux) and the iOS build.
+# Runs when something under native/ changes, or by hand (Actions > Native apps > Run workflow).
+name: Native apps
+
+on:
+  push:
+    paths: ['native/**', '.github/workflows/native.yml']
+  pull_request:
+    paths: ['native/**', '.github/workflows/native.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: native/global.json
+      - name: Unit and screen tests
+        run: dotnet test native/tests/Fully.Wms.Tests -c Release
+
+  desktop:
+    name: Desktop (${{ matrix.rid }})
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rid: [win-x64, osx-arm64, osx-x64, linux-x64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: native/global.json
+      - name: Publish
+        run: >
+          dotnet publish native/src/Fully.Wms.Desktop -c Release -r ${{ matrix.rid }} --self-contained
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -o out/FullyWms-${{ matrix.rid }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FullyWms-${{ matrix.rid }}
+          path: out/FullyWms-${{ matrix.rid }}
+          retention-days: 30
+
+  ios:
+    name: iOS (PDA)
+    needs: test
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: native/global.json
+      - name: iOS workload
+        run: dotnet workload install ios
+      - name: Build for the simulator (no signing needed)
+        run: >
+          dotnet build native/src/Fully.Wms.iOS -c Release -r iossimulator-arm64
+          -p:ValidateXcodeVersion=false

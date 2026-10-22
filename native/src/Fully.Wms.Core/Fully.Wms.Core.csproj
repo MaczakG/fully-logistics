@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The app without user interface: the API client, the data it reads and writes, and the rules
+       that do not depend on a screen (scan parsing, matching a code to a line). Tested on any OS. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Fully.Wms.Core</RootNamespace>
+  </PropertyGroup>
+</Project>
