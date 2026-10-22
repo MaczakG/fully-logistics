@@ -1,6 +1,9 @@
 /* Készlet view.
      #/keszlet                  stock per product and client, location occupancy summary
      #/keszlet/helyek           locations: which client holds which location, empty ones by size
+     #/keszlet/terkep           warehouse map: zones, racks, levels drawn from the location codes,
+                                occupancy at a glance, a client's locations highlighted, contents
+                                of a location on click
      #/keszlet/termek/<id>      product page: locations and lots, reservations, movements,
                                 transfer (stock edit) and manual adjustment (stock approve)
      #/keszlet/cikktorzs        product catalogue: create, edit, deactivate, CSV import and export
@@ -70,6 +73,7 @@
     { key: 'stock', label: 'Készlet', href: ROUTE, icon: 'stack' },
     { key: 'catalog', label: 'Cikktörzs', href: `${ROUTE}/cikktorzs`, icon: 'package' },
     { key: 'movements', label: 'Mozgások', href: `${ROUTE}/mozgasok`, icon: 'arrows-left-right' },
+    { key: 'map', label: 'Térkép', href: `${ROUTE}/terkep`, icon: 'map-trifold' },
   ], active, 'Készlet fülei');
 
   const head = (actions) => ui.pageHead({
@@ -93,6 +97,7 @@
       if (sub === 'cikktorzs') return renderCatalog(root, ctx);
       if (sub === 'mozgasok') return renderMovements(root, ctx);
       if (sub === 'helyek') return renderLocations(root, ctx);
+      if (sub === 'terkep') return renderMap(root, ctx);
       if (sub) { root.innerHTML = String(ui.empty('Ez az oldal nem létezik.', 'warning-circle')); return null; }
       return renderStock(root, ctx);
     },
@@ -171,7 +176,8 @@
       <div class="panel__head">
         <div><h2 id="stk-occ-h">Raktárhelyek foglaltsága</h2>
           <p class="muted small">Aktív tárolóhelyek méret és ügyfél szerint. Egy helyen mindig csak egy ügyfél áruja lehet.</p></div>
-        <a class="btn btn--sm" href="${ROUTE}/helyek">${FL.icon('map-trifold')}Helyek listája</a>
+        <span class="actions"><a class="btn btn--sm" href="${ROUTE}/terkep">${FL.icon('map-trifold')}Térkép</a>
+          <a class="btn btn--sm" href="${ROUTE}/helyek">${FL.icon('list')}Helyek listája</a></span>
       </div>
       <div class="stk-occ">
         ${ui.table({
@@ -216,7 +222,7 @@
     const filtered = Boolean(f.q || f.state || f.size_id || f.partner_id || f.kind !== 'storage');
     const kinds = Object.entries(FL.state.meta.locationKinds || {}).map(([k, v]) => ({ value: k, label: v }));
     root.innerHTML = String(html`
-      ${ui.pageHead({ crumb: { href: ROUTE, label: 'Készlet' }, title: 'Raktárhelyek', lead: 'Melyik helyen melyik ügyfél áruja van, és hol van szabad hely méret szerint.' })}
+      ${ui.pageHead({ crumb: { href: ROUTE, label: 'Készlet' }, title: 'Raktárhelyek', lead: 'Melyik helyen melyik ügyfél áruja van, és hol van szabad hely méret szerint.', actions: html`<a class="btn" href="${ROUTE}/terkep">${FL.icon('map-trifold')}Térkép</a>` })}
       <form class="toolbar" data-filters role="search" aria-label="Raktárhelyek szűrése">
         ${searchField('loc-q', f.q, 'pl. A-01', 'Hely kódja')}
         ${ui.field({ name: 'state', label: 'Foglaltság', type: 'select', value: f.state, placeholder: 'Mind', options: [['empty', 'Üres'], ['occupied', 'Foglalt']] })}
@@ -247,6 +253,231 @@
     bindFilters(root, base);
     ui.bind(root, { page: (el) => FL.go(base + FL.qs({ ...f, offset: el.dataset.offset })) });
     return null;
+  }
+
+  /* ================================================================ Térkép */
+
+  // A location code is zone, rack, level and maybe position (Beállítások > Raktárhelyek > Tömeges
+  // létrehozás): A-01-03, A.01.03.2, A0103. The numbers after the zone are rack, level and
+  // position; a code that does not split this way goes under "Egyéb helyek".
+  function parseCode(code, zone) {
+    let rest = String(code);
+    if (zone && rest.toUpperCase().startsWith(zone.toUpperCase())) rest = rest.slice(zone.length);
+    let nums = rest.match(/\d+/g) || [];
+    if (nums.length === 1 && [4, 6].includes(nums[0].length)) nums = nums[0].match(/\d\d/g);
+    if (nums.length < 2) return null;
+    return { rack: nums[0], level: Number(nums[1]), pos: nums.length > 2 ? Number(nums[2]) : 0 };
+  }
+  const natural = (a, b) => String(a).localeCompare(String(b), 'hu', { numeric: true });
+  const MAP_STATES = { occupied: 'foglalt', empty: 'szabad', dedicated: 'fix hely, üres', inactive: 'inaktív' };
+
+  async function renderMap(root, ctx) {
+    const data = await api.get('/api/stock/map');
+    const partners = new Map(data.partners.map((p) => [p.id, p]));
+    const locs = data.rows.map((r) => Object.fromEntries(data.columns.map((c, i) => [c, r[i]])));
+    const q = ctx.query;
+    const st = { partner_id: q.get('partner_id') || '', size: q.get('size') || '', zone: q.get('zone') || '', state: q.get('state') || '', q: q.get('q') || '' };
+    const stateOf = (l) => (!l.active ? 'inactive' : l.occupant ? 'occupied' : l.dedicated ? 'dedicated' : 'empty');
+    const labelOf = (l) => {
+      const occ = partners.get(l.occupant);
+      const ded = partners.get(l.dedicated);
+      return [
+        l.code, `${l.size} méret`, MAP_STATES[stateOf(l)],
+        l.kind !== 'storage' ? kindLabel(l.kind) : '',
+        occ ? `${occ.name} (${occ.code}), ${fmt.int(l.products)} cikk, ${fmt.int(l.qty)} db` : '',
+        ded && (!occ || ded.id !== occ.id) ? `fix hely: ${ded.name}` : '',
+      ].filter(Boolean).join(', ');
+    };
+
+    // zones -> racks -> levels (top first, as you look at the rack) -> positions
+    const zones = new Map();
+    const other = [];
+    for (const l of locs) {
+      l.state = stateOf(l);
+      const p = parseCode(l.code, l.zone);
+      if (!p) { other.push(l); continue; }
+      Object.assign(l, p);
+      const z = l.zone || (String(l.code).match(/^[A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű]+/) || [''])[0];
+      if (!zones.has(z)) zones.set(z, new Map());
+      const racks = zones.get(z);
+      if (!racks.has(p.rack)) racks.set(p.rack, []);
+      racks.get(p.rack).push(l);
+    }
+    const zoneNames = [...zones.keys()].sort(natural);
+    const counted = (list) => {
+      const store = list.filter((l) => l.active && ['storage', 'quarantine'].includes(l.kind));
+      const occ = store.filter((l) => l.occupant).length;
+      return { total: store.length, occ, free: store.length - occ, ded: store.filter((l) => !l.occupant && l.dedicated).length };
+    };
+    const all = counted(locs);
+    const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+    const holders = data.partners;
+
+    const cell = (l) => html`<button class="map-cell" type="button" data-id="${l.id}" data-state="${l.state}" data-kind="${l.kind}"
+        data-size="${l.size}" data-occ="${l.occupant || ''}" data-ded="${l.dedicated || ''}" data-code="${l.code}" aria-label="${labelOf(l)}">
+        <span class="map-cell__no">${l.pos ? `${l.level}.${l.pos}` : l.level ?? ''}</span>
+        ${l.occupant ? html`<span class="map-cell__who">${(partners.get(l.occupant) || {}).code || ''}</span>` : ''}
+      </button>`;
+    const rackHtml = (rack, cells) => {
+      const levels = FL.groupBy(cells, (l) => l.level);
+      const order = Object.keys(levels).map(Number).sort((a, b) => b - a);
+      return html`<div class="map-rack">
+        ${order.map((lv) => html`<div class="map-level">${levels[lv].sort((a, b) => a.pos - b.pos).map(cell)}</div>`)}
+        <span class="map-rack__label">${rack}</span>
+      </div>`;
+    };
+
+    root.innerHTML = String(html`
+      ${head(html`<a class="btn" href="${ROUTE}/helyek">${FL.icon('list')}Helyek listája</a>`)}
+      ${tabs('map')}
+      ${locs.length ? html`
+        ${ui.kpis([
+          { label: 'Tárolóhelyek', value: fmt.int(all.total), hint: 'aktív tároló- és karanténhely' },
+          { label: 'Foglalt', value: fmt.int(all.occ), hint: `${pct(all.occ, all.total)}%` },
+          { label: 'Szabad', value: fmt.int(all.free), hint: all.ded ? `ebből ${fmt.int(all.ded)} fix hely` : 'egyik ügyfélé sem' },
+        ])}
+        <form class="toolbar map-filters" data-filters role="search" aria-label="Térkép szűrése">
+          <div class="field field--grow"><label for="map-q">Hely kódja</label>
+            <input class="input" id="map-q" name="q" type="search" value="${st.q}" placeholder="pl. A-01" autocomplete="off"></div>
+          ${ui.field({ name: 'partner_id', label: 'Ügyfél kiemelése', type: 'select', value: st.partner_id, placeholder: 'Nincs', options: holders.map((p) => ({ value: p.id, label: `${p.name} (${p.code})` })) })}
+          ${ui.field({ name: 'state', label: 'Foglaltság', type: 'select', value: st.state, placeholder: 'Mind', options: [['empty', 'Szabad'], ['occupied', 'Foglalt']] })}
+          ${ui.field({ name: 'size', label: 'Méret', type: 'select', value: st.size, placeholder: 'Minden méret', options: sizes().map((z) => ({ value: z.code, label: `${z.code}, ${z.name}` })) })}
+          ${zoneNames.length > 1 ? ui.field({ name: 'zone', label: 'Zóna', type: 'select', value: st.zone, placeholder: 'Minden zóna', options: zoneNames.map((z) => ({ value: z, label: z || 'zóna nélkül' })) }) : ''}
+        </form>
+        <div class="map-legend" aria-label="Jelmagyarázat">
+          <span><i class="map-swatch" data-state="occupied"></i>Foglalt (ügyfélkóddal)</span>
+          <span><i class="map-swatch" data-state="empty"></i>Szabad</span>
+          <span><i class="map-swatch" data-state="dedicated"></i>Fix hely, üres</span>
+          <span><i class="map-swatch" data-state="inactive"></i>Inaktív</span>
+          <span><i class="map-swatch" data-kind="quarantine"></i>Karantén</span>
+          <span><i class="map-swatch" data-hl="true"></i>Kiemelt ügyfél</span>
+          <span class="muted">A számok: szint (és pozíció). A szintek alulról felfelé, az állvány száma alul.</span>
+        </div>
+        <p class="map-focus" data-focus aria-live="polite"></p>
+        <div class="map-zones">
+        ${zoneNames.map((z) => {
+          const racks = [...zones.get(z).entries()].sort((a, b) => natural(a[0], b[0]));
+          const c = counted(racks.flatMap(([, cells]) => cells));
+          return html`<section class="map-zone" data-zone="${z}" aria-label="${z ? `${z} zóna` : 'Zóna nélkül'}">
+            <div class="map-zone__head"><h2>${z ? `${z} zóna` : 'Zóna nélkül'}</h2>
+              <span class="muted small">${fmt.int(c.total)} hely, ${fmt.int(c.occ)} foglalt (${pct(c.occ, c.total)}%), ${fmt.int(c.free)} szabad</span></div>
+            <div class="map-zone__racks" data-scroll>${racks.map(([rack, cells]) => rackHtml(rack, cells))}</div>
+          </section>`;
+        })}
+        ${other.length ? html`<section class="map-zone" data-zone="" aria-label="Egyéb helyek">
+          <div class="map-zone__head"><h2>Egyéb helyek</h2><span class="muted small">Átvételi, csomagoló, visszáru és a mintától eltérő kódú helyek</span></div>
+          <div class="map-zone__racks map-zone__racks--flat">${other.sort((a, b) => natural(a.code, b.code)).map((l) => html`<button class="map-cell map-cell--wide" type="button" data-id="${l.id}" data-state="${l.state}" data-kind="${l.kind}"
+              data-size="${l.size}" data-occ="${l.occupant || ''}" data-ded="${l.dedicated || ''}" data-code="${l.code}" aria-label="${labelOf(l)}">
+              <span class="map-cell__no">${l.code}</span>${l.occupant ? html`<span class="map-cell__who">${(partners.get(l.occupant) || {}).code || ''}</span>` : ''}</button>`)}</div>
+        </section>` : ''}
+        </div>
+        <div class="map-tip" role="tooltip" hidden></div>`
+        : ui.empty(html`Még nincs raktárhely. Vedd fel őket a Beállítások, Raktárhelyek oldalon.${FL.can('settings', 'view') ? html` <a href="#/beallitasok/raktarhelyek">Raktárhelyek megnyitása</a>` : ''}`, 'map-trifold')}`);
+    if (!locs.length) return null;
+
+    // Filters dim what does not match (and the zone filter hides the other zones) without a redraw.
+    const byId = new Map(locs.map((l) => [String(l.id), l]));
+    const focusBox = root.querySelector('[data-focus]');
+    function apply() {
+      const pid = Number(st.partner_id) || 0;
+      const text = st.q.trim().toUpperCase();
+      let hits = 0;
+      for (const el of root.querySelectorAll('.map-cell')) {
+        const l = byId.get(el.dataset.id);
+        const mine = pid && (l.occupant === pid || (!l.occupant && l.dedicated === pid));
+        const match = (!pid || mine) && (!st.size || l.size === st.size)
+          && (!st.state || (st.state === 'empty' ? l.active && !l.occupant : !!l.occupant))
+          && (!text || String(l.code).toUpperCase().includes(text));
+        el.dataset.hl = String(Boolean(mine));
+        el.dataset.dim = String(!match);
+        if (match && (pid || st.size || st.state || text)) hits++;
+      }
+      for (const z of root.querySelectorAll('.map-zone[data-zone]')) z.hidden = Boolean(st.zone) && z.dataset.zone !== st.zone;
+      const p = partners.get(Number(st.partner_id));
+      if (p) {
+        const own = locs.filter((l) => l.occupant === p.id);
+        const bySize = FL.groupBy(own, (l) => l.size);
+        const free = locs.filter((l) => l.active && !l.occupant && l.dedicated === p.id).length;
+        focusBox.textContent = `${p.name}: ${fmt.int(own.length)} foglalt hely (${Object.entries(bySize).map(([k, v]) => `${v.length} ${k}`).join(', ') || 'nincs'})${free ? `, ${fmt.int(free)} üres fix hely` : ''}.`;
+      } else {
+        focusBox.textContent = st.size || st.state || text ? `${fmt.int(hits)} hely felel meg a szűrésnek.` : '';
+      }
+      history.replaceState(null, '', `${ROUTE}/terkep${FL.qs(st)}`);
+    }
+    const form = root.querySelector('[data-filters]');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const first = root.querySelector('.map-cell[data-dim="false"]');
+      if (first && st.q) { first.scrollIntoView({ block: 'center', inline: 'center' }); first.focus({ preventScroll: true }); }
+    });
+    form.addEventListener('input', (e) => {
+      if (!e.target.name || !(e.target.name in st)) return;
+      st[e.target.name] = e.target.value;
+      apply();
+    });
+    apply();
+
+    // Hover and keyboard focus show what a location holds; a click opens its contents.
+    const tip = root.querySelector('.map-tip');
+    const showTip = (el) => {
+      tip.textContent = el.getAttribute('aria-label');
+      tip.hidden = false;
+      const r = el.getBoundingClientRect();
+      const w = tip.offsetWidth;
+      tip.style.left = `${Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2))}px`;
+      tip.style.top = `${r.top > tip.offsetHeight + 12 ? r.top - tip.offsetHeight - 6 : r.bottom + 6}px`;
+    };
+    const hideTip = () => { tip.hidden = true; };
+    root.addEventListener('pointerover', (e) => { const el = e.target.closest('.map-cell'); if (el && e.pointerType === 'mouse') showTip(el); });
+    root.addEventListener('pointerout', (e) => { if (e.target.closest('.map-cell')) hideTip(); });
+    root.addEventListener('focusin', (e) => { const el = e.target.closest('.map-cell'); if (el) showTip(el); });
+    root.addEventListener('focusout', hideTip);
+    window.addEventListener('scroll', hideTip, { passive: true });
+    root.addEventListener('click', (e) => {
+      const el = e.target.closest('.map-cell');
+      if (!el) return;
+      hideTip();
+      openLocation(Number(el.dataset.id));
+    });
+    return { destroy() { window.removeEventListener('scroll', hideTip); } };
+  }
+
+  async function openLocation(id) {
+    const d = await ui.run(null, () => api.get(`/api/stock/locations/${id}`));
+    if (!d) return;
+    const l = d.location;
+    const holder = d.stock[0];
+    const total = d.stock.reduce((n, r) => n + r.qty, 0);
+    const info = [
+      ['Méret', `${l.size_code}, ${l.size_name}`],
+      ['Típus', l.kind_label],
+      ['Zóna', l.zone || 'nincs'],
+      ['Ügyfél', holder ? `${holder.partner_name} (${holder.partner_code})` : 'szabad hely'],
+      ['Fix hely', l.dedicated_name ? `${l.dedicated_name} (${l.dedicated_code})` : 'nincs'],
+      ['Állapot', l.active ? 'aktív' : 'inaktív'],
+      ['Utolsó mozgás', d.last_movement ? `${fmt.dateTime(d.last_movement.at)}, ${d.last_movement.type_label}` : 'még nem volt'],
+    ];
+    if (l.note) info.push(['Megjegyzés', l.note]);
+    ui.dialog({
+      title: html`<span class="mono">${l.code}</span>`,
+      hideSubmit: true,
+      cancelLabel: 'Bezárás',
+      body: html`
+        <dl class="dl">${info.map(([k, v]) => html`<dt>${k}</dt><dd>${v}</dd>`)}</dl>
+        ${ui.table({
+          caption: 'A hely tartalma',
+          empty: 'Ezen a helyen nincs áru.',
+          rows: d.stock,
+          columns: [
+            { key: 'sku', label: 'Cikk', render: (r) => html`<a class="mono stk-code" href="${ROUTE}/termek/${r.product_id}">${r.sku}</a><span class="sub">${r.name}</span>` },
+            { key: 'lot', label: 'Sarzs', render: (r) => r.lot || html`<span class="muted">nincs</span>` },
+            { key: 'expiry', label: 'Lejárat', cls: 'nowrap', render: (r) => expiryCell(r.expiry) },
+            { key: 'qty', label: 'Mennyiség', align: 'r', cls: 'num', render: (r) => html`<b>${fmt.int(r.qty)}</b> ${r.unit || 'db'}` },
+          ],
+          footer: d.stock.length > 1 ? html`<tr><td colspan="3">Összesen</td><td class="r num">${fmt.int(total)}</td></tr>` : '',
+        })}
+        <p><a class="btn btn--sm" href="${ROUTE}/mozgasok?location_id=${l.id}">${FL.icon('arrows-left-right')}Mozgások ezen a helyen</a></p>`,
+    }).el.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"]')) e.target.closest('dialog').close(); });
   }
 
   /* ================================================================ product page */

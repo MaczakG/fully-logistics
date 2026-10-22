@@ -213,6 +213,36 @@ test('location occupancy: who holds what, empty locations by size', async () => 
   assert.deepEqual(quarantine.items.map((l) => l.code), ['KARANTEN']);
 });
 
+test('warehouse map: every location with its occupant; one location with its contents', async () => {
+  const map = ok(await operator.get('/api/stock/map'));
+  assert.deepEqual(Array.from(map.columns), ['id', 'code', 'zone', 'size', 'kind', 'active', 'dedicated', 'occupant', 'products', 'qty']);
+  const rows = map.rows.map((r) => Object.fromEntries(map.columns.map((c, i) => [c, r[i]])));
+  const total = (await srv.query('SELECT COUNT(*) AS n FROM locations'))[0].n;
+  assert.equal(rows.length, total, 'inactive and non storage locations too');
+  const a02 = rows.find((l) => l.code === 'A-01-02');
+  assert.equal(a02.size, 'M');
+  assert.equal(a02.occupant, fx.clients.konyha);
+  assert.ok(a02.qty > 0 && a02.products >= 1);
+  const konyha = map.partners.find((p) => p.id === fx.clients.konyha);
+  assert.equal(konyha.code, 'KONYHA');
+  assert.ok(rows.some((l) => !l.occupant && l.qty === 0), 'empty locations are there with 0');
+
+  const detail = ok(await operator.get(`/api/stock/locations/${a02.id}`));
+  assert.equal(detail.location.code, 'A-01-02');
+  assert.equal(detail.location.size_code, 'M');
+  assert.equal(detail.location.kind_label, 'Tárolóhely');
+  assert.ok(detail.stock.length >= 1);
+  assert.ok(detail.stock.every((r) => r.partner_code === 'KONYHA' && r.qty > 0));
+  assert.equal(detail.stock.reduce((n, r) => n + r.qty, 0), a02.qty);
+  await srv.call('stock.addStock', [{ productId: fx.products.robot, locationId: a02.id, qty: 1, type: 'inbound' }], { as: 1 });
+  const after = ok(await operator.get(`/api/stock/locations/${a02.id}`));
+  assert.equal(after.last_movement.type, 'inbound');
+  assert.equal(after.last_movement.type_label, 'Betárolás');
+  assert.equal((await operator.get('/api/stock/locations/999999')).status, 404);
+  assert.equal((await operator.get('/api/stock/locations/abc')).status, 404);
+  assert.equal((await srv.client().get('/api/stock/map')).status, 401);
+});
+
 test('products: create with EAN warning, unique SKU per client, edit, permissions', async () => {
   const body = { partner_id: fx.clients.kutya, sku: 'KB-2000', name: 'Etetőtál', ean: '5990000010016', unit: 'db', weight_kg: '0,4', min_stock: 3, track_lot: false };
   assert.equal((await service.post('/api/products', body)).status, 403);

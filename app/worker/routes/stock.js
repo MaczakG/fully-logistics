@@ -532,6 +532,48 @@ export function register(r) {
     };
   }, { perm: ['stock', 'view'] });
 
+  // Warehouse map (Készlet > Térkép): every location with its occupant in compact rows, and the
+  // partners they name. One location holds one client's goods at a time.
+  r.get('/api/stock/map', async (ctx) => {
+    const db = ctx.env.DB;
+    const rows = await all(db,
+      `SELECT l.id, l.code, l.zone, z.code AS size_code, l.kind, l.active, l.partner_id AS dedicated_id,
+              occ.partner_id AS occupant_id, COALESCE(occ.products, 0) AS products, COALESCE(occ.qty, 0) AS qty
+       FROM locations l JOIN location_sizes z ON z.id = l.size_id LEFT JOIN ${OCCUPANCY} occ ON occ.location_id = l.id
+       ORDER BY l.zone, l.code`);
+    const ids = [...new Set(rows.flatMap((r) => [r.dedicated_id, r.occupant_id]).filter(Boolean))];
+    const partners = ids.length
+      ? await all(db, 'SELECT id, code, name FROM partners WHERE id IN (SELECT value FROM json_each(?)) ORDER BY name', JSON.stringify(ids))
+      : [];
+    return {
+      columns: ['id', 'code', 'zone', 'size', 'kind', 'active', 'dedicated', 'occupant', 'products', 'qty'],
+      rows: rows.map((r) => [r.id, r.code, r.zone, r.size_code, r.kind, r.active ? 1 : 0, r.dedicated_id, r.occupant_id, r.products, r.qty]),
+      partners: partners.map((p) => ({ id: p.id, code: p.code, name: p.name })),
+    };
+  }, { perm: ['stock', 'view'] });
+
+  // One location: its data, what lies on it (product, lot, expiry, quantity) and its last movement.
+  r.get('/api/stock/locations/:id', async (ctx) => {
+    const db = ctx.env.DB;
+    const id = Number(ctx.params.id);
+    const loc = Number.isInteger(id) && id > 0 ? await first(db,
+      `SELECT l.id, l.code, l.zone, l.kind, l.active, l.note, z.code AS size_code, z.name AS size_name,
+              dp.id AS dedicated_id, dp.code AS dedicated_code, dp.name AS dedicated_name
+       FROM locations l JOIN location_sizes z ON z.id = l.size_id LEFT JOIN partners dp ON dp.id = l.partner_id
+       WHERE l.id = ?`, id) : null;
+    if (!loc) throw notFound('A raktárhely nem található.');
+    const stock = await all(db,
+      `SELECT s.product_id, p.sku, p.name, p.unit, pa.id AS partner_id, pa.code AS partner_code, pa.name AS partner_name, s.lot, s.expiry, s.qty
+       FROM stock s JOIN products p ON p.id = s.product_id JOIN partners pa ON pa.id = p.partner_id
+       WHERE s.location_id = ? AND s.qty > 0 ORDER BY p.sku, s.expiry, s.lot`, id);
+    const last = await first(db, 'SELECT at, type FROM movements WHERE location_id = ? ORDER BY id DESC LIMIT 1', id);
+    return {
+      location: { ...loc, active: !!loc.active, kind_label: LOCATION_KINDS[loc.kind] || loc.kind },
+      stock,
+      last_movement: last ? { ...last, type_label: MOVEMENT_TYPES[last.type] || last.type } : null,
+    };
+  }, { perm: ['stock', 'view'] });
+
   // ------------------------------------------------ transfer and adjustment
   r.post('/api/stock/transfer', async (ctx) => {
     const db = ctx.env.DB;

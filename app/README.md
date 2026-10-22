@@ -29,6 +29,16 @@ A beolvasómező mellett két gomb van:
 
 Amíg a mennyiséget nem rögzíted, semmi sem kerül átvételre. A termék újabb beolvasása eggyel növeli a beírt darabszámot, így darabonként is számolhatsz. Ha a vártnál több lenne az átvett mennyiség, a rendszer rákérdez. A tételnél a **Javítás** gombbal az összesített átvett és sérült mennyiség utólag átírható.
 
+## Raktártérkép
+
+**Készlet > Térkép**: a raktárhelyek rajza. A rendszer a helykódokból (zóna, állvány, szint, pozíció, pl. `A-01-03`) rakja össze, ahogy a Beállítások > Raktárhelyek tömeges létrehozása építi őket:
+- **Elrendezés:** zónánként egymás mellett az állványok, a szintek alulról felfelé, az állvány száma alul.
+- **Színek:** a foglalt hely sötét (benne az ügyfél kódja), a szabad hely üres. A fix, de üres hely szaggatott keretes, az inaktív csíkozott, a karanténhely piros keretes.
+- **Szűrés:** az „Ügyfél kiemelése” sárgával mutatja egy ügyfél helyeit, és kiírja, hány helye van méretenként. A méret, a foglaltság és a hely kódja szerinti szűrés halványítja a többi helyet.
+- **Részletek:** egy helyre kattintva látszik, mi van rajta (cikk, sarzs, lejárat, mennyiség), és mikor volt rajta utoljára mozgás.
+
+A mintától eltérő kódú helyek (pl. `KARANTEN`, `RAMPA-BE`) az „Egyéb helyek” részbe kerülnek.
+
 ## Ajánlatkészítő: belső fedezetszámítás
 
 Az ajánlat alatti „Belső fedezetszámítás” rész nem kerül az ajánlatba. Megmutatja, hány raktáros kell az ajánlott forgalomhoz, mekkora területet foglal az ügyfél áruja, mennyi raktárbérleti díj esik rá, és mennyi a havi fedezet (profit). Az alapadatokat egyszer kell megadni: **Beállítások > Raktár > Költségkalkuláció**.
