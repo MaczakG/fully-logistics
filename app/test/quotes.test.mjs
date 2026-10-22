@@ -23,7 +23,9 @@ const EXAMPLE = {
   discounts: { freeMoveIn: 3000, freeStorageMonths: 1, priceLockMonths: 12 },
   terms: ['Az árak nettó árak.'],
   internal: {
-    rent: 2400000, area_m2: 1200, space: { M: 0.15, L: 0.25, XL: 0.4, PAL: 1.2 }, worker_cost: 520000, worker_hours: 150,
+    rent: 2400000, area_m2: 1200, worker_cost: 520000, worker_hours: 150,
+    // m² per location: M 1.5 / (5 x 2) = 0.15, L 2 / (4 x 2) = 0.25, XL 1.2 / 3 = 0.4, PAL 7.2 / (3 x 2) = 1.2
+    racks: { M: { area: 1.5, levels: 5, per_level: 2 }, L: { area: 2, levels: 4, per_level: 2 }, XL: { area: 1.2, levels: 3, per_level: 1 }, PAL: { area: 7.2, levels: 3, per_level: 2 } },
     min_order: 3, min_item: 0.5, min_inbound: 0.3, min_return: 5, costPack: 100,
   },
 };
@@ -103,6 +105,7 @@ test('internal costing: staff from the minute norms, area and rent by occupancy,
   assert.equal(k.area, 8.75);
   assert.equal(k.rent, 17500);
   const m = k.sizes.find((s) => s.code === 'M');
+  assert.equal(m.m2, 0.15);
   assert.equal(m.fits, 8000);
   assert.equal(m.rentPer, 300);
   assert.equal(k.sizes.find((s) => s.code === 'PAL').rentPer, 2400);
@@ -110,7 +113,7 @@ test('internal costing: staff from the minute norms, area and rent by occupancy,
   assert.equal(Math.round(k.cost), 114233);
   assert.equal(Math.round(k.margin), 167308);
   assert.equal(Math.round(k.pct * 100) / 100, 59.43);
-  assert.deepEqual(JSON.parse(JSON.stringify(k.missing)), { rent: false, staff: false, space: [] });
+  assert.deepEqual(JSON.parse(JSON.stringify(k.missing)), { rent: false, staff: false, racks: [] });
   // 3000 pieces moving in: 15 hours once, outside the monthly cost
   assert.equal(k.moveInHours, 15);
 
@@ -119,14 +122,20 @@ test('internal costing: staff from the minute norms, area and rent by occupancy,
   const e = costing(empty, calc(empty));
   assert.equal(e.cost, 0);
   assert.equal(e.staff, 0);
-  assert.deepEqual(JSON.parse(JSON.stringify(e.missing)), { rent: true, staff: true, space: ['M', 'L', 'XL'] });
+  assert.deepEqual(JSON.parse(JSON.stringify(e.missing)), { rent: true, staff: true, racks: ['M', 'L', 'XL'] });
+  // A rack without levels takes no area.
+  const half = normalizeQuoteData({ ...EXAMPLE, internal: { ...EXAMPLE.internal, racks: { ...EXAMPLE.internal.racks, M: { area: 1.5, levels: 0, per_level: 2 } } } });
+  assert.deepEqual(Array.from(costing(half, calc(half)).missing.racks), ['M']);
 
   // The server keeps the assumptions, cleans them, and drops the old per order labour cost.
-  const n = normalizeQuoteData({ internal: { costLabor: 450, costSpace: 250, rent: '-5', area_m2: '1 200', worker_hours: 9999, costPack: '120', space: { M: '0,15', X: 'abc' } } });
+  const n = normalizeQuoteData({ internal: { costLabor: 450, costSpace: 250, rent: '-5', area_m2: '1 200', worker_hours: 9999, costPack: '120', racks: { M: { area: '1,1', levels: 5, per_level: 'x' } } } });
   assert.deepEqual(n.internal, {
     rent: 0, area_m2: 1200, worker_cost: 0, worker_hours: 744, min_order: 0, min_item: 0, min_inbound: 0, min_return: 0,
-    space: { M: 0.15, X: 0 }, costPack: 120,
+    racks: { M: { area: 1.1, levels: 5, per_level: 0 } }, costPack: 120,
   });
+  // A quote saved with the earlier m² per location: one level, one location each.
+  const old = normalizeQuoteData({ internal: { worker_hours: 150, space: { M: 0.2, PAL: 1.5 } } });
+  assert.deepEqual(old.internal.racks, { M: { area: 0.2, levels: 1, per_level: 1 }, PAL: { area: 1.5, levels: 1, per_level: 1 } });
 });
 
 test('defaults: company, default tariffs, terms, active sizes, tariff list', async () => {

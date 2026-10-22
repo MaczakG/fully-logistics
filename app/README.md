@@ -34,7 +34,12 @@ Amíg a mennyiséget nem rögzíted, semmi sem kerül átvételre. A termék új
 Az ajánlat alatti „Belső fedezetszámítás” rész nem kerül az ajánlatba. Megmutatja, hány raktáros kell az ajánlott forgalomhoz, mekkora területet foglal az ügyfél áruja, mennyi raktárbérleti díj esik rá, és mennyi a havi fedezet (profit). Az alapadatokat egyszer kell megadni: **Beállítások > Raktár > Költségkalkuláció**.
 
 - **Létszám:** a havi munkaidő a percnormákból jön. Rendelésenként, a rendelés további termékeiként, betárolt darabonként és visszárunként van egy-egy norma, ehhez jönnek az óradíjas munka órái. Ezt osztja el egy raktáros havi hasznos óráival. A bérköltség ennyi fő része egy raktáros havi költségéből.
-- **Terület és bérleti díj:** az egy m²-re eső bérleti díj a havi bérleti díj osztva a bérelt alapterülettel. Méretenként (M, L, XL, raklaphely) meg kell adni, hogy egy hely hány m²-t foglal a folyosóval együtt. Ebből jön ki, hány hely fér el a raktárban, és mennyi egy hely havi bérleti díja. Az ügyfél tárolóhelyei ennyi területet és bérleti díjat foglalnak.
+- **Terület és bérleti díj:** az egy m²-re eső bérleti díj a havi bérleti díj osztva a bérelt alapterülettel. Méretenként (M, L, XL, raklaphely) meg kell adni az állványt:
+  - egy állványrekesz alapterületét a folyosó rá eső részével együtt (m²),
+  - a szintek számát,
+  - és hogy hány hely van egy szinten.
+
+  Egy hely helyigénye: alapterület / (szintek × hely szintenként). Például egy 1,1 m²-es polc, 5 szinttel és szintenként 2 hellyel: 0,11 m² helyenként. Ebből jön ki, hány hely férne el a raktárban, és mennyi egy hely havi bérleti díja. Az ügyfél tárolóhelyei ennyi területet és bérleti díjat foglalnak.
 - **Fedezet:** az ajánlat havi nettó összege, mínusz a bérköltség, a helyfoglalás szerinti bérleti díj és a csomagolóanyag beszerzési ára.
 
 Az új ajánlat a Beállítások értékeivel indul. Az ajánlatnál a „Feltételezések ennél az ajánlatnál” alatt ezek csak arra az ajánlatra átírhatók. A „Beállítások értékeinek betöltése” gomb visszahozza a Beállítások aktuális értékeit. A mentett ajánlatok a saját értékeiket tartják meg.
@@ -95,7 +100,7 @@ A weboldalhoz: **Workers & Pages > fully-logistics > Settings > Domains & Routes
 Nyisd meg a `https://app.fully.hu` címet. Az első indításkor a rendszer a `SETUP_TOKEN` értékét kéri, és létrehozza az első adminisztrátort. Utána érdemes ebben a sorrendben haladni:
 
 1. **Beállítások > Cégadatok**: a saját cégadatok (ajánlatokon és számlákon jelennek meg).
-2. **Beállítások > Raktár**: munkarend, és a Költségkalkuláció az ajánlatok belső fedezetszámításához (bérleti díj, alapterület, helyigény, bérköltség, percnormák).
+2. **Beállítások > Raktár**: munkarend, és a Költségkalkuláció az ajánlatok belső fedezetszámításához (bérleti díj, alapterület, állványok szintekkel, bérköltség, percnormák).
 3. **Beállítások > Raktárhelyek**: a méretek (M, L, XL, Raklaphely, bővíthető) és a raktárhelyek, tömeges létrehozással.
 4. **Beállítások > Alap tarifák**: a listaárak. Az új partnerek és ajánlatok ezekből indulnak.
 5. **Beállítások > Futárszolgálatok** és **Számlázó**: a hozzáférések, amikor megvannak.

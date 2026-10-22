@@ -70,6 +70,8 @@
 .qc-cost__total { font-weight: 700; background: var(--panel-alt); border-top: 2px solid var(--ink); }
 .qc-cost__total > span { min-width: 0; font-size: 0.875rem; }
 .qc-assume { background: var(--panel); }
+.qc-rack { display: grid; gap: 0.5rem; padding: 0.625rem 0.75rem 0.75rem; border: 1px solid var(--line); }
+.qc-rack legend { padding: 0 0.25rem; font-weight: 700; }
 
 /* ------------------------------------------------------------ the paper */
 .qp {

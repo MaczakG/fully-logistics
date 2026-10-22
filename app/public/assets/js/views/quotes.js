@@ -130,8 +130,9 @@
      - staff: the volume of the quote in minutes by the norms (per order, per further item, per
        received piece, per return) plus the hourly work, divided by a worker's productive hours;
        its cost is that share of a worker's monthly cost
-     - rent: rent / rented m² is the rent of one m²; a storage location takes its size's m² (aisles
-       included), so the client's locations take area = qty x m², and pay that area's rent
+     - rent: rent / rented m² is the rent of one m²; a location takes the floor area of its size's
+       rack bay (aisle share included) divided by the bay's levels and locations per level, so the
+       client's locations take area = qty x that, and pay that area's rent
      - packaging purchase per order
      What the quote brings in a month (r.net) less these is the margin. */
   function costing(d, r) {
@@ -155,12 +156,14 @@
 
     const totalArea = n(i.area_m2);
     const rentPerM2 = totalArea > 0 ? n(i.rent) / totalArea : 0;
-    const space = i.space || {};
+    const racks = i.racks || {};
     const sizes = (d.storage || []).map((s) => {
-      const m2 = n(space[s.code]);
+      const rk = racks[s.code] || {};
+      const rack = { area: n(rk.area), levels: n(rk.levels), per_level: n(rk.per_level) };
+      const m2 = rack.area > 0 && rack.levels > 0 && rack.per_level > 0 ? rack.area / (rack.levels * rack.per_level) : 0;
       const qty = n(s.qty);
       return {
-        code: s.code, name: s.name || s.code, qty, m2, area: qty * m2, price: n(s.price),
+        code: s.code, name: s.name || s.code, qty, rack, m2, area: qty * m2, price: n(s.price),
         fits: m2 > 0 && totalArea > 0 ? Math.floor(totalArea / m2) : 0,
         rentPer: m2 * rentPerM2, rent: qty * m2 * rentPerM2,
       };
@@ -178,14 +181,15 @@
       missing: {
         rent: !(n(i.rent) > 0 && totalArea > 0),
         staff: !(n(i.worker_cost) > 0 && workerHours > 0),
-        space: sizes.filter((s) => s.qty > 0 && !s.m2).map((s) => s.code),
+        racks: sizes.filter((s) => s.qty > 0 && !s.m2).map((s) => s.code),
       },
     };
   }
 
   // The assumptions of a new quote: the settings (Beállítások > Raktár > Költségkalkuláció).
   const costingFrom = (c = {}) => ({
-    rent: num(c.rent), area_m2: num(c.area_m2), space: { ...(c.space || {}) },
+    rent: num(c.rent), area_m2: num(c.area_m2),
+    racks: Object.fromEntries(Object.entries(c.racks || {}).map(([code, r]) => [code, { area: num(r.area), levels: num(r.levels), per_level: num(r.per_level) }])),
     worker_cost: num(c.worker_cost), worker_hours: num(c.worker_hours),
     min_order: num(c.min_order), min_item: num(c.min_item), min_inbound: num(c.min_inbound), min_return: num(c.min_return),
     costPack: num(c.pack_cost),
@@ -463,8 +467,17 @@
               <div class="form-grid">
                 ${field('internal.rent', 'Havi raktárbérleti díj (Ft)', d.internal.rent, { type: 'number', step: 10000 })}
                 ${field('internal.area_m2', 'Bérelt alapterület (m²)', d.internal.area_m2, { type: 'number', step: 10 })}
-                ${d.storage.map((s) => field(`internal.space.${s.code}`, `${s.name || s.code}: helyigény (m²)`, (d.internal.space || {})[s.code] ?? 0, { type: 'number', step: 0.05, hint: 'egy hely, folyosóval együtt' }))}
               </div>
+              <p class="field__hint">Állványok méretenként: egy állványrekesz alapterülete a folyosó rá eső részével, a szintek száma, és hány hely van egy szinten. Egy hely helyigénye: alapterület / (szintek × hely szintenként).</p>
+              ${d.storage.map((s) => {
+                const rk = (d.internal.racks || {})[s.code] || {};
+                return html`<fieldset class="qc-rack"><legend><span class="tag">${s.code}</span> ${s.name || s.code}</legend>
+                  <div class="form-grid">
+                    ${field(`internal.racks.${s.code}.area`, 'Állvány + folyosó (m²)', rk.area ?? 0, { type: 'number', step: 0.1 })}
+                    ${field(`internal.racks.${s.code}.levels`, 'Szintek', rk.levels ?? 0, { type: 'number', step: 1 })}
+                    ${field(`internal.racks.${s.code}.per_level`, 'Hely / szint', rk.per_level ?? 0, { type: 'number', step: 1 })}
+                  </div></fieldset>`;
+              })}
               <p class="qc-sub">Munkaerő</p>
               <div class="form-grid">
                 ${field('internal.worker_cost', 'Egy raktáros havi költsége (Ft)', d.internal.worker_cost, { type: 'number', step: 10000, hint: 'bér és járulékok' })}
@@ -496,7 +509,7 @@
       const warn = [];
       if (k.missing.rent) warn.push('a raktár havi bérleti díja és alapterülete');
       if (k.missing.staff) warn.push('egy raktáros havi költsége');
-      if (k.missing.space.length) warn.push(`a helyigény ennél a méretnél: ${k.missing.space.join(', ')}`);
+      if (k.missing.racks.length) warn.push(`az állvány adatai ennél a méretnél: ${k.missing.racks.join(', ')}`);
       const settingsLink = FL.can('settings', 'view') ? html` <a href="#/beallitasok/raktar">Beállítások > Raktár</a>` : '';
       box.innerHTML = String(html`
         ${warn.length ? ui.notice(html`Hiányzik ${warn.join(', ')}, ezért ez a költség 0 Ft-tal számít. Add meg lent a Feltételezések alatt, vagy a Beállításokban.${settingsLink}`, 'warn') : ''}
@@ -522,6 +535,7 @@
           <section class="qc-cost__box" aria-label="Tárolás és bérleti díj">
             <h3>Tárolás és bérleti díj${k.rentPerM2 > 0 ? html` <span class="muted small">${ftu(k.rentPerM2)} / m² / hó</span>` : ''}</h3>
             ${k.sizes.some((s) => s.qty > 0) ? html`<ul class="qc-cost__rows">${k.sizes.filter((s) => s.qty > 0).map((s) => html`<li><span><span><span class="tag">${s.code}</span> ${s.name}</span>
+              <small>${s.m2 ? `${nf2.format(s.rack.area)} m² állvány / (${f0(s.rack.levels)} szint × ${f0(s.rack.per_level)} hely) = ${nf2.format(s.m2)} m² / hely` : 'nincs megadva az állvány'}</small>
               <small>${f0(s.qty)} hely × ${s.m2 ? nf2.format(s.m2) : '?'} m² = ${nf2.format(s.area)} m² · bérlet ${ft(s.rentPer)} / hely, díj ${ft(s.price)} / hely</small>
               ${s.price < s.rentPer ? html`<small class="diff-neg">A tárolási díj kevesebb, mint a helyre eső bérleti díj.</small>` : ''}</span>
               <b class="num">${ft(s.rent)}</b></li>`)}</ul>` : html`<p class="muted small">Az ajánlatban nincs tárolóhely.</p>`}
@@ -578,9 +592,9 @@
       } else if (parts[0] === 'storage') {
         const s = d.storage.find((x) => x.code === parts[1]);
         if (s) s[parts[2]] = val;
-      } else if (parts[0] === 'internal' && parts[1] === 'space') {
-        d.internal.space = d.internal.space || {};
-        d.internal.space[parts[2]] = val;
+      } else if (parts[0] === 'internal' && parts[1] === 'racks') {
+        d.internal.racks = d.internal.racks || {};
+        d.internal.racks[parts[2]] = { ...(d.internal.racks[parts[2]] || {}), [parts[3]]: val };
       } else if (parts[0] === 'custom') {
         const it = d.customItems[Number(parts[1])];
         if (it) it[parts[2]] = val;
@@ -781,7 +795,7 @@
     // Quotes saved before the costing had only per order and per location costs: they get the
     // settings' assumptions, the packaging price stays.
     if (!(n(d.internal.worker_hours) > 0)) d.internal = { ...costingFrom(defs.costing), costPack: num(d.internal.costPack) || num((defs.costing || {}).pack_cost) };
-    d.internal.space = d.internal.space || {};
+    d.internal.racks = d.internal.racks || {};
     d.customItems = d.customItems || [];
     d.terms = d.terms || [];
     return d;

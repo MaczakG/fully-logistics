@@ -66,26 +66,40 @@ test('costing: defaults, field checks, save, audit, and the quote calculator get
   assert.equal(cur.rent, 0);
   assert.equal(cur.worker_hours, 150);
   assert.equal(cur.min_order, 3);
-  assert.deepEqual(cur.space, { M: 0.15, L: 0.25, XL: 0.4, PAL: 1.2 });
+  assert.deepEqual(cur.racks.M, { area: 1.1, levels: 5, per_level: 2 });
+  assert.deepEqual(cur.racks.PAL, { area: 7, levels: 4, per_level: 3 });
+  assert.equal(cur.space, undefined);
   assert.deepEqual(cur.sizes.map((z) => z.code), ['M', 'L', 'XL', 'PAL']);
 
-  const bad = await admin.put('/api/settings/costing', { rent: -1, area_m2: 'sok', worker_hours: 0, min_order: 9999, space: { M: -0.1 } });
+  const bad = await admin.put('/api/settings/costing', { rent: -1, area_m2: 'sok', worker_hours: 0, min_order: 9999, racks: { M: { area: -0.1, levels: 2.5, per_level: 2 } } });
   assert.equal(bad.status, 400);
-  for (const f of ['rent', 'area_m2', 'worker_hours', 'min_order', 'space.M']) assert.ok(bad.data.error.fields[f], f);
+  for (const f of ['rent', 'area_m2', 'worker_hours', 'min_order', 'racks.M.area', 'racks.M.levels']) assert.ok(bad.data.error.fields[f], f);
 
-  const body = { rent: 2400000, area_m2: '1 200', worker_cost: 520000, worker_hours: 150, min_order: 3, min_item: 0.5, min_inbound: 0.3, min_return: 5, pack_cost: 100, space: { M: '0,2', PAL: 1.5 } };
+  const body = { rent: 2400000, area_m2: '1 200', worker_cost: 520000, worker_hours: 150, min_order: 3, min_item: 0.5, min_inbound: 0.3, min_return: 5, pack_cost: 100, racks: { M: { area: '1,2', levels: 6, per_level: 2 } } };
   const ok = await admin.put('/api/settings/costing', body);
   assert.equal(ok.status, 200, JSON.stringify(ok.data));
   assert.equal(ok.data.area_m2, 1200);
-  assert.deepEqual(ok.data.space, { M: 0.2, L: 0.25, XL: 0.4, PAL: 1.5 }, 'sizes left out keep their value');
+  assert.deepEqual(ok.data.racks.M, { area: 1.2, levels: 6, per_level: 2 });
+  assert.deepEqual(ok.data.racks.PAL, { area: 7, levels: 4, per_level: 3 }, 'sizes left out keep their rack');
   const log = await lastAudit('settings');
   assert.equal(log.entity_id, 'costing');
   assert.match(log.details, /area_m2/);
 
   const defs = (await admin.get('/api/quotes/defaults')).data;
   assert.equal(defs.costing.rent, 2400000);
-  assert.equal(defs.costing.space.M, 0.2);
+  assert.deepEqual(defs.costing.racks.M, { area: 1.2, levels: 6, per_level: 2 });
   assert.equal(defs.costing.pack_cost, 100);
+
+  // A setting saved with the earlier m² per location: changed values become one level racks, the
+  // estimates that were the defaults then give way to the rack defaults.
+  await srv.sql(`UPDATE settings SET value = '{"rent":1,"area_m2":1,"worker_hours":150,"space":{"M":0.3,"L":0.25}}' WHERE key = 'costing'`);
+  const changed = (await admin.get('/api/settings/costing')).data;
+  assert.deepEqual(changed.racks.M, { area: 0.3, levels: 1, per_level: 1 });
+  assert.deepEqual(changed.racks.L, { area: 0.25, levels: 1, per_level: 1 });
+  await srv.sql(`UPDATE settings SET value = '{"rent":1,"area_m2":1,"worker_hours":150,"space":{"M":0.15,"L":0.25,"XL":0.4,"PAL":1.2}}' WHERE key = 'costing'`);
+  const untouched = (await admin.get('/api/settings/costing')).data;
+  assert.deepEqual(untouched.racks.M, { area: 1.1, levels: 5, per_level: 2 });
+  assert.equal(untouched.space, undefined);
 });
 
 test('sizes: create, rename carries the default price, deactivate, delete only when unused', async () => {

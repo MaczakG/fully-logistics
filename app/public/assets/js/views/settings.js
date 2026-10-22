@@ -1,8 +1,8 @@
 /* Beállítások (module "settings"): route #/beallitasok/<tab>
      cegadatok      company data for quotes and invoices
      raktar         cut-off (top bar countdown), opening hours, workdays, default carrier; costing
-                    assumptions of the quote calculator's internal margin (rent, area, m² per
-                    location size, staff cost, minute norms)
+                    assumptions of the quote calculator's internal margin (rent, area, the rack
+                    of each location size with its levels, staff cost, minute norms)
      raktarhelyek   location sizes and locations (filters, bulk create from a pattern, bulk size
                     change, CSV import and export)
      alaptarifak    default tariffs and quote terms for new client partners and new quotes
@@ -165,16 +165,21 @@
             </div>
             <p class="small" data-cost-rentm2></p>
             <div class="table-wrap"><table class="table table--cards cost-sizes">
-              <caption class="visually-hidden">Helyigény méretenként</caption>
-              <thead><tr><th scope="col">Méret</th><th scope="col">Helyigény (m² / hely, folyosóval)</th><th class="r" scope="col">Ennyi férne el</th><th class="r" scope="col">Bérleti díj / hely / hó</th></tr></thead>
-              <tbody>${cost.sizes.map((z) => html`<tr data-size="${z.code}">
-                <td><span class="tag">${z.code}</span> ${z.name}</td>
-                <td data-label="Helyigény (m²)"><div class="field"><label class="visually-hidden" for="cost-space-${z.id}">${z.name}: helyigény (m²)</label>
-                  <input class="input input--num" id="cost-space-${z.id}" name="space.${z.code}" type="number" min="0" step="0.01" inputmode="decimal" value="${(cost.space || {})[z.code] ?? 0}" aria-describedby="cost-space-${z.id}-err">
-                  <p class="field__error" id="cost-space-${z.id}-err" hidden></p></div></td>
-                <td class="r num" data-label="Ennyi férne el" data-fits></td><td class="r num" data-label="Bérleti díj / hely / hó" data-rent></td></tr>`)}</tbody>
+              <caption class="visually-hidden">Állványok méretenként</caption>
+              <thead><tr><th scope="col">Méret</th><th scope="col">Állvány + folyosó (m²)</th><th scope="col">Szintek</th><th scope="col">Hely / szint</th>
+                <th class="r" scope="col">m² / hely</th><th class="r" scope="col">Ennyi férne el</th><th class="r" scope="col">Bérleti díj / hely / hó</th></tr></thead>
+              <tbody>${cost.sizes.map((z) => {
+                const rk = (cost.racks || {})[z.code] || {};
+                const input = (key, label, step) => html`<td data-label="${label}"><div class="field"><label class="visually-hidden" for="cost-${key}-${z.id}">${z.name}: ${label}</label>
+                  <input class="input input--num" id="cost-${key}-${z.id}" name="racks.${z.code}.${key}" type="number" min="0" step="${step}" inputmode="decimal" value="${rk[key] ?? 0}" aria-describedby="cost-${key}-${z.id}-err">
+                  <p class="field__error" id="cost-${key}-${z.id}-err" hidden></p></div></td>`;
+                return html`<tr data-size="${z.code}">
+                  <td><span class="tag">${z.code}</span> ${z.name}</td>
+                  ${input('area', 'Állvány + folyosó (m²)', 0.1)}${input('levels', 'Szintek', 1)}${input('per_level', 'Hely / szint', 1)}
+                  <td class="r num" data-label="m² / hely" data-m2></td><td class="r num" data-label="Ennyi férne el" data-fits></td><td class="r num" data-label="Bérleti díj / hely / hó" data-rent></td></tr>`;
+              })}</tbody>
             </table></div>
-            <p class="field__hint">Egy raktárhely a folyosó rá eső részével együtt ennyi alapterületet foglal. Polcos helynél a polc alapterületét oszd el a szintek számával.</p>
+            <p class="field__hint">Egy állványrekesz alapterülete a folyosó rá eső részével együtt (pl. 1 × 0,5 m-es polc és 0,6 m² folyosó: 1,1 m²), a polcszintek száma, és hány ilyen méretű hely van egy szinten. Egy hely helyigénye: alapterület / (szintek × hely szintenként). Az „Ennyi férne el” azt mutatja, hány ilyen hely férne el, ha a teljes alapterületen ilyen állványok állnának.</p>
             <p class="set-sub">Munkaerő</p>
             <div class="form-grid">
               ${numField('worker_cost', 'Egy raktáros havi költsége (Ft)', cost.worker_cost, { step: 1000, hint: 'Bér és járulékok együtt.' })}
@@ -200,7 +205,10 @@
       const perM2 = area > 0 ? v('rent') / area : 0;
       costForm.querySelector('[data-cost-rentm2]').textContent = perM2 > 0 ? `Bérleti díj: ${fmt.num(perM2)} Ft / m² / hó.` : 'Add meg a bérleti díjat és az alapterületet.';
       for (const row of costForm.querySelectorAll('[data-size]')) {
-        const m2 = v(`space.${row.dataset.size}`);
+        const code = row.dataset.size;
+        const places = v(`racks.${code}.levels`) * v(`racks.${code}.per_level`);
+        const m2 = places > 0 ? v(`racks.${code}.area`) / places : 0;
+        row.querySelector('[data-m2]').textContent = m2 > 0 ? `${fmt.num(m2, 3)} m²` : '';
         row.querySelector('[data-fits]').textContent = m2 > 0 && area > 0 ? `${fmt.int(Math.floor(area / m2))} db` : '';
         row.querySelector('[data-rent]').textContent = m2 > 0 && perM2 > 0 ? money(m2 * perM2) : '';
       }
@@ -208,7 +216,13 @@
     costForm.addEventListener('input', preview);
     preview();
     bindForm(costForm, async (values) => {
-      await api.put('/api/settings/costing', nested(values));
+      // racks.<code>.<field> into { racks: { code: { field } } }
+      const body = { racks: {} };
+      for (const [k, val] of Object.entries(values)) {
+        const m = k.match(/^racks\.(.+)\.(area|levels|per_level)$/);
+        if (m) (body.racks[m[1]] ||= {})[m[2]] = val; else body[k] = val;
+      }
+      await api.put('/api/settings/costing', body);
       ui.toast('Költségkalkuláció mentve. Az új ajánlatok ezekkel az értékekkel indulnak.', 'ok');
     });
     const form = root.querySelector('#warehouse-form');

@@ -12,7 +12,7 @@
 .stack { display: grid; gap: 1.25rem; align-content: start; min-width: 0; }
 .check-row { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; padding: 0.25rem 0; }
 .set-sub { margin-top: 0.5rem; font: 600 0.6875rem/1.2 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
-.cost-sizes .input { max-width: 9rem; }
+.cost-sizes .input { max-width: 7.5rem; }
 .field > legend.field__label { margin-bottom: 0.375rem; }
 fieldset[disabled] .check, fieldset[disabled] .choice { cursor: not-allowed; opacity: 0.7; }
 

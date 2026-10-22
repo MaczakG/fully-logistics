@@ -639,7 +639,7 @@ export function register(r) {
   }, { perm: ['settings', 'edit'] });
 
   // ---------------------------------------------------------------- costing (quote internal margin)
-  // Rent, floor area, space per location size, staff cost and minute norms (worker/lib/costing.js).
+  // Rent, floor area, racks per location size, staff cost and minute norms (worker/lib/costing.js).
   const costingSizes = (db) => all(db, 'SELECT id, code, name FROM location_sizes WHERE active = 1 ORDER BY sort, code');
 
   r.get('/api/settings/costing', async (ctx) => ({
@@ -652,7 +652,7 @@ export function register(r) {
     const { costing, errors } = checkCosting(await ctx.body());
     if (Object.keys(errors).length) throw badRequest('Ellenőrizd a megjelölt mezőket.', errors);
     const current = costingWithDefaults(await getSetting(db, 'costing', {}));
-    const next = { ...costing, space: { ...current.space, ...costing.space } };
+    const next = { ...costing, racks: { ...current.racks, ...costing.racks } };
     const changes = diff(current, next, Object.keys(next));
     await setSetting(db, 'costing', next);
     if (Object.keys(changes).length) {
