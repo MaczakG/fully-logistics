@@ -136,4 +136,24 @@ public class ApiClientTests
         Assert.Equal("2026. 10. 22.", Fmt.Date("2026-10-22"));
         Assert.Equal("1 234 Ft", Fmt.Money(1234).Replace(' ', ' '));
     }
+
+    // The server's form parser takes only quoted names: name="file"; filename="...", in ASCII.
+    [Fact]
+    public async Task Upload_sends_quoted_form_names()
+    {
+        string? body = null;
+        string? type = null;
+        var handler = new FakeHandler((req) =>
+        {
+            body = req.Content!.ReadAsStringAsync().Result;
+            type = req.Content.Headers.ContentType?.MediaType;
+            return JsonResponse(HttpStatusCode.OK, """{"id":7,"filename":"x"}""");
+        });
+        using var api = new ApiClient(new Uri("https://example.test"), handler);
+        await api.UploadAsync<System.Text.Json.JsonElement>("api/x", [1, 2, 3], "sérült doboz.jpg", new Dictionary<string, string> { ["preview"] = "1" }, TestContext.Current.CancellationToken);
+        Assert.Equal("multipart/form-data", type);
+        Assert.Contains("Content-Disposition: form-data; name=\"preview\"", body);
+        Assert.Contains("Content-Disposition: form-data; name=\"file\"; filename=\"serult doboz.jpg\"", body);
+        Assert.Contains("Content-Type: image/jpeg", body);
+    }
 }

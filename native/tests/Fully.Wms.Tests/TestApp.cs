@@ -26,4 +26,13 @@ public sealed class TestPlatform(string folder, bool phone = false) : DefaultPla
 {
     public override bool IsPhone => phone;
     public override string? SettingsFolder => folder;
+
+    // The documents a test opened (reports, labels, exports), kept instead of launching a program.
+    public List<Core.DownloadedFile> Opened { get; } = [];
+
+    public override Task OpenFileAsync(Core.DownloadedFile file)
+    {
+        Opened.Add(file);
+        return Task.CompletedTask;
+    }
 }

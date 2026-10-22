@@ -73,16 +73,48 @@ public sealed class ApiClient : IDisposable
     {
         using var req = Request(HttpMethod.Post, path);
         var form = new MultipartFormDataContent();
-        foreach (var (k, v) in fields ?? new Dictionary<string, string>()) form.Add(new StringContent(v), k);
+        // The server's form parser wants the names quoted (form-data; name="file"; filename="a.csv"),
+        // which .NET leaves out, so the parts get their headers by hand.
+        foreach (var (k, v) in fields ?? new Dictionary<string, string>())
+        {
+            var part = new StringContent(v);
+            part.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data") { Name = Quote(k) };
+            form.Add(part);
+        }
         var content = new ByteArrayContent(file);
-        content.Headers.ContentType = new MediaTypeHeaderValue(fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) ? "text/csv" : "application/octet-stream");
-        form.Add(content, "file", fileName);
+        content.Headers.ContentType = new MediaTypeHeaderValue(ContentTypeOf(fileName));
+        content.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data") { Name = Quote("file"), FileName = Quote(AsciiName(fileName)) };
+        form.Add(content);
         req.Content = form;
         using var res = await Send(req, ct).ConfigureAwait(false);
         var text = await res.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
         if (!res.IsSuccessStatusCode) throw Error(res, text);
         return JsonSerializer.Deserialize<T>(text, Json.Options)!;
     }
+
+    static string Quote(string s) => $"\"{s.Replace("\"", "")}\"";
+
+    // Header values are ASCII: "sérült doboz.jpg" goes as "serult doboz.jpg".
+    internal static string AsciiName(string name)
+    {
+        var plain = new string(name.Normalize(NormalizationForm.FormD)
+            .Where((c) => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
+            .Select((c) => c is >= ' ' and < (char)127 ? c : '_').ToArray());
+        return plain.Trim().Length > 0 ? plain.Trim() : "fajl";
+    }
+
+    static string ContentTypeOf(string fileName) => Path.GetExtension(fileName).ToLowerInvariant() switch
+    {
+        ".csv" => "text/csv",
+        ".jpg" or ".jpeg" => "image/jpeg",
+        ".png" => "image/png",
+        ".webp" => "image/webp",
+        ".heic" => "image/heic",
+        ".heif" => "image/heif",
+        ".gif" => "image/gif",
+        ".pdf" => "application/pdf",
+        _ => "application/octet-stream",
+    };
 
     // A file from the server (PDF documents, CSV exports): its bytes, type and name.
     public async Task<DownloadedFile> DownloadAsync(string path, CancellationToken ct = default)

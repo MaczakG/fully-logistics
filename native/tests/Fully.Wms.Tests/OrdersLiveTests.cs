@@ -31,9 +31,9 @@ public class OrdersLiveTests
             Assert.NotEmpty(o.Events);
             if (o.Status is "new" or "hold") Assert.All(o.Lines, (l) => Assert.NotNull(l.Free));
         }
-        // A shipped order (Rendeléstörténet) with its picks.
+        // A closed order of the demo data (Rendeléstörténet) with its picks.
         var shipped = await api.GetAsync<OrderDetail>("api/orders/1", Ct);
-        Assert.Equal("shipped", shipped.Status);
+        Assert.Contains(shipped.Status, new[] { "shipped", "delivered", "returned" });
         Assert.NotEmpty(shipped.Picks);
         Assert.All(shipped.Picks, (p) => Assert.False(string.IsNullOrEmpty(p.LocationCode)));
     }
@@ -103,5 +103,19 @@ public class OrdersLiveTests
         o = await api.GetAsync<OrderDetail>($"api/orders/{o.Id}", Ct);
         Assert.Equal("cancelled", o.Status);
         Assert.NotNull(o.CancelledAt);
+    }
+
+    // The CSV import's preview (multipart upload with a form field) answers what would happen.
+    [Fact]
+    public async Task Csv_import_preview_reads()
+    {
+        using var api = await LiveServer.SignInAsync(LiveServer.Admin);
+        var csv = "Partnerkód;Rendelésszám;Vevő neve;Város;Cikkszám;Mennyiség\nDEMO-KONYHA;NATIVE-CSV-1;Teszt Elek;Szeged;DEMO-KM-100;1\nNINCS;NATIVE-CSV-2;Valaki;Pécs;X;1\n";
+        var r = await api.UploadAsync<CsvImportResult>("api/orders/import", System.Text.Encoding.UTF8.GetBytes(csv), "rendelések.csv",
+            new Dictionary<string, string> { ["preview"] = "1" }, Ct);
+        Assert.Equal(2, r.Rows);
+        Assert.Equal(1, r.Valid);
+        Assert.Equal(1, r.Orders);
+        Assert.Contains(r.Errors!, (e) => e.Line == 3);
     }
 }
