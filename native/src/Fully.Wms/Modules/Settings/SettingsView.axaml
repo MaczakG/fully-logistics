@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Settings"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Settings.SettingsView"
+             x:DataType="local:SettingsViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="12">
+      <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding IsCompany}" Text="A cégadatok az ajánlatokon, az elszámolásokon és a számlákon jelennek meg." />
+      <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding IsWarehouse}" Text="A raktár munkarendje. A napi rendelési határidőt a felső sáv visszaszámlálója mutatja." />
+      <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding IsLocations}" Text="Minden raktárhelynek egy mérete van; a méret havi díját ügyfelenként a partner Tarifák fülén adod meg. Egy helyen mindig csak egy partner áruja lehet." />
+      <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding IsTariffs}" Text="Az új ügyfél partnerek és az új ajánlatok ezekkel az árakkal indulnak. A meglévő partnerek tarifái nem változnak." />
+      <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding IsCouriers}" Text="A saját futárszerződéseink hozzáférési adatai. Ezekkel készülnek a címkék és a nyomkövetés. A titkos adatokat titkosítva tároljuk, és soha nem jelenítjük meg." />
+      <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding IsInvoicing}" Text="A jóváhagyott havi elszámolásokból ezzel a szolgáltatással állítjuk ki a számlát." />
+      <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding IsLog}" Text="Ki, mit és mikor csinált a rendszerben, és a külső rendszerek hívásai." />
+      <ItemsControl ItemsSource="{Binding Tabs}">
+        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="p:PartnerTabChip">
+            <ToggleButton Classes="chip" Content="{Binding Text}" IsChecked="{Binding IsSelected, Mode=OneWay}"
+                          Command="{Binding $parent[local:SettingsView].((local:SettingsViewModel)DataContext).SelectTabCommand}" CommandParameter="{Binding}" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <Panel IsVisible="{Binding IsCompany}"><local:CompanyTabView DataContext="{Binding Company}" /></Panel>
+      <Panel IsVisible="{Binding IsWarehouse}"><local:WarehouseTabView DataContext="{Binding Warehouse}" /></Panel>
+      <Panel IsVisible="{Binding IsLocations}"><local:LocationsTabView DataContext="{Binding Locations}" /></Panel>
+      <Panel IsVisible="{Binding IsTariffs}"><local:TariffsTabView DataContext="{Binding Tariffs}" /></Panel>
+      <Panel IsVisible="{Binding IsCouriers}"><local:CouriersTabView DataContext="{Binding Couriers}" /></Panel>
+      <Panel IsVisible="{Binding IsInvoicing}"><local:InvoicingTabView DataContext="{Binding Invoicing}" /></Panel>
+      <Panel IsVisible="{Binding IsLog}"><local:LogTabView DataContext="{Binding Log}" /></Panel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

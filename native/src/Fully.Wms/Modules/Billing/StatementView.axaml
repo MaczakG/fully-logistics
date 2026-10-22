@@ -1,0 +1,368 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Billing"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Billing.StatementView"
+             x:DataType="local:StatementViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="12" IsVisible="{Binding Data, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <WrapPanel>
+            <TextBlock Text="{Binding Title}" Classes="h1" Margin="0,0,10,4" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <ctl:StatusTag Group="statement" Status="{Binding Data.Status, FallbackValue=''}" VerticalAlignment="Center" Margin="0,0,0,4" />
+          </WrapPanel>
+          <TextBlock Classes="muted" Text="{Binding Data.Number, StringFormat='{}{0} elszámolás', FallbackValue=''}" />
+        </StackPanel>
+        <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top" MaxWidth="760">
+          <Button Command="{Binding ExportCommand}" Margin="0,0,8,4">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconDownload}" /><TextBlock Text="CSV" /></StackPanel>
+          </Button>
+          <Button Command="{Binding RegenerateCommand}" IsVisible="{Binding CanRegenerate}" Margin="0,0,8,4">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconRefresh}" /><TextBlock Text="{Binding RegenerateText}" /></StackPanel>
+          </Button>
+          <Button Command="{Binding AddLineCommand}" IsVisible="{Binding CanAddLine}" Margin="0,0,8,4">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Tétel hozzáadása" /></StackPanel>
+          </Button>
+          <Button Classes="danger" Command="{Binding DeleteCommand}" IsVisible="{Binding CanDelete}" Margin="0,0,8,4">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconTrash}" /><TextBlock Text="Törlés" /></StackPanel>
+          </Button>
+          <Button Classes="danger" Command="{Binding VoidCommand}" IsVisible="{Binding CanVoid}" Margin="0,0,8,4">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconClose}" /><TextBlock Text="Érvénytelenítés" /></StackPanel>
+          </Button>
+          <Button Classes="primary" Command="{Binding ApproveCommand}" IsVisible="{Binding CanApprove}" IsEnabled="{Binding ApproveEnabled}" Margin="0,0,8,4">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheck}" /><TextBlock Text="Jóváhagyás" /></StackPanel>
+          </Button>
+          <Button Classes="primary" Command="{Binding InvoiceCommand}" IsVisible="{Binding CanInvoice}" IsEnabled="{Binding InvoiceEnabled}" Margin="0,0,8,4">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconReceipt}" /><TextBlock Text="Számla kiállítása" /></StackPanel>
+          </Button>
+          <Button Classes="primary" Command="{Binding InvoicePdfCommand}" IsVisible="{Binding HasInvoicePdf}" Margin="0,0,8,4">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconFile}" /><TextBlock Text="Számla PDF" /></StackPanel>
+          </Button>
+          <Button Classes="primary" Command="{Binding InvoiceCommand}" IsVisible="{Binding CanRefetchPdf}" Margin="0,0,8,4">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconDownload}" /><TextBlock Text="Számla PDF letöltése újra" /></StackPanel>
+          </Button>
+        </WrapPanel>
+      </Grid>
+
+      <Border Classes="notice" IsVisible="{Binding IsVoid}"><TextBlock Text="{Binding VoidText}" /></Border>
+      <Border Classes="notice warn" IsVisible="{Binding StaleText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"><TextBlock Text="{Binding StaleText}" /></Border>
+      <Border Classes="notice danger" Classes.warn="{Binding InvoiceErrorIsWarn}" IsVisible="{Binding InvoiceErrorText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding InvoiceErrorText}" />
+      </Border>
+      <Border Classes="notice" IsVisible="{Binding ShowUncertain}">
+        <TextBlock Text="Az előző kísérletre nem jött egyértelmű válasz a számlázótól. A következő kísérlet előbb megnézi, elkészült-e már a számla, így nem lesz kétszer kiállítva." />
+      </Border>
+      <Border Classes="notice" IsVisible="{Binding ShowBusy}"><TextBlock Text="A számla kiállítása éppen folyamatban van. Frissítsd az ablakot (F5) egy perc múlva." /></Border>
+      <Border Classes="notice warn" IsVisible="{Binding InvoicingWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"><TextBlock Text="{Binding InvoicingWarning}" /></Border>
+      <Border Classes="notice warn" IsVisible="{Binding Warnings, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"><TextBlock Text="{Binding Warnings}" /></Border>
+
+      <Grid ColumnDefinitions="*,Auto">
+        <Border Classes="panel" Margin="0,0,10,0">
+          <StackPanel Spacing="8">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Classes="section" Text="Adatok" />
+              <TextBlock Grid.Column="1" Classes="muted small" Text="{Binding StatusText}" VerticalAlignment="Center" />
+            </Grid>
+            <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+              <TextBlock Classes="dt" Text="Ügyfél" />
+              <Button Grid.Column="1" Classes="link" Command="{Binding OpenPartnerCommand}" HorizontalAlignment="Left" Margin="0,4,0,0">
+                <TextBlock Text="{Binding PartnerText}" />
+              </Button>
+              <TextBlock Grid.Row="1" Classes="dt" Text="Számlázási cím" />
+              <Panel Grid.Row="1" Grid.Column="1">
+                <TextBlock Classes="dd" Text="{Binding BillingAddress}" TextWrapping="Wrap" />
+                <TextBlock Classes="dd neg" Text="hiányzik" IsVisible="{Binding NoBillingAddress}" />
+              </Panel>
+              <TextBlock Grid.Row="2" Classes="dt" Text="Adószám" />
+              <Panel Grid.Row="2" Grid.Column="1">
+                <TextBlock Classes="dd mono" Text="{Binding TaxNumber}" />
+                <TextBlock Classes="dd neg" Text="hiányzik" IsVisible="{Binding NoTaxNumber}" />
+              </Panel>
+              <TextBlock Grid.Row="3" Classes="dt" Text="Fizetési határidő" />
+              <TextBlock Grid.Row="3" Grid.Column="1" Classes="dd" Text="{Binding PaymentDays}" />
+              <TextBlock Grid.Row="4" Classes="dt" Text="Készült" />
+              <TextBlock Grid.Row="4" Grid.Column="1" Classes="dd" Text="{Binding GeneratedText}" />
+              <TextBlock Grid.Row="5" Classes="dt" Text="Jóváhagyta" IsVisible="{Binding HasApproved}" />
+              <TextBlock Grid.Row="5" Grid.Column="1" Classes="dd" Text="{Binding ApprovedText}" IsVisible="{Binding HasApproved}" />
+              <TextBlock Grid.Row="6" Classes="dt" Text="Számla" IsVisible="{Binding HasInvoice}" />
+              <TextBlock Grid.Row="6" Grid.Column="1" Classes="dd" Text="{Binding InvoiceText}" IsVisible="{Binding HasInvoice}" />
+            </Grid>
+          </StackPanel>
+        </Border>
+        <StackPanel Grid.Column="1" Width="230">
+          <Border Classes="kpi"><StackPanel><TextBlock Classes="kpilabel" Text="Nettó" /><TextBlock Classes="kpivalue" Text="{Binding NetText}" FontSize="22" /></StackPanel></Border>
+          <Border Classes="kpi"><StackPanel>
+            <TextBlock Classes="kpilabel" Text="{Binding VatLabel}" /><TextBlock Classes="kpivalue" Text="{Binding VatText}" FontSize="22" /><TextBlock Classes="kpihint" Text="soronként kerekítve" />
+          </StackPanel></Border>
+          <Border Classes="kpi"><StackPanel><TextBlock Classes="kpilabel" Text="Bruttó" /><TextBlock Classes="kpivalue" Text="{Binding GrossText}" FontSize="22" /></StackPanel></Border>
+        </StackPanel>
+      </Grid>
+
+      <TextBlock Classes="section" Text="Tételek" />
+      <Border Classes="notice" IsVisible="{Binding !HasLines}"><TextBlock Text="Az elszámolásban nincs tétel." /></Border>
+      <Border Classes="panel" Padding="0" IsVisible="{Binding HasLines}">
+        <StackPanel>
+          <Grid ColumnDefinitions="*,120,190,110,100,110,110" Margin="20,8,20,4">
+            <TextBlock Classes="dt" Text="Tétel" />
+            <TextBlock Grid.Column="1" Classes="dt" Text="Mennyiség" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="2" Classes="dt" Text="Egységár" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="3" Classes="dt" Text="Nettó" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="4" Classes="dt" Text="{Binding VatLabel}" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="5" Classes="dt" Text="Bruttó" TextAlignment="Right" Margin="0,6,8,0" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Groups}" Margin="10,0">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="local:StatementGroupItem">
+                <StackPanel>
+                  <Border Classes="grouphead"><TextBlock Text="{Binding Label}" FontWeight="Bold" /></Border>
+                  <ItemsControl ItemsSource="{Binding Lines}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="local:StatementLineItem">
+                        <Border Classes="taskrow">
+                          <Grid ColumnDefinitions="*,120,190,110,100,110,110">
+                            <StackPanel VerticalAlignment="Center" Margin="0,0,8,0">
+                              <TextBlock Text="{Binding Line.Name}" TextWrapping="Wrap" />
+                              <TextBlock Classes="muted small" Text="{Binding Sub}" IsVisible="{Binding HasSub}" TextWrapping="Wrap" />
+                              <TextBlock Classes="small neg" Text="{Binding Line.Warn}" IsVisible="{Binding HasWarn}" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <TextBlock Grid.Column="1" Classes="mono" Text="{Binding QtyText}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Classes="mono" Text="{Binding PriceText}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" TextWrapping="Wrap" />
+                            <TextBlock Grid.Column="3" Classes="mono" Text="{Binding NetText}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="4" Classes="mono" Text="{Binding VatText}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="5" Classes="mono" Text="{Binding GrossText}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="6" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4" VerticalAlignment="Center">
+                              <Button Classes="ghost" Content="Részletek" Command="{Binding DrillCommand}" IsVisible="{Binding CanDrill}" ToolTip.Tip="{Binding DrillTip}" />
+                              <Button Classes="ghost" Command="{Binding RemoveCommand}" IsVisible="{Binding CanRemove}" ToolTip.Tip="Tétel törlése"><PathIcon Data="{StaticResource IconTrash}" /></Button>
+                            </StackPanel>
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <Border Padding="10,6" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="*,120,190,110,100,110,110">
+                      <TextBlock Grid.ColumnSpan="3" Classes="small" Text="{Binding TotalLabel}" FontWeight="SemiBold" />
+                      <TextBlock Grid.Column="3" Classes="mono" Text="{Binding Net}" FontWeight="SemiBold" TextAlignment="Right" Margin="0,0,8,0" />
+                      <TextBlock Grid.Column="4" Classes="mono" Text="{Binding Vat}" FontWeight="SemiBold" TextAlignment="Right" Margin="0,0,8,0" />
+                      <TextBlock Grid.Column="5" Classes="mono" Text="{Binding Gross}" FontWeight="SemiBold" TextAlignment="Right" Margin="0,0,8,0" />
+                    </Grid>
+                  </Border>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Border BorderBrush="{DynamicResource Ink}" BorderThickness="0,2,0,0" Margin="10,0,10,10" Padding="10,8">
+            <Grid ColumnDefinitions="*,120,190,110,100,110,110">
+              <TextBlock Grid.ColumnSpan="3" Text="Összesen nettó" FontWeight="Bold" />
+              <TextBlock Grid.Column="3" Classes="mono" Text="{Binding NetText}" FontWeight="Bold" TextAlignment="Right" Margin="0,0,8,0" />
+              <TextBlock Grid.Column="4" Classes="mono" Text="{Binding VatText}" FontWeight="Bold" TextAlignment="Right" Margin="0,0,8,0" />
+              <TextBlock Grid.Column="5" Classes="mono" Text="{Binding GrossText}" FontWeight="Bold" TextAlignment="Right" Margin="0,0,8,0" />
+            </Grid>
+          </Border>
+        </StackPanel>
+      </Border>
+      <TextBlock Classes="muted small" TextWrapping="Wrap"
+                 Text="Kerekítés: minden tétel nettó összege egész forintra kerekítve, az ÁFA a kerekített nettóból tételenként, szintén egész forintra. A végösszegek a tételek összegei." />
+
+      <!-- Drill-down lists -->
+      <StackPanel Spacing="8" IsVisible="{Binding HasDrill}">
+        <TextBlock Classes="section" Text="Részletezés" />
+        <ItemsControl ItemsSource="{Binding DrillTabs}">
+          <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="p:PartnerTabChip">
+              <ToggleButton Classes="chip" Content="{Binding Text}" IsChecked="{Binding IsSelected, Mode=OneWay}"
+                            Command="{Binding $parent[local:StatementView].((local:StatementViewModel)DataContext).DrillCommand}" CommandParameter="{Binding}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Classes="muted small" Text="{Binding DrillNote}" TextWrapping="Wrap" IsVisible="{Binding DrillNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <Border Classes="notice" IsVisible="{Binding DrillEmpty}"><TextBlock Text="Nincs tétel." /></Border>
+
+        <Border Classes="panel" Padding="0" IsVisible="{Binding IsOrders}">
+          <StackPanel>
+            <Grid ColumnDefinitions="160,*,110,130,70,120,130" Margin="20,8,20,4">
+              <TextBlock Classes="dt" Text="Rendelés" />
+              <TextBlock Grid.Column="1" Classes="dt" Text="Vevő" />
+              <TextBlock Grid.Column="2" Classes="dt" Text="Feladva" />
+              <TextBlock Grid.Column="3" Classes="dt" Text="Állapot" />
+              <TextBlock Grid.Column="4" Classes="dt" Text="Darab" TextAlignment="Right" Margin="0,6,8,0" />
+              <TextBlock Grid.Column="5" Classes="dt" Text="Kezelési díj" TextAlignment="Right" Margin="0,6,8,0" />
+              <TextBlock Grid.Column="6" Classes="dt" Text="Utánvét" TextAlignment="Right" Margin="0,6,8,0" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding DrillOrders}" Margin="10,0,10,10">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="m:DetailOrder">
+                  <Border Classes="taskrow">
+                    <Grid ColumnDefinitions="160,*,110,130,70,120,130">
+                      <StackPanel VerticalAlignment="Center">
+                        <TextBlock Classes="mono" Text="{Binding Number}" FontWeight="SemiBold" />
+                        <TextBlock Classes="muted small" Text="{Binding ExternalNumber}" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="1" Text="{Binding CustomerName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                      <TextBlock Grid.Column="2" Classes="small" Text="{Binding ShippedDate, Converter={x:Static p:PartnerFormat.DateText}}" VerticalAlignment="Center" />
+                      <ctl:StatusTag Grid.Column="3" Group="order" Status="{Binding Status}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="4" Classes="mono" Text="{Binding Pieces, Converter={x:Static local:BillingFormat.Whole}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="5" Classes="mono" Text="{Binding Fee, Converter={x:Static local:BillingFormat.MoneyText}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="6" Classes="mono" Text="{Binding, Converter={x:Static local:BillingFormat.Cod}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="panel" Padding="0" IsVisible="{Binding IsStorage}">
+          <StackPanel>
+            <Grid ColumnDefinitions="130,*,70,110,110,120,120" Margin="20,8,20,4">
+              <TextBlock Classes="dt" Text="Raktárhely" />
+              <TextBlock Grid.Column="1" Classes="dt" Text="Méret" />
+              <TextBlock Grid.Column="2" Classes="dt" Text="Napok" TextAlignment="Right" Margin="0,6,8,0" />
+              <TextBlock Grid.Column="3" Classes="dt" Text="Első nap" />
+              <TextBlock Grid.Column="4" Classes="dt" Text="Utolsó nap" />
+              <TextBlock Grid.Column="5" Classes="dt" Text="Havi ár" TextAlignment="Right" Margin="0,6,8,0" />
+              <TextBlock Grid.Column="6" Classes="dt" Text="Arányos díj" TextAlignment="Right" Margin="0,6,8,0" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding DrillStorage}" Margin="10,0,10,10">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="m:DetailStorage">
+                  <Border Classes="taskrow">
+                    <Grid ColumnDefinitions="130,*,70,110,110,120,120">
+                      <TextBlock Classes="mono" Text="{Binding Code}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Border Classes="tag"><TextBlock Text="{Binding SizeCode}" /></Border>
+                        <TextBlock Text="{Binding SizeName}" VerticalAlignment="Center" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Days, Converter={x:Static p:PartnerFormat.Int}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="3" Classes="small" Text="{Binding FirstDate, Converter={x:Static p:PartnerFormat.DateText}}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="4" Classes="small" Text="{Binding LastDate, Converter={x:Static p:PartnerFormat.DateText}}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="5" Classes="mono" Text="{Binding Price, Converter={x:Static local:BillingFormat.StoragePrice}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="6" Classes="mono" Text="{Binding Amount, Converter={x:Static local:BillingFormat.MoneyText}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="panel" Padding="0" IsVisible="{Binding IsInbound}">
+          <StackPanel>
+            <Grid ColumnDefinitions="110,*,110,110,150,110" Margin="20,8,20,4">
+              <TextBlock Classes="dt" Text="Dátum" />
+              <TextBlock Grid.Column="1" Classes="dt" Text="Cikk" />
+              <TextBlock Grid.Column="2" Classes="dt" Text="Hely" />
+              <TextBlock Grid.Column="3" Classes="dt" Text="Sarzs" />
+              <TextBlock Grid.Column="4" Classes="dt" Text="Betárolás" />
+              <TextBlock Grid.Column="5" Classes="dt" Text="Mennyiség" TextAlignment="Right" Margin="0,6,8,0" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding DrillInbound}" Margin="10,0,10,10">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="m:DetailInbound">
+                  <Border Classes="taskrow">
+                    <Grid ColumnDefinitions="110,*,110,110,150,110">
+                      <TextBlock Classes="small" Text="{Binding Date, Converter={x:Static p:PartnerFormat.DateText}}" VerticalAlignment="Center" />
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
+                        <TextBlock Classes="mono" Text="{Binding Sku}" />
+                        <TextBlock Classes="muted small" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="2" Classes="mono" Text="{Binding LocationCode}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="3" Classes="mono" Text="{Binding Lot}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="4" Classes="mono" Text="{Binding InboundNumber}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="5" Classes="mono" Text="{Binding Qty, Converter={x:Static local:BillingFormat.Whole}, StringFormat='{}{0} db'}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="panel" Padding="0" IsVisible="{Binding IsReturns}">
+          <StackPanel>
+            <Grid ColumnDefinitions="150,110,160,*,90" Margin="20,8,20,4">
+              <TextBlock Classes="dt" Text="Visszáru" />
+              <TextBlock Grid.Column="1" Classes="dt" Text="Beérkezett" />
+              <TextBlock Grid.Column="2" Classes="dt" Text="Rendelés" />
+              <TextBlock Grid.Column="3" Classes="dt" Text="Ok" />
+              <TextBlock Grid.Column="4" Classes="dt" Text="Darab" TextAlignment="Right" Margin="0,6,8,0" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding DrillReturns}" Margin="10,0,10,10">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="m:DetailReturn">
+                  <Border Classes="taskrow">
+                    <Grid ColumnDefinitions="150,110,160,*,90">
+                      <TextBlock Classes="mono" Text="{Binding Number}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="1" Classes="small" Text="{Binding ReceivedDate, Converter={x:Static p:PartnerFormat.DateText}}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="2" Classes="mono" Text="{Binding OrderNumber}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="3" Text="{Binding Reason}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                      <TextBlock Grid.Column="4" Classes="mono" Text="{Binding Pieces, Converter={x:Static local:BillingFormat.Whole}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="panel" Padding="0" IsVisible="{Binding IsEntries}">
+          <StackPanel>
+            <Grid ColumnDefinitions="110,130,*,110,110,*,140" Margin="20,8,20,4">
+              <TextBlock Classes="dt" Text="Dátum" />
+              <TextBlock Grid.Column="1" Classes="dt" Text="Típus" />
+              <TextBlock Grid.Column="2" Classes="dt" Text="Tétel" />
+              <TextBlock Grid.Column="3" Classes="dt" Text="Mennyiség" TextAlignment="Right" Margin="0,6,8,0" />
+              <TextBlock Grid.Column="4" Classes="dt" Text="Egységár" TextAlignment="Right" Margin="0,6,8,0" />
+              <TextBlock Grid.Column="5" Classes="dt" Text="Megjegyzés" />
+              <TextBlock Grid.Column="6" Classes="dt" Text="Rögzítette" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding DrillEntries}" Margin="10,0,10,10">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="m:DetailEntry">
+                  <Border Classes="taskrow">
+                    <Grid ColumnDefinitions="110,130,*,110,110,*,140">
+                      <TextBlock Classes="small" Text="{Binding Date, Converter={x:Static p:PartnerFormat.DateText}}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="1" Classes="small" Text="{Binding Kind, Converter={x:Static local:BillingFormat.EntryKind}}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="2" Text="{Binding, Converter={x:Static local:BillingFormat.EntryItem}}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                      <TextBlock Grid.Column="3" Classes="mono" Text="{Binding, Converter={x:Static local:BillingFormat.EntryQty}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="4" Classes="mono" Text="{Binding Price, Converter={x:Static local:BillingFormat.MoneyText}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="5" Classes="small" Text="{Binding Note}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,8,0" />
+                      <TextBlock Grid.Column="6" Classes="small" Text="{Binding CreatedByName}" VerticalAlignment="Center" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Classes="muted" Text="{Binding DrillTotal, StringFormat='{}{0} tétel'}" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Content="Továbbiak" Command="{Binding DrillMoreCommand}" IsVisible="{Binding DrillHasMore}" />
+        </Grid>
+      </StackPanel>
+
+      <StackPanel Spacing="6" IsVisible="{Binding HasHistory}">
+        <TextBlock Classes="section" Text="Előzmények" />
+        <ItemsControl ItemsSource="{Binding Data.History, FallbackValue={x:Null}}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="m:StatementEvent">
+              <Grid ColumnDefinitions="160,150,*" Margin="0,0,0,4">
+                <TextBlock Classes="mono small muted" Text="{Binding At, Converter={x:Static p:PartnerFormat.DateTimeText}}" />
+                <TextBlock Grid.Column="1" Classes="small" Text="{Binding Actor}" />
+                <TextBlock Grid.Column="2" Classes="small" Text="{Binding Summary}" TextWrapping="Wrap" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

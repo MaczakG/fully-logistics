@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Inbound"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Inbound.InboundFormView"
+             x:DataType="local:InboundFormViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14" MaxWidth="980" HorizontalAlignment="Stretch">
+      <WrapPanel>
+        <StackPanel Margin="0,0,12,10" Width="300">
+          <TextBlock Classes="label" Text="Ügyfél" />
+          <ComboBox ItemsSource="{Binding Clients}" SelectedItem="{Binding Client}" PlaceholderText="Válassz ügyfelet"
+                    Classes.invalid="{Binding ClientError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="m:PartnerLookup"><TextBlock Text="{Binding Display}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+          <TextBlock Classes="fielderror" Text="{Binding ClientError}" IsVisible="{Binding ClientError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </StackPanel>
+        <StackPanel Margin="0,0,12,10" Width="260">
+          <TextBlock Classes="label" Text="Beszállító (nem kötelező)" />
+          <ComboBox ItemsSource="{Binding Suppliers}" SelectedItem="{Binding Supplier}" PlaceholderText="Nincs megadva">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="m:PartnerLookup"><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Margin="0,0,12,10" Width="180">
+          <TextBlock Classes="label" Text="Várható érkezés" />
+          <CalendarDatePicker SelectedDate="{Binding ExpectedDate}" HorizontalAlignment="Stretch" />
+        </StackPanel>
+        <StackPanel Margin="0,0,12,10" Width="220">
+          <TextBlock Classes="label" Text="Külső hivatkozás" />
+          <TextBox Text="{Binding ExternalRef}" Watermark="Szállítólevél vagy ASN szám" />
+        </StackPanel>
+        <StackPanel Margin="0,0,12,10" Width="110">
+          <TextBlock Classes="label" Text="Raklap" />
+          <TextBox Text="{Binding Pallets}" Classes="num" TextInputOptions.ContentType="Digits" />
+        </StackPanel>
+        <StackPanel Margin="0,0,12,10" Width="110">
+          <TextBlock Classes="label" Text="Karton" />
+          <TextBox Text="{Binding Cartons}" Classes="num" TextInputOptions.ContentType="Digits" />
+        </StackPanel>
+      </WrapPanel>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Megjegyzés (nem kötelező)" />
+        <TextBox Text="{Binding Note}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
+      </StackPanel>
+
+      <TextBlock Classes="section" Text="Tételek" />
+      <TextBlock Classes="muted small" Text="Előbb válassz ügyfelet: csak az ő termékei választhatók." IsVisible="{Binding !HasClient}" />
+      <ItemsControl ItemsSource="{Binding Lines}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="local:InboundFormLine">
+            <Border Classes="card" Padding="12" Margin="0,0,0,8">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel>
+                    <TextBlock Classes="label" Text="Termék" />
+                    <AutoCompleteBox SelectedItem="{Binding Product}" AsyncPopulator="{Binding FindProducts}" MinimumPrefixLength="1" MinimumPopulateDelay="0:0:0.25"
+                                     FilterMode="None" Watermark="Cikkszám, név vagy EAN" ValueMemberBinding="{Binding Display, DataType=m:ProductLookup}"
+                                     IsEnabled="{Binding $parent[local:InboundFormView].((local:InboundFormViewModel)DataContext).HasClient}">
+                      <AutoCompleteBox.ItemTemplate>
+                        <DataTemplate x:DataType="m:ProductLookup">
+                          <StackPanel>
+                            <TextBlock Text="{Binding Display}" />
+                            <TextBlock Text="{Binding Ean}" Classes="muted small" />
+                          </StackPanel>
+                        </DataTemplate>
+                      </AutoCompleteBox.ItemTemplate>
+                    </AutoCompleteBox>
+                  </StackPanel>
+                  <Button Grid.Column="1" Classes="ghost" Command="{Binding RemoveCommand}" VerticalAlignment="Bottom" Margin="8,0,0,0" ToolTip.Tip="Sor törlése" AutomationProperties.Name="Sor törlése">
+                    <PathIcon Data="{StaticResource IconTrash}" />
+                  </Button>
+                </Grid>
+                <WrapPanel>
+                  <StackPanel Margin="0,0,10,0" Width="140">
+                    <TextBlock Classes="label" Text="Várt mennyiség" />
+                    <TextBox Text="{Binding Qty}" Classes="num" TextInputOptions.ContentType="Digits" />
+                  </StackPanel>
+                  <StackPanel Margin="0,0,10,0" Width="180">
+                    <TextBlock Classes="label" Text="Sarzs" />
+                    <TextBox Text="{Binding Lot}" Classes="mono" />
+                  </StackPanel>
+                  <StackPanel Width="160">
+                    <TextBlock Classes="label" Text="Lejárat" />
+                    <TextBox Text="{Binding Expiry}" Classes="mono" Watermark="ÉÉÉÉ-HH-NN" />
+                  </StackPanel>
+                </WrapPanel>
+                <TextBlock Classes="fielderror" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <Button Command="{Binding AddLineCommand}" HorizontalAlignment="Left">
+        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Tétel hozzáadása" /></StackPanel>
+      </Button>
+      <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding Error}" />
+      </Border>
+      <Button Classes="primary" HorizontalAlignment="Left" MinWidth="240" Content="{Binding SubmitText}" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

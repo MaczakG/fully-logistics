@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Inbound"
+             x:Class="Fully.Wms.Modules.Inbound.InboundArriveView"
+             x:DataType="local:InboundArriveViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14" MaxWidth="520" HorizontalAlignment="Stretch">
+      <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding Inbound.Number, StringFormat='{}{0}: raklapok, kartonok és érkezési megjegyzés.'}" />
+      <Grid ColumnDefinitions="*,*">
+        <StackPanel Margin="0,0,8,0">
+          <TextBlock Classes="label" Text="Raklap" />
+          <TextBox Text="{Binding Pallets}" Classes="num" TextInputOptions.ContentType="Digits" />
+        </StackPanel>
+        <StackPanel Grid.Column="1">
+          <TextBlock Classes="label" Text="Karton" />
+          <TextBox Text="{Binding Cartons}" Classes="num" TextInputOptions.ContentType="Digits" />
+        </StackPanel>
+      </Grid>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Érkezési megjegyzés (nem kötelező)" />
+        <TextBox Text="{Binding Note}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80" Watermark="Pl. sérült fólia, rendszám, késés oka." />
+      </StackPanel>
+      <TextBlock Classes="error" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="{Binding SubmitText}" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

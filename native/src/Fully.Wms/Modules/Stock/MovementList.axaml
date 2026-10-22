@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Stock"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Stock.MovementList"
+             x:DataType="local:MovementList">
+  <!-- Stock movements, newest first: type, place, lot, quantity (+/-), reference, who. -->
+  <StackPanel>
+    <Border Classes="notice" IsVisible="{Binding $parent[local:MovementList].IsEmpty}">
+      <TextBlock Text="Még nincs készletmozgás." />
+    </Border>
+    <ItemsControl ItemsSource="{Binding $parent[local:MovementList].Items}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="m:Movement">
+          <Border BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="0,8">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Spacing="2">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Border Classes="tag"><TextBlock Text="{Binding TypeLabel}" /></Border>
+                  <TextBlock Text="{Binding LocationCode}" Classes="mono" FontWeight="Bold" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding At, Converter={x:Static local:StockFormat.DateTime}}" Classes="muted small" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding Converter={x:Static local:StockFormat.MovementDetail}}" />
+              </StackPanel>
+              <TextBlock Grid.Column="1" Classes="mono" FontWeight="Bold" FontSize="16" VerticalAlignment="Center"
+                         Classes.pos="{Binding Qty, Converter={x:Static local:StockFormat.Positive}}"
+                         Classes.neg="{Binding Qty, Converter={x:Static local:StockFormat.Negative}}"
+                         Text="{Binding Qty, Converter={x:Static local:StockFormat.Signed}}" />
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+  </StackPanel>
+</UserControl>

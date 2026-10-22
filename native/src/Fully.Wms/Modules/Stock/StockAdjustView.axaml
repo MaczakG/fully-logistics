@@ -1,0 +1,60 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Stock"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Stock.StockAdjustView"
+             x:DataType="local:StockAdjustViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14" MaxWidth="620" HorizontalAlignment="Stretch">
+      <TextBlock Text="{Binding Product.Name}" Classes="h2" TextWrapping="Wrap" />
+      <Border Classes="notice warn">
+        <TextBlock Text="A korrekció azonnal módosítja a készletet. Az indoklással együtt bekerül a készletmozgások közé és a naplóba." />
+      </Border>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Készletsor" />
+        <ComboBox ItemsSource="{Binding Choices}" SelectedItem="{Binding Choice}">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="local:AdjustChoice">
+              <TextBlock Text="{Binding Label}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+      </StackPanel>
+      <StackPanel Spacing="10" IsVisible="{Binding IsNew}">
+        <StackPanel>
+          <TextBlock Classes="label" Text="Raktárhely" />
+          <ctl:ScanField Command="{Binding ScanLocationCommand}" Placeholder="Raktárhely, pl. A-01-04" AutoFocus="False" />
+          <TextBox Text="{Binding LocationCode}" Classes="mono" Margin="0,8,0,0" Watermark="Raktárhely" />
+        </StackPanel>
+        <StackPanel>
+          <TextBlock Classes="label" Text="Sarzs" />
+          <TextBox Text="{Binding Lot}" Classes="mono" />
+        </StackPanel>
+        <StackPanel>
+          <TextBlock Classes="label" Text="Lejárat (ÉÉÉÉ-HH-NN)" />
+          <TextBox Text="{Binding Expiry}" Classes="mono" Watermark="2027-03-31" Width="180" HorizontalAlignment="Left" />
+        </StackPanel>
+      </StackPanel>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Művelet" />
+        <ComboBox ItemsSource="{Binding Modes}" SelectedIndex="{Binding Mode}" />
+      </StackPanel>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Mennyiség (beállításnál a hely új, teljes mennyisége)" />
+        <TextBox Text="{Binding Qty}" Classes="num" TextInputOptions.ContentType="Digits" Width="160" HorizontalAlignment="Left" />
+      </StackPanel>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Indoklás" />
+        <ComboBox ItemsSource="{Binding ReasonList}" SelectedItem="{Binding Reason}" PlaceholderText="Válassz okot" />
+      </StackPanel>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Részletek (nem kötelező)" />
+        <TextBox Text="{Binding ReasonText}" Watermark="pl. leltárszám, sérülés leírása" />
+      </StackPanel>
+      <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding Error}" />
+      </Border>
+      <Button Classes="primary" Content="Korrekció könyvelése" HorizontalAlignment="Stretch" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

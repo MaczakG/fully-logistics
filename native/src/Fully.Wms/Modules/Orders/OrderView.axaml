@@ -1,0 +1,294 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Orders"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Orders.OrderView"
+             x:DataType="local:OrderViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <UserControl.Resources>
+    <DataTemplate x:Key="InfoRow" x:DataType="local:OrderInfo">
+      <Grid ColumnDefinitions="130,*" Margin="0,2">
+        <TextBlock Classes="dt" Text="{Binding Label}" />
+        <TextBlock Grid.Column="1" Classes="dd" Text="{Binding Value}" TextWrapping="Wrap" Classes.strong="{Binding Strong}" />
+      </Grid>
+    </DataTemplate>
+  </UserControl.Resources>
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="12" IsVisible="{Binding Data, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+      <!-- Head -->
+      <StackPanel Spacing="4">
+        <WrapPanel>
+          <TextBlock Text="{Binding Data.Number, FallbackValue=''}" Classes="h1 mono" Margin="0,0,10,4" VerticalAlignment="Center" />
+          <ctl:StatusTag Group="order" Status="{Binding Status}" Margin="0,0,6,4" VerticalAlignment="Center" />
+          <Border Classes="tag warn" Margin="0,0,6,4" VerticalAlignment="Center" IsVisible="{Binding Data.IsExpress, FallbackValue={x:False}}"><TextBlock Text="Expressz" /></Border>
+          <Border Classes="tag ok" Margin="0,0,6,4" VerticalAlignment="Center" IsVisible="{Binding AvailOk}"><TextBlock Text="Van készlet" /></Border>
+          <Border Classes="tag danger" Margin="0,0,6,4" VerticalAlignment="Center" IsVisible="{Binding AvailShort}"><TextBlock Text="Hiány" /></Border>
+          <Border Classes="tag info" Margin="0,0,6,4" VerticalAlignment="Center" IsVisible="{Binding HasCod}"><TextBlock Text="{Binding CodText}" /></Border>
+        </WrapPanel>
+        <TextBlock Text="{Binding Lead}" Classes="muted" TextWrapping="Wrap" />
+      </StackPanel>
+
+      <!-- Actions of the status; the main one in yellow -->
+      <WrapPanel>
+        <Button Command="{Binding EditCommand}" IsVisible="{Binding CanEdit}" Margin="0,0,8,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconEdit}" /><TextBlock Text="Módosítás" /></StackPanel>
+        </Button>
+        <Button Command="{Binding HoldCommand}" IsVisible="{Binding CanHold}" Margin="0,0,8,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconClock}" /><TextBlock Text="Felfüggesztés" /></StackPanel>
+        </Button>
+        <Button Command="{Binding ReleaseCommand}" IsVisible="{Binding CanRelease}" Classes.primary="{Binding Primary, Converter={x:Static local:OrderFormat.Is}, ConverterParameter=release}" Margin="0,0,8,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheck}" /><TextBlock Text="Feloldás" /></StackPanel>
+        </Button>
+        <Button Classes="danger" Command="{Binding CancelOrderCommand}" IsVisible="{Binding CanCancel}" Margin="0,0,8,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconClose}" /><TextBlock Text="Sztornó" /></StackPanel>
+        </Button>
+        <Button Command="{Binding WaveCommand}" IsVisible="{Binding CanWave}" Classes.primary="{Binding Primary, Converter={x:Static local:OrderFormat.Is}, ConverterParameter=wave}" Margin="0,0,8,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPicking}" /><TextBlock Text="Komissióba küldés" /></StackPanel>
+        </Button>
+        <Button Command="{Binding PackCommand}" IsVisible="{Binding CanPack}" Classes.primary="{Binding Primary, Converter={x:Static local:OrderFormat.Is}, ConverterParameter=pack}" Margin="0,0,8,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPackage}" /><TextBlock Text="Csomagolás" /></StackPanel>
+        </Button>
+        <Button Command="{Binding LabelCommand}" IsVisible="{Binding HasLabel}" Classes.primary="{Binding Primary, Converter={x:Static local:OrderFormat.Is}, ConverterParameter=label}" Margin="0,0,8,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPrinter}" /><TextBlock Text="Címke" /></StackPanel>
+        </Button>
+        <Button Command="{Binding DeliveredCommand}" IsVisible="{Binding CanDeliver}" Margin="0,0,8,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheckCircle}" /><TextBlock Text="Kézbesítve" /></StackPanel>
+        </Button>
+        <Button Command="{Binding ReturnCommand}" IsVisible="{Binding CanReturn}" Classes.primary="{Binding Primary, Converter={x:Static local:OrderFormat.Is}, ConverterParameter=return}" Margin="0,0,8,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconReturn}" /><TextBlock Text="Visszáru rögzítése" /></StackPanel>
+        </Button>
+      </WrapPanel>
+
+      <!-- Where the order is in its life -->
+      <ItemsControl ItemsSource="{Binding Steps}" IsVisible="{Binding ShowSteps}" Classes.compact="{Binding IsCompact}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="local:OrderStep">
+            <Border Classes="step" Classes.done="{Binding Done}" Classes.current="{Binding Current}">
+              <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <Border Classes="notice" Classes.warn="{Binding StateTone, Converter={x:Static local:OrdersFormat.IsWarn}}"
+              Classes.danger="{Binding StateTone, Converter={x:Static local:OrdersFormat.IsDanger}}"
+              IsVisible="{Binding StateNotice, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding StateNotice}" />
+      </Border>
+
+      <!-- Recipient and shipping, order data -->
+      <UniformGrid Columns="{Binding IsCompact, Converter={x:Static local:OrderFormat.PanelColumns}}">
+        <Border Classes="panel" Margin="0,0,8,8" VerticalAlignment="Top">
+          <StackPanel>
+            <TextBlock Classes="section" Text="Címzett és szállítás" Margin="0,0,0,6" />
+            <ItemsControl ItemsSource="{Binding ShipRows}" ItemTemplate="{StaticResource InfoRow}" />
+            <Button Classes="link" Content="Csomagkövetés megnyitása" Click="OpenTracking" IsVisible="{Binding HasTracking}" Margin="130,4,0,0" />
+          </StackPanel>
+        </Border>
+        <Border Classes="panel" Margin="0,0,8,8" VerticalAlignment="Top">
+          <StackPanel>
+            <TextBlock Classes="section" Text="Rendelés" Margin="0,0,0,6" />
+            <ItemsControl ItemsSource="{Binding MetaRows}" ItemTemplate="{StaticResource InfoRow}" />
+            <Button Classes="link" Content="{Binding Data.Wave.Number, StringFormat='{}{0} hullám megnyitása', FallbackValue=''}" Command="{Binding WaveOpenCommand}"
+                    IsVisible="{Binding Data.Wave, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue={x:False}}" Margin="130,4,0,0" />
+          </StackPanel>
+        </Border>
+      </UniformGrid>
+
+      <!-- Lines -->
+      <WrapPanel>
+        <TextBlock Classes="section" Text="Tételek" Margin="0,0,10,0" VerticalAlignment="Center" />
+        <TextBlock Classes="muted small" Text="{Binding LinesHead}" VerticalAlignment="Center" />
+      </WrapPanel>
+      <Border Classes="panel" Padding="0" IsVisible="{Binding !IsCompact}">
+        <StackPanel>
+          <Grid ColumnDefinitions="140,*,100,100,150,100" Margin="10,0,10,6">
+            <TextBlock Classes="dt" Text="Cikkszám" />
+            <TextBlock Grid.Column="1" Classes="dt" Text="Megnevezés" />
+            <TextBlock Grid.Column="2" Classes="dt" Text="Rendelt" TextAlignment="Right" Margin="0,6,0,0" />
+            <TextBlock Grid.Column="3" Classes="dt" Text="Kiszedve" TextAlignment="Right" Margin="0,6,0,0" />
+            <TextBlock Grid.Column="4" Classes="dt" Text="Szabad készlet" TextAlignment="Right" Margin="0,6,0,0" IsVisible="{Binding HasAvailability}" />
+            <TextBlock Grid.Column="5" Classes="dt" Text="Visszajött" TextAlignment="Right" Margin="0,6,0,0" IsVisible="{Binding HasReturns}" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Lines}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="local:OrderLineRow">
+                <Border Classes="taskrow">
+                  <Grid ColumnDefinitions="140,*,100,100,150,100">
+                    <TextBlock Classes="mono" Text="{Binding Line.Sku}" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Line.Name}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Classes="muted small mono" Text="{Binding Ean}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Classes="mono" Text="{Binding QtyText}" TextAlignment="Right" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Classes="mono" Classes.pos="{Binding AllPicked}" Text="{Binding PickedText}" TextAlignment="Right" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" VerticalAlignment="Center">
+                      <TextBlock Classes="mono" Text="{Binding FreeText}" VerticalAlignment="Center" />
+                      <Border Classes="tag ok" IsVisible="{Binding Available}"><TextBlock Text="Van készlet" /></Border>
+                      <Border Classes="tag danger" IsVisible="{Binding Unavailable}"><TextBlock Text="Hiány" /></Border>
+                    </StackPanel>
+                    <TextBlock Grid.Column="5" Classes="mono" Text="{Binding ReturnedText}" TextAlignment="Right" VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+      <ItemsControl ItemsSource="{Binding Lines}" IsVisible="{Binding IsCompact}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="local:OrderLineRow">
+            <Border Classes="linecard">
+              <StackPanel Spacing="2">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Classes="sku" Text="{Binding Line.Sku}" />
+                  <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Border Classes="tag ok" IsVisible="{Binding Available}"><TextBlock Text="Van készlet" /></Border>
+                    <Border Classes="tag danger" IsVisible="{Binding Unavailable}"><TextBlock Text="Hiány" /></Border>
+                  </StackPanel>
+                </Grid>
+                <TextBlock Text="{Binding Line.Name}" TextWrapping="Wrap" />
+                <TextBlock Classes="muted small" Text="{Binding CardLine}" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- Picks -->
+      <StackPanel Spacing="6" IsVisible="{Binding HasPicks}">
+        <TextBlock Classes="section" Text="Kiszedések" />
+        <Border Classes="panel" Padding="0" IsVisible="{Binding !IsCompact}">
+          <StackPanel>
+            <Grid ColumnDefinitions="150,90,*,60,80,60,90,160" Margin="10,0,10,6">
+              <TextBlock Classes="dt" Text="Hullám" />
+              <TextBlock Grid.Column="1" Classes="dt" Text="Hely" />
+              <TextBlock Grid.Column="2" Classes="dt" Text="Cikk" />
+              <TextBlock Grid.Column="3" Classes="dt" Text="Terv" TextAlignment="Right" Margin="0,6,0,0" />
+              <TextBlock Grid.Column="4" Classes="dt" Text="Kiszedve" TextAlignment="Right" Margin="0,6,0,0" />
+              <TextBlock Grid.Column="5" Classes="dt" Text="Hiány" TextAlignment="Right" Margin="0,6,0,0" />
+              <TextBlock Grid.Column="6" Classes="dt" Text="Visszatéve" TextAlignment="Right" Margin="0,6,0,0" />
+              <TextBlock Grid.Column="7" Classes="dt" Text="Ki, mikor" Margin="12,6,0,0" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding Picks}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="local:OrderPickRow">
+                  <Border Classes="taskrow">
+                    <Grid ColumnDefinitions="150,90,*,60,80,60,90,160">
+                      <StackPanel VerticalAlignment="Center">
+                        <TextBlock Classes="mono" Text="{Binding Pick.WaveNumber}" />
+                        <TextBlock Classes="muted small" Text="{Binding WaveStatus}" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="1" Classes="mono" Text="{Binding Pick.LocationCode}" VerticalAlignment="Center" />
+                      <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                        <TextBlock Classes="mono" Text="{Binding Pick.Sku}" />
+                        <TextBlock Classes="muted small" Text="{Binding LotText}" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="3" Classes="mono" Text="{Binding Pick.Qty}" TextAlignment="Right" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="4" Classes="mono" Text="{Binding Pick.PickedQty}" TextAlignment="Right" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="5" Classes="mono neg" Text="{Binding ShortText}" TextAlignment="Right" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="6" Classes="mono" Text="{Binding RestockedText}" TextAlignment="Right" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="7" Classes="small" Text="{Binding WhoText}" Margin="12,0,0,0" VerticalAlignment="Center" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <ItemsControl ItemsSource="{Binding Picks}" IsVisible="{Binding IsCompact}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:OrderPickRow">
+              <Border Classes="linecard">
+                <StackPanel Spacing="2">
+                  <TextBlock Classes="mono" FontWeight="SemiBold" Text="{Binding Pick.Sku}" />
+                  <TextBlock Classes="muted small" Text="{Binding CardLine}" TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <!-- Returns -->
+      <StackPanel Spacing="6" IsVisible="{Binding HasReturns}">
+        <TextBlock Classes="section" Text="Visszáruk" />
+        <ItemsControl ItemsSource="{Binding Returns}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:OrderReturnRow">
+              <Border Classes="panel" Margin="0,0,0,8">
+                <StackPanel Spacing="6">
+                  <WrapPanel>
+                    <TextBlock Classes="mono" FontWeight="Bold" Text="{Binding Return.Number}" Margin="0,0,10,0" />
+                    <TextBlock Classes="muted small" Text="{Binding Meta}" VerticalAlignment="Center" />
+                  </WrapPanel>
+                  <TextBlock Text="{Binding Text}" TextWrapping="Wrap" IsVisible="{Binding HasText}" />
+                  <ItemsControl ItemsSource="{Binding Lines}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="local:OrderReturnLineRow">
+                        <WrapPanel Margin="0,2">
+                          <TextBlock Classes="mono" Text="{Binding Line.Sku}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                          <TextBlock Text="{Binding Line.Name}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                          <TextBlock Classes="mono" FontWeight="Bold" Text="{Binding QtyText}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                          <Border Classes="tag" Classes.danger="{Binding Damaged}" Classes.ok="{Binding !Damaged}" Margin="0,0,8,0"><TextBlock Text="{Binding ConditionText}" /></Border>
+                          <TextBlock Classes="muted small" Text="{Binding Extra}" VerticalAlignment="Center" />
+                        </WrapPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <ItemsControl ItemsSource="{Binding Photos}" IsVisible="{Binding HasPhotos}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="local:OrderReturnPhotoItem">
+                        <Button Command="{Binding OpenCommand}" Margin="0,0,6,6">
+                          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconEye}" /><TextBlock Text="{Binding Photo.Filename}" /></StackPanel>
+                        </Button>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <!-- Timeline -->
+      <Border Classes="panel">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="section" Text="Előzmények" />
+          <StackPanel Spacing="6" IsVisible="{Binding CanNote}">
+            <TextBlock Classes="label" Text="Megjegyzés hozzáadása" />
+            <TextBox Text="{Binding NoteText}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="56"
+                     PlaceholderText="Pl. a vevő telefonon módosította az átvétel idejét."
+                     Classes.invalid="{Binding NoteError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <TextBlock Classes="fielderror" Text="{Binding NoteError}" IsVisible="{Binding NoteError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <Button Command="{Binding AddNoteCommand}" HorizontalAlignment="Left">
+              <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Hozzáadás" /></StackPanel>
+            </Button>
+          </StackPanel>
+          <ItemsControl ItemsSource="{Binding Events}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="m:OrderEvent">
+                <Border Classes="event">
+                  <StackPanel>
+                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                    <TextBlock Classes="muted small" Text="{Binding Converter={x:Static local:OrderFormat.EventMeta}}" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

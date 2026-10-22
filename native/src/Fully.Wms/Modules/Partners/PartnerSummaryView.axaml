@@ -1,0 +1,326 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Partners"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Partners.PartnerSummaryView"
+             x:DataType="local:PartnerSummaryTab">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <Panel>
+  <StackPanel Spacing="12" IsVisible="{Binding IsClient}">
+      <UniformGrid Columns="5">
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Aktív cikkek" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="kpivalue" Text="{Binding Kpis.ActiveSkus, Converter={x:Static local:PartnerFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text=" " />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Készleten" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="kpivalue" Text="{Binding Kpis.OnHand, Converter={x:Static local:PartnerFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text=" " />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Foglalt tárolóhely" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="kpivalue" Text="{Binding Kpis.OccupiedLocations, Converter={x:Static local:PartnerFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text="{Binding OccupiedHint}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Classes.warn="{Binding Kpis.OpenInbounds, Converter={x:Static local:PartnerFormat.NonZero}, FallbackValue={x:False}}" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Nyitott betárolás" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="kpivalue" Text="{Binding Kpis.OpenInbounds, Converter={x:Static local:PartnerFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text=" " />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="{Binding OrdersLabel}" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="kpivalue" Text="{Binding Kpis.OrdersThisMonth, Converter={x:Static local:PartnerFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text="{Binding OrdersHint}" />
+          </StackPanel>
+        </Border>
+      </UniformGrid>
+      <UniformGrid Columns="2">
+        <Panel Margin="0,0,8,0">
+    <StackPanel Spacing="6">
+      <TextBlock Classes="section" Text="Rendelések állapot szerint" />
+      <Border Classes="notice" IsVisible="{Binding !OrdersByStatus.Count}"><TextBlock Text="Nincs rendelés ebben és az előző hónapban." /></Border>
+      <Border Classes="panel" Padding="0" IsVisible="{Binding !!OrdersByStatus.Count}">
+        <StackPanel>
+          <Grid ColumnDefinitions="*,120,120" Margin="10,0,10,6">
+            <TextBlock Classes="dt" Text="Állapot" />
+            <TextBlock Grid.Column="1" Classes="dt" Text="Ebben a hónapban" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="2" Classes="dt" Text="Előző hónap" TextAlignment="Right" Margin="0,6,8,0" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding OrdersByStatus}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="m:OrdersByStatus">
+                <Border Classes="taskrow">
+                  <Grid ColumnDefinitions="*,120,120">
+                    <ctl:StatusTag Grid.Column="0" Group="order" Status="{Binding Status}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Classes="mono" Text="{Binding ThisMonth, Converter={x:Static local:PartnerFormat.Int}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Classes="mono" Text="{Binding LastMonth, Converter={x:Static local:PartnerFormat.Int}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+        </Panel>
+        <StackPanel Spacing="6">
+    <StackPanel Spacing="6">
+      <TextBlock Classes="section" Text="Tárolás ebben a hónapban" />
+      <TextBlock Classes="muted small" Text="{Binding StorageLead}" TextWrapping="Wrap" />
+      <Border Classes="notice" IsVisible="{Binding !StorageRows.Count}"><TextBlock Text="{Binding StorageEmpty}" /></Border>
+      <Border Classes="panel" Padding="0" IsVisible="{Binding !!StorageRows.Count}">
+        <StackPanel>
+          <Grid ColumnDefinitions="*,80,90,100,110" Margin="10,0,10,6">
+            <TextBlock Classes="dt" Text="Méret" />
+            <TextBlock Grid.Column="1" Classes="dt" Text="Helynap" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="2" Classes="dt" Text="Átlag hely" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="3" Classes="dt" Text="Havi díj" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="4" Classes="dt" Text="Eddig" TextAlignment="Right" Margin="0,6,8,0" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding StorageRows}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="m:StorageBySize">
+                <Border Classes="taskrow">
+                  <Grid ColumnDefinitions="*,80,90,100,110">
+                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Classes="mono" Text="{Binding LocationDays, Converter={x:Static local:PartnerFormat.Int}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Classes="mono" Text="{Binding AvgLocations, Converter={x:Static local:PartnerFormat.Num1}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Classes="mono" Text="{Binding Price, Converter={x:Static local:PartnerFormat.Money}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="4" Classes="mono" Text="{Binding Amount, Converter={x:Static local:PartnerFormat.Money}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+          <TextBlock Text="{Binding StorageTotal, StringFormat='Összesen eddig (nettó): {0}'}" FontWeight="Bold" HorizontalAlignment="Right" IsVisible="{Binding HasStorage}" />
+        </StackPanel>
+      </UniformGrid>
+    <StackPanel Spacing="6">
+      <TextBlock Classes="section" Text="Nyitott betárolások" />
+      <Border Classes="notice" IsVisible="{Binding !OpenInbounds.Count}"><TextBlock Text="Nincs nyitott betárolás." /></Border>
+      <Border Classes="panel" Padding="0" IsVisible="{Binding !!OpenInbounds.Count}">
+        <StackPanel>
+          <Grid ColumnDefinitions="150,120,*,70,90,140" Margin="10,0,10,6">
+            <TextBlock Classes="dt" Text="Szám" />
+            <TextBlock Grid.Column="1" Classes="dt" Text="Várható" />
+            <TextBlock Grid.Column="2" Classes="dt" Text="Hivatkozás" />
+            <TextBlock Grid.Column="3" Classes="dt" Text="Tétel" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="4" Classes="dt" Text="Várt db" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="5" Classes="dt" Text="Állapot" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding OpenInbounds}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="m:SummaryInbound">
+                <Border Classes="taskrow">
+                  <Grid ColumnDefinitions="150,120,*,70,90,140">
+                    <Button Classes="link" Command="{Binding $parent[local:PartnerSummaryView].((local:PartnerSummaryTab)DataContext).OpenInboundCommand}" CommandParameter="{Binding Id}" VerticalAlignment="Center"><TextBlock Classes="mono" Text="{Binding Number}" /></Button>
+                    <TextBlock Grid.Column="1" Text="{Binding ExpectedDate, Converter={x:Static local:PartnerFormat.DateText}}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="{Binding ExternalRef}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Classes="mono" Text="{Binding Lines, Converter={x:Static local:PartnerFormat.Int}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="4" Classes="mono" Text="{Binding ExpectedQty, Converter={x:Static local:PartnerFormat.Int}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <ctl:StatusTag Grid.Column="5" Group="inbound" Status="{Binding Status}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+    <StackPanel Spacing="6">
+      <TextBlock Classes="section" Text="Utolsó 10 feladott rendelés" />
+      <Border Classes="notice" IsVisible="{Binding !LastShipped.Count}"><TextBlock Text="Még nem adtunk fel rendelést." /></Border>
+      <Border Classes="panel" Padding="0" IsVisible="{Binding !!LastShipped.Count}">
+        <StackPanel>
+          <Grid ColumnDefinitions="150,160,*,70,*,120" Margin="10,0,10,6">
+            <TextBlock Classes="dt" Text="Szám" />
+            <TextBlock Grid.Column="1" Classes="dt" Text="Feladva" />
+            <TextBlock Grid.Column="2" Classes="dt" Text="Címzett" />
+            <TextBlock Grid.Column="3" Classes="dt" Text="Termék" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="4" Classes="dt" Text="Fuvarozó" />
+            <TextBlock Grid.Column="5" Classes="dt" Text="Állapot" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding LastShipped}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="m:ShippedOrder">
+                <Border Classes="taskrow">
+                  <Grid ColumnDefinitions="150,160,*,70,*,120">
+                    <Button Classes="link" Command="{Binding $parent[local:PartnerSummaryView].((local:PartnerSummaryTab)DataContext).OpenOrderCommand}" CommandParameter="{Binding Id}" VerticalAlignment="Center"><TextBlock Classes="mono" Text="{Binding Number}" /></Button>
+                    <TextBlock Grid.Column="1" Text="{Binding ShippedAt, Converter={x:Static local:PartnerFormat.DateTimeText}}" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center"><TextBlock Text="{Binding CustomerName}" TextTrimming="CharacterEllipsis" /><TextBlock Classes="muted small" Text="{Binding City}" /></StackPanel>
+                    <TextBlock Grid.Column="3" Classes="mono" Text="{Binding Items, Converter={x:Static local:PartnerFormat.Int}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="4" VerticalAlignment="Center"><TextBlock Text="{Binding CarrierName}" TextTrimming="CharacterEllipsis" /><TextBlock Classes="muted small mono" Text="{Binding TrackingNumber}" /></StackPanel>
+                    <ctl:StatusTag Grid.Column="5" Group="order" Status="{Binding Status}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </StackPanel>
+  <StackPanel Spacing="12" IsVisible="{Binding IsCarrier}">
+      <UniformGrid Columns="3">
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Feladott rendelés ebben a hónapban" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="kpivalue" Text="{Binding Kpis.ShippedThisMonth, Converter={x:Static local:PartnerFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text="{Binding ThisMonth}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Feladott rendelés az előző hónapban" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="kpivalue" Text="{Binding Kpis.ShippedLastMonth, Converter={x:Static local:PartnerFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text="{Binding LastMonth}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Futárátvétel ebben a hónapban" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="kpivalue" Text="{Binding Kpis.PickupsThisMonth, Converter={x:Static local:PartnerFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text=" " />
+          </StackPanel>
+        </Border>
+      </UniformGrid>
+      <UniformGrid Columns="2">
+        <Panel Margin="0,0,8,0">
+    <StackPanel Spacing="6">
+      <TextBlock Classes="section" Text="Ügyfelek szerint, ebben a hónapban" />
+      <Border Classes="notice" IsVisible="{Binding !ByClient.Count}"><TextBlock Text="Ebben a hónapban még nem adtunk fel vele rendelést." /></Border>
+      <Border Classes="panel" Padding="0" IsVisible="{Binding !!ByClient.Count}">
+        <StackPanel>
+          <Grid ColumnDefinitions="*,100" Margin="10,0,10,6">
+            <TextBlock Classes="dt" Text="Ügyfél" />
+            <TextBlock Grid.Column="1" Classes="dt" Text="Rendelés" TextAlignment="Right" Margin="0,6,8,0" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding ByClient}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="m:ClientOrders">
+                <Border Classes="taskrow">
+                  <Grid ColumnDefinitions="*,100">
+                    <StackPanel VerticalAlignment="Center">
+                      <Button Classes="link" Command="{Binding $parent[local:PartnerSummaryView].((local:PartnerSummaryTab)DataContext).OpenPartnerCommand}" CommandParameter="{Binding Id}"><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" /></Button>
+                      <TextBlock Classes="muted small mono" Text="{Binding Code}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Classes="mono" Text="{Binding Orders, Converter={x:Static local:PartnerFormat.Int}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+        </Panel>
+    <StackPanel Spacing="6">
+      <TextBlock Classes="section" Text="Utolsó futárátvételek" />
+      <Border Classes="notice" IsVisible="{Binding !LastPickups.Count}"><TextBlock Text="Még nem volt futárátvétel." /></Border>
+      <Border Classes="panel" Padding="0" IsVisible="{Binding !!LastPickups.Count}">
+        <StackPanel>
+          <Grid ColumnDefinitions="140,110,80,*,120" Margin="10,0,10,6">
+            <TextBlock Classes="dt" Text="Szám" />
+            <TextBlock Grid.Column="1" Classes="dt" Text="Nap" />
+            <TextBlock Grid.Column="2" Classes="dt" Text="Rendelés" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="3" Classes="dt" Text="Manifeszt" />
+            <TextBlock Grid.Column="4" Classes="dt" Text="Állapot" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding LastPickups}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="m:SummaryPickup">
+                <Border Classes="taskrow">
+                  <Grid ColumnDefinitions="140,110,80,*,120">
+                    <TextBlock Classes="mono" Text="{Binding Number}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{Binding Date, Converter={x:Static local:PartnerFormat.DateText}}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Orders, Converter={x:Static local:PartnerFormat.Int}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Classes="mono" Text="{Binding ManifestNumber}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <ctl:StatusTag Grid.Column="4" Group="pickup" Status="{Binding Status}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+      </UniformGrid>
+  </StackPanel>
+  <StackPanel Spacing="12" IsVisible="{Binding IsSupplier}">
+      <UniformGrid Columns="3">
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Betárolás idén" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="kpivalue" Text="{Binding Kpis.InboundsThisYear, Converter={x:Static local:PartnerFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text="{Binding YearText}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Classes.warn="{Binding Kpis.OpenInbounds, Converter={x:Static local:PartnerFormat.NonZero}, FallbackValue={x:False}}" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Nyitott betárolás" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="kpivalue" Text="{Binding Kpis.OpenInbounds, Converter={x:Static local:PartnerFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text=" " />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Átvett darab idén" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="kpivalue" Text="{Binding Kpis.ReceivedThisYear, Converter={x:Static local:PartnerFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text="{Binding YearText}" />
+          </StackPanel>
+        </Border>
+      </UniformGrid>
+    <StackPanel Spacing="6">
+      <TextBlock Classes="section" Text="Utolsó betárolások" />
+      <Border Classes="notice" IsVisible="{Binding !LastInbounds.Count}"><TextBlock Text="Még nem érkezett tőle áru." /></Border>
+      <Border Classes="panel" Padding="0" IsVisible="{Binding !!LastInbounds.Count}">
+        <StackPanel>
+          <Grid ColumnDefinitions="150,*,120,*,90,90,140" Margin="10,0,10,6">
+            <TextBlock Classes="dt" Text="Szám" />
+            <TextBlock Grid.Column="1" Classes="dt" Text="Ügyfél" />
+            <TextBlock Grid.Column="2" Classes="dt" Text="Várható" />
+            <TextBlock Grid.Column="3" Classes="dt" Text="Szállítólevél" />
+            <TextBlock Grid.Column="4" Classes="dt" Text="Várt db" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="5" Classes="dt" Text="Átvett db" TextAlignment="Right" Margin="0,6,8,0" />
+            <TextBlock Grid.Column="6" Classes="dt" Text="Állapot" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding LastInbounds}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="m:SummaryInbound">
+                <Border Classes="taskrow">
+                  <Grid ColumnDefinitions="150,*,120,*,90,90,140">
+                    <Button Classes="link" Command="{Binding $parent[local:PartnerSummaryView].((local:PartnerSummaryTab)DataContext).OpenInboundCommand}" CommandParameter="{Binding Id}" VerticalAlignment="Center"><TextBlock Classes="mono" Text="{Binding Number}" /></Button>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center"><TextBlock Text="{Binding ClientName}" TextTrimming="CharacterEllipsis" /><TextBlock Classes="muted small mono" Text="{Binding ClientCode}" /></StackPanel>
+                    <TextBlock Grid.Column="2" Text="{Binding ExpectedDate, Converter={x:Static local:PartnerFormat.DateText}}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Text="{Binding ExternalRef}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="4" Classes="mono" Text="{Binding ExpectedQty, Converter={x:Static local:PartnerFormat.Int}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="5" Classes="mono" Text="{Binding ReceivedQty, Converter={x:Static local:PartnerFormat.Int}}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <ctl:StatusTag Grid.Column="6" Group="inbound" Status="{Binding Status}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </StackPanel>
+  </Panel>
+</UserControl>

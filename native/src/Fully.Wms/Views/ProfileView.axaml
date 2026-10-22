@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Fully.Wms.ViewModels"
+             x:Class="Fully.Wms.Views.ProfileView"
+             x:DataType="vm:ProfileViewModel">
+  <ScrollViewer>
+    <StackPanel MaxWidth="560" Margin="16,20" Spacing="16" HorizontalAlignment="Stretch">
+      <Border Classes="card">
+        <StackPanel Spacing="14">
+          <TextBlock Classes="h2" Text="Adataim" />
+          <StackPanel>
+            <TextBlock Classes="label" Text="E-mail cím" />
+            <TextBlock Text="{Binding Email}" Classes="mono" />
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Classes="label" Text="Szerepkör" />
+            <TextBlock Text="{Binding RoleName}" />
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Classes="label" Text="Név" />
+            <TextBox Text="{Binding Name}" Classes.invalid="{Binding NameError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <TextBlock Classes="fielderror" Text="{Binding NameError}" IsVisible="{Binding NameError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Classes="label" Text="Telefonszám" />
+            <TextBox Text="{Binding Phone}" TextInputOptions.ContentType="Number" />
+          </StackPanel>
+          <WrapPanel>
+            <Button Classes="primary" Content="Mentés" Command="{Binding SaveCommand}" Margin="0,0,10,8" />
+            <Button Content="Jelszó módosítása" Command="{Binding ChangePasswordCommand}" Margin="0,0,10,8" />
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="14">
+          <TextBlock Classes="h2" Text="Ezen az eszközön" />
+          <StackPanel>
+            <TextBlock Classes="label" Text="Megjelenés" />
+            <ComboBox SelectedIndex="{Binding Theme}">
+              <ComboBoxItem Content="A rendszer beállítása szerint" />
+              <ComboBoxItem Content="Világos" />
+              <ComboBoxItem Content="Sötét" />
+            </ComboBox>
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Classes="label" Text="Szerver" />
+            <TextBlock Text="{Binding Server}" Classes="mono" />
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Classes="label" Text="Verzió" />
+            <TextBlock Text="{Binding Version}" Classes="mono" />
+          </StackPanel>
+          <Button Classes="danger" Content="Kijelentkezés" Command="{Binding Shell.LogoutCommand}" HorizontalAlignment="Left" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

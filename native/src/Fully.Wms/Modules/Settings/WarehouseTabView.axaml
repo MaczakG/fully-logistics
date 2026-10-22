@@ -1,0 +1,185 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Settings"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Settings.WarehouseTabView"
+             x:DataType="local:WarehouseTab">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <StackPanel Spacing="12">
+    <Border Classes="notice" IsVisible="{Binding ReadOnly}">
+      <TextBlock Text="Ezt a részt csak megtekintheted: a módosításhoz Beállítások módosítása jog kell." />
+    </Border>
+    <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <TextBlock Text="{Binding Error}" />
+    </Border>
+    <Border Classes="panel">
+      <StackPanel>
+        <UniformGrid Columns="4">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Napi rendelési határidő" />
+            <TextBox Text="{Binding Cutoff}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=cutoff}" />
+            <TextBlock Classes="muted small" Text="Az eddig beérkező rendeléseket még aznap feladjuk." Margin="0,4,0,0" TextWrapping="Wrap" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=cutoff}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=cutoff}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Nyitás (nem kötelező)" />
+            <TextBox Text="{Binding Open}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=open}" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=open}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=open}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Zárás (nem kötelező)" />
+            <TextBox Text="{Binding Close}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=close}" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=close}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=close}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Alapértelmezett futár" />
+            <ComboBox ItemsSource="{Binding CarrierChoices}" SelectedItem="{Binding DefaultCarrierCode}" HorizontalAlignment="Stretch" IsEnabled="{Binding CanEdit}">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Classes="muted small" Text="Akkor kerül a rendelésre, ha a forrás nem ad meg futárt." Margin="0,4,0,0" TextWrapping="Wrap" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=default_carrier_code}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=default_carrier_code}" />
+          </StackPanel>
+        </UniformGrid>
+        <TextBlock Classes="label" Text="Munkanapok" />
+        <ItemsControl ItemsSource="{Binding Days}">
+          <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:Workday">
+              <CheckBox Content="{Binding Name}" IsChecked="{Binding On}" Margin="0,0,16,0"
+                        IsEnabled="{Binding $parent[local:WarehouseTabView].((local:WarehouseTab)DataContext).CanEdit}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=workdays}"
+                   IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=workdays}" />
+      </StackPanel>
+    </Border>
+    <Button Classes="primary" HorizontalAlignment="Right" Command="{Binding SaveCommand}" IsVisible="{Binding CanEdit}">
+      <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheck}" /><TextBlock Text="Mentés" /></StackPanel>
+    </Button>
+
+    <Border Classes="panel">
+      <StackPanel Spacing="8">
+        <TextBlock Classes="section" Text="Költségkalkuláció" />
+        <TextBlock Classes="muted" TextWrapping="Wrap" Text="Az Ajánlatkészítő belső fedezetszámítása ezekből számolja ki, hány raktáros kell egy ajánlathoz, mekkora területet foglal az ügyfél áruja, és mennyi raktárbérleti díj esik rá. Új ajánlat ezekkel az értékekkel indul, a meglévő ajánlatok a saját értékeiket tartják meg." />
+        <Border Classes="notice danger" IsVisible="{Binding CostError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding CostError}" />
+        </Border>
+        <TextBlock Classes="label" Text="Raktár" FontWeight="Bold" />
+        <UniformGrid Columns="2">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Havi raktárbérleti díj (Ft, nettó)" />
+            <TextBox Classes="num" Text="{Binding Rent}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=rent}" />
+            <TextBlock Classes="fielderror" Text="{Binding CostErrors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=rent}"
+                       IsVisible="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=rent}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Bérelt alapterület (m²)" />
+            <TextBox Classes="num" Text="{Binding AreaM2}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=area_m2}" />
+            <TextBlock Classes="fielderror" Text="{Binding CostErrors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=area_m2}"
+                       IsVisible="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=area_m2}" />
+          </StackPanel>
+        </UniformGrid>
+        <TextBlock Classes="small" Text="{Binding RentPerM2Text}" />
+        <Grid ColumnDefinitions="*,120,90,90,100,110,150" Margin="10,0">
+          <TextBlock Classes="dt" Text="Méret" />
+          <TextBlock Grid.Column="1" Classes="dt" Text="Állvány + folyosó (m²)" TextWrapping="Wrap" />
+          <TextBlock Grid.Column="2" Classes="dt" Text="Szintek" />
+          <TextBlock Grid.Column="3" Classes="dt" Text="Hely / szint" />
+          <TextBlock Grid.Column="4" Classes="dt" Text="m² / hely" TextAlignment="Right" Margin="0,6,8,0" />
+          <TextBlock Grid.Column="5" Classes="dt" Text="Ennyi férne el" TextAlignment="Right" Margin="0,6,8,0" />
+          <TextBlock Grid.Column="6" Classes="dt" Text="Bérleti díj / hely / hó" TextAlignment="Right" Margin="0,6,8,0" TextWrapping="Wrap" />
+        </Grid>
+        <ItemsControl ItemsSource="{Binding Racks}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:RackRow">
+              <Border Classes="taskrow">
+                <Grid ColumnDefinitions="*,120,90,90,100,110,150" RowDefinitions="Auto,Auto">
+                  <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                  <TextBox Grid.Column="1" Classes="num" Text="{Binding Area}" Margin="0,0,8,0" IsReadOnly="{Binding $parent[local:WarehouseTabView].((local:WarehouseTab)DataContext).ReadOnly}"
+                           Classes.invalid="{Binding AreaError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  <TextBox Grid.Column="2" Classes="num" Text="{Binding Levels}" Margin="0,0,8,0" IsReadOnly="{Binding $parent[local:WarehouseTabView].((local:WarehouseTab)DataContext).ReadOnly}"
+                           Classes.invalid="{Binding LevelsError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  <TextBox Grid.Column="3" Classes="num" Text="{Binding PerLevel}" Margin="0,0,8,0" IsReadOnly="{Binding $parent[local:WarehouseTabView].((local:WarehouseTab)DataContext).ReadOnly}"
+                           Classes.invalid="{Binding PerLevelError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="6" Classes="fielderror" Text="{Binding Error}"
+                             IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  <TextBlock Grid.Column="4" Classes="mono" Text="{Binding M2Text}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="5" Classes="mono" Text="{Binding FitsText}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="6" Classes="mono" Text="{Binding RentText}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Classes="muted small" TextWrapping="Wrap" Text="Egy állványrekesz alapterülete a folyosó rá eső részével együtt (pl. 1 × 0,5 m-es polc és 0,6 m² folyosó: 1,1 m²), a polcszintek száma, és hány ilyen méretű hely van egy szinten. Az „Ennyi férne el” azt mutatja, hány ilyen hely férne el, ha a teljes alapterületen ilyen állványok állnának." />
+        <TextBlock Classes="label" Text="Munkaerő" FontWeight="Bold" Margin="0,8,0,0" />
+        <UniformGrid Columns="3">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Egy raktáros havi költsége (Ft)" />
+            <TextBox Classes="num" Text="{Binding WorkerCost}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=worker_cost}" />
+            <TextBlock Classes="muted small" Text="Bér és járulékok együtt." Margin="0,4,0,0" TextWrapping="Wrap" />
+            <TextBlock Classes="fielderror" Text="{Binding CostErrors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=worker_cost}"
+                       IsVisible="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=worker_cost}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Hasznos munkaóra / fő / hó" />
+            <TextBox Classes="num" Text="{Binding WorkerHours}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=worker_hours}" />
+            <TextBlock Classes="muted small" Text="Szabadság, szünet nélkül." Margin="0,4,0,0" TextWrapping="Wrap" />
+            <TextBlock Classes="fielderror" Text="{Binding CostErrors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=worker_hours}"
+                       IsVisible="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=worker_hours}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Rendelés kiszedése, csomagolása (perc)" />
+            <TextBox Classes="num" Text="{Binding MinOrder}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=min_order}" />
+            <TextBlock Classes="fielderror" Text="{Binding CostErrors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=min_order}"
+                       IsVisible="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=min_order}" />
+          </StackPanel>
+        </UniformGrid>
+        <UniformGrid Columns="3">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="További termék a rendelésben (perc)" />
+            <TextBox Classes="num" Text="{Binding MinItem}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=min_item}" />
+            <TextBlock Classes="fielderror" Text="{Binding CostErrors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=min_item}"
+                       IsVisible="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=min_item}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Betárolás (perc / db)" />
+            <TextBox Classes="num" Text="{Binding MinInbound}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=min_inbound}" />
+            <TextBlock Classes="fielderror" Text="{Binding CostErrors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=min_inbound}"
+                       IsVisible="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=min_inbound}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Visszáru (perc / csomag)" />
+            <TextBox Classes="num" Text="{Binding MinReturn}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=min_return}" />
+            <TextBlock Classes="fielderror" Text="{Binding CostErrors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=min_return}"
+                       IsVisible="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=min_return}" />
+          </StackPanel>
+        </UniformGrid>
+        <TextBlock Classes="label" Text="Anyag" FontWeight="Bold" />
+        <UniformGrid Columns="3">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Csomagolóanyag beszerzés / rendelés (Ft)" />
+            <TextBox Classes="num" Text="{Binding PackCost}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=pack_cost}" />
+            <TextBlock Classes="fielderror" Text="{Binding CostErrors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=pack_cost}"
+                       IsVisible="{Binding CostErrors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=pack_cost}" />
+          </StackPanel>
+          <Panel />
+          <Panel />
+        </UniformGrid>
+        <Button Classes="primary" HorizontalAlignment="Right" Command="{Binding SaveCostingCommand}" IsVisible="{Binding CanEdit}">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheck}" /><TextBlock Text="Költségkalkuláció mentése" /></StackPanel>
+        </Button>
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Inbound"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Inbound.InboundCompleteView"
+             x:DataType="local:InboundCompleteViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14" MaxWidth="760" HorizontalAlignment="Stretch">
+      <TextBlock TextWrapping="Wrap" IsVisible="{Binding !HasIssues}"
+                 Text="Minden tétel rendben: a várt mennyiség megérkezett, és minden darab polcra került. Lezárod?" />
+      <Border Classes="notice warn" IsVisible="{Binding HasIssues}">
+        <TextBlock Text="A betárolásban eltérés van. Lezárás után a polcra nem helyezett darabok nem kerülnek készletre, és az eltérés a jegyzőkönyvön is szerepel." />
+      </Border>
+      <ItemsControl ItemsSource="{Binding Issues}" IsVisible="{Binding HasIssues}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="m:InboundLine">
+            <Border Classes="card" Padding="12,8" Margin="0,0,0,6">
+              <StackPanel Spacing="2">
+                <TextBlock Text="{Binding Sku}" Classes="mono" FontWeight="Bold" />
+                <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
+                <TextBlock Classes="small mono" Text="{Binding Converter={x:Static local:InboundFormat.LineFigures}}" />
+                <TextBlock Classes="small" Foreground="{DynamicResource Warn}" FontWeight="Bold" TextWrapping="Wrap"
+                           Text="{Binding Converter={x:Static local:InboundCompleteFormat.Issue}}" />
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <StackPanel IsVisible="{Binding NeedsReason}">
+        <TextBlock Classes="label" Text="Az eltérés oka" />
+        <TextBox Text="{Binding Note}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80"
+                 Watermark="Pl. a beszállító kevesebbet hozott, a sérült zsákot visszaküldtük."
+                 Classes.invalid="{Binding NoteError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Classes="fielderror" Text="{Binding NoteError}" IsVisible="{Binding NoteError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      </StackPanel>
+      <Border Classes="notice danger" IsVisible="{Binding Blocked}">
+        <TextBlock Text="Eltéréssel csak jóváhagyási joggal zárhatod le. Kérd meg a raktárvezetőt, vagy rögzítsd a hiányzó darabokat." />
+      </Border>
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="{Binding SubmitText}" Command="{Binding SaveCommand}" IsVisible="{Binding CanSubmit}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -1,0 +1,127 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Counts"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Counts.CountsView"
+             x:DataType="local:CountsViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Counts/CountsStyles.axaml" />
+  </UserControl.Styles>
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Margin="16,16,16,6" Spacing="10">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Classes="muted" TextWrapping="Wrap" VerticalAlignment="Center" IsVisible="{Binding !IsCompact}"
+                   Text="Ciklikus, zóna, termék és teljes leltárak. Számlálás helyenként, kézi szkennerrel; az eltéréseket jóváhagyással könyveljük." />
+        <Button Grid.Column="1" Classes="primary" Margin="10,0,0,0" Command="{Binding NewCommand}" IsVisible="{Binding CanCreate}">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Új leltár" /></StackPanel>
+        </Button>
+      </Grid>
+
+      <ItemsControl ItemsSource="{Binding StatusTabs}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="local:CountTab">
+            <ToggleButton Classes="chip" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=OneWay}"
+                          Command="{Binding $parent[local:CountsView].((local:CountsViewModel)DataContext).SelectTabCommand}" CommandParameter="{Binding}" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <Grid ColumnDefinitions="Auto,*">
+        <ComboBox ItemsSource="{x:Static local:CountsViewModel.Types}" SelectedItem="{Binding Type}" Width="200" Margin="0,0,10,0">
+          <ComboBox.ItemTemplate><DataTemplate x:DataType="local:CountChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+        <TextBox Grid.Column="1" Text="{Binding Search}" PlaceholderText="Szám, hely, cikkszám vagy megjegyzés">
+          <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding ApplyCommand}" /></TextBox.KeyBindings>
+        </TextBox>
+      </Grid>
+    </StackPanel>
+
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="16,6,16,12">
+      <TextBlock Text="{Binding TotalText}" Classes="muted" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Továbbiak" Command="{Binding MoreCommand}" IsVisible="{Binding HasMore}" />
+    </Grid>
+
+    <Panel Margin="16,0">
+      <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
+        <TextBlock Text="{Binding EmptyText}" />
+      </Border>
+      <DataGrid ItemsSource="{Binding Items}" ctl:RowOpen.Item="{Binding Selected}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False" CanUserSortColumns="False">
+        <DataGrid.Columns>
+          <DataGridTemplateColumn Header="Szám" Width="170">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:CountRow">
+                <StackPanel Orientation="Horizontal" Spacing="6" Margin="10,0" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Number}" Classes="mono" FontWeight="Bold" VerticalAlignment="Center" />
+                  <Border Classes="tag" IsVisible="{Binding Blind}" ToolTip.Tip="Vak leltár: a raktárosok nem látják a nyilvántartott mennyiséget"><TextBlock Text="vak" /></Border>
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Típus" Width="*" MinWidth="200">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:CountRow">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Type, Converter={x:Static local:CountsFormat.Type}}" />
+                  <TextBlock Text="{Binding Scope}" Classes="muted small" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Állapot" Width="210">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:CountRow">
+                <ctl:StatusTag Group="count" Status="{Binding Status}" Margin="10,0" VerticalAlignment="Center" HorizontalAlignment="Left" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Haladás" Width="160">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:CountRow">
+                <StackPanel Margin="10,6" Spacing="4" VerticalAlignment="Center">
+                  <ProgressBar Classes="line" Classes.done="{Binding Converter={x:Static local:CountsFormat.RowDone}}" Value="{Binding Converter={x:Static local:CountsFormat.RowRatio}}" />
+                  <TextBlock Classes="small" Text="{Binding Converter={x:Static local:CountsFormat.RowProgress}}" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Eltérő tétel" Width="110">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:CountRow">
+                <TextBlock Margin="10,0" VerticalAlignment="Center" Text="{Binding Converter={x:Static local:CountsFormat.RowDiff}}" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Indította" Width="160">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:CountRow">
+                <TextBlock Margin="10,0" VerticalAlignment="Center" Classes="small" Text="{Binding Converter={x:Static local:CountsFormat.RowCreated}}" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+      <ListBox Classes="rows" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding IsCompact}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="m:CountRow">
+            <StackPanel Margin="14,10" Spacing="6">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <TextBlock Text="{Binding Number}" Classes="mono" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" />
+                  <Border Classes="tag" IsVisible="{Binding Blind}" VerticalAlignment="Center"><TextBlock Text="vak" /></Border>
+                </StackPanel>
+                <ctl:StatusTag Grid.Column="1" Group="count" Status="{Binding Status}" />
+              </Grid>
+              <TextBlock Text="{Binding Scope}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <ProgressBar Classes="line" Classes.done="{Binding Converter={x:Static local:CountsFormat.RowDone}}" Value="{Binding Converter={x:Static local:CountsFormat.RowRatio}}" />
+              <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding Converter={x:Static local:CountsFormat.RowCard}}" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Panel>
+  </DockPanel>
+</UserControl>

@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Orders"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Orders.SendToPickingView"
+             x:DataType="local:SendToPickingViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="12">
+      <Border Classes="notice" Classes.warn="{Binding !HasOk}"><TextBlock Text="{Binding OkText}" /></Border>
+      <Border Classes="notice warn" IsVisible="{Binding ShortText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"><TextBlock Text="{Binding ShortText}" /></Border>
+      <Border Classes="notice warn" IsVisible="{Binding NotNewText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"><TextBlock Text="{Binding NotNewText}" /></Border>
+      <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"><TextBlock Text="{Binding Error}" /></Border>
+      <Grid ColumnDefinitions="*,*" IsVisible="{Binding HasOk}">
+        <StackPanel Margin="0,0,8,0">
+          <TextBlock Classes="label" Text="Komissiós (nem kötelező)" />
+          <ComboBox ItemsSource="{Binding Users}" SelectedItem="{Binding Picker}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="local:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+        <StackPanel Grid.Column="1">
+          <TextBlock Classes="label" Text="Megjegyzés (nem kötelező)" />
+          <TextBox Text="{Binding Note}" />
+        </StackPanel>
+      </Grid>
+      <Button Classes="primary" HorizontalAlignment="Stretch" Command="{Binding SaveCommand}" IsVisible="{Binding HasOk}">
+        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPicking}" /><TextBlock Text="{Binding SubmitText}" /></StackPanel>
+      </Button>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

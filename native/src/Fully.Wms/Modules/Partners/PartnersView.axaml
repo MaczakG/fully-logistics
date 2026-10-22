@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Partners"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Partners.PartnersView"
+             x:DataType="local:PartnersViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Margin="16,16,16,6" Spacing="10">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Classes="muted" TextWrapping="Wrap" VerticalAlignment="Center"
+                   Text="Ügyfelek, fuvarozók és beszállítók: cégadatok, kapcsolattartók, szerződések, tarifák és integrációk." />
+        <Button Grid.Column="1" Classes="primary" Margin="10,0,0,0" Command="{Binding NewCommand}" IsVisible="{Binding CanCreate}">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Új partner" /></StackPanel>
+        </Button>
+      </Grid>
+
+      <ItemsControl ItemsSource="{Binding TypeTabs}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="o:OrderTab">
+            <ToggleButton Classes="chip" Content="{Binding Text}" IsChecked="{Binding IsSelected, Mode=OneWay}"
+                          Command="{Binding $parent[local:PartnersView].((local:PartnersViewModel)DataContext).SelectTabCommand}" CommandParameter="{Binding}" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <Grid ColumnDefinitions="*,Auto,180">
+        <TextBox Text="{Binding Search}" PlaceholderText="Név, kód, adószám, település vagy e-mail">
+          <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding ApplyCommand}" /></TextBox.KeyBindings>
+        </TextBox>
+        <Button Grid.Column="1" Margin="8,0" Command="{Binding ApplyCommand}" ToolTip.Tip="Keresés">
+          <PathIcon Data="{StaticResource IconSearch}" />
+        </Button>
+        <ComboBox Grid.Column="2" ItemsSource="{x:Static local:PartnersViewModel.Statuses}" SelectedItem="{Binding Status}">
+          <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+      </Grid>
+    </StackPanel>
+
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="16,6,16,12">
+      <TextBlock Text="{Binding TotalText}" Classes="muted" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Továbbiak" Command="{Binding MoreCommand}" IsVisible="{Binding HasMore}" />
+    </Grid>
+
+    <Panel Margin="16,0">
+      <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
+        <TextBlock Text="{Binding EmptyText}" />
+      </Border>
+      <DataGrid ItemsSource="{Binding Items}" ctl:RowOpen.Item="{Binding Selected}" AutoGenerateColumns="False" CanUserSortColumns="False"
+                IsVisible="{Binding !IsEmpty}">
+        <DataGrid.Columns>
+          <DataGridTemplateColumn Header="Kód" Width="150">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:PartnerRowItem">
+                <TextBlock Margin="10,6" VerticalAlignment="Center" Classes="mono" FontWeight="Bold" Text="{Binding Row.Code}" TextTrimming="CharacterEllipsis" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Név" Width="*" MinWidth="200">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:PartnerRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Row.Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Text="{Binding Place}" Classes="muted small" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Típus" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:PartnerRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center" Spacing="2">
+                  <Border Classes="tag" HorizontalAlignment="Left"><TextBlock Text="{Binding TypeText}" /></Border>
+                  <TextBlock Text="{Binding CarrierText}" Classes="muted small" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Adószám" Width="140">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:PartnerRowItem">
+                <TextBlock Margin="10,6" VerticalAlignment="Center" Classes="mono" Text="{Binding Row.TaxNumber}" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Kapcsolattartó" Width="260">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:PartnerRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding ContactText}" Classes.muted="{Binding NoContact}" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Text="{Binding ContactSub}" Classes="muted small" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Állapot" Width="100">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:PartnerRowItem">
+                <ctl:StatusTag Margin="10,6" Group="partner" Status="{Binding Row.Status}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+    </Panel>
+  </DockPanel>
+</UserControl>
