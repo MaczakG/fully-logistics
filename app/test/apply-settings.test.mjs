@@ -74,6 +74,23 @@ test('tariffs and costing through the API, with the changes listed and logged', 
   assert.deepEqual(c2.racks.M, { area: 1.1, levels: 6, per_level: 2 });
 });
 
+test('location sizes: inner dimensions and maximum weight by code', async () => {
+  const logs = [];
+  const changes = await applySettings({
+    worker, env, adminId, log: (m) => logs.push(m),
+    payload: { sizes: { L: { width_cm: 50, depth_cm: 50, height_cm: 60, max_kg: 125 }, PAL: { width_cm: 120, depth_cm: 80, height_cm: 150, max_kg: 1000, name: 'nem változik' } } },
+  });
+  const rows = (await DB.prepare("SELECT code, name, width_cm, depth_cm, height_cm, max_kg FROM location_sizes WHERE code IN ('L', 'PAL') ORDER BY code").all()).results;
+  assert.deepEqual(rows.map((r) => ({ ...r })), [
+    { code: 'L', name: 'Polchely L', width_cm: 50, depth_cm: 50, height_cm: 60, max_kg: 125 },
+    { code: 'PAL', name: 'Raklaphely', width_cm: 120, depth_cm: 80, height_cm: 150, max_kg: 1000 },
+  ]);
+  assert.deepEqual(changes.sizes.find((c) => c.field === 'L.height_cm'), { field: 'L.height_cm', before: null, after: 60 });
+  assert.ok(logs.includes('  PAL.max_kg: nincs -> 1000'), logs.join('\n'));
+  await assert.rejects(applySettings({ worker, env, adminId, log: () => {}, payload: { sizes: { XXL: { width_cm: 1 } } } }), /Ismeretlen helyméret: XXL/);
+  await assert.rejects(applySettings({ worker, env, adminId, log: () => {}, payload: { sizes: { L: { width_cm: -5 } } } }), /400/);
+});
+
 test('unknown parts, an empty package and invalid values are refused', async () => {
   await assert.rejects(applySettings({ worker, env, adminId, log: () => {}, payload: { users: {} } }), /Ismeretlen beállítás: users/);
   await assert.rejects(applySettings({ worker, env, adminId, log: () => {}, payload: {} }), /Üres a beállításcsomag/);

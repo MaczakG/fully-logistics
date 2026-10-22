@@ -88,7 +88,7 @@ node deploy/aws/task.mjs demo-remove   # törlés; a valódi adatokhoz nem nyúl
 
 ### Beállítások böngésző nélkül
 
-Az alap tarifák és a költségkalkuláció egy JSON fájlból is beírhatók:
+Az alap tarifák, a költségkalkuláció és a helyméretek egy JSON fájlból is beírhatók:
 
 ```bash
 node deploy/aws/task.mjs settings beallitasok.json
@@ -96,8 +96,11 @@ node deploy/aws/task.mjs settings beallitasok.json
 
 ```json
 { "tariffs": { "values": { "cod_fixed": 190, "cod_pct": 1.5 }, "storage": { "PAL": 3990 } },
-  "costing": { "pack_cost": 90, "racks": { "M": { "levels": 5 } } } }
+  "costing": { "pack_cost": 90, "racks": { "M": { "levels": 5 } } },
+  "sizes": { "L": { "width_cm": 50, "depth_cm": 50, "height_cm": 60, "max_kg": 125 } } }
 ```
+
+A `sizes` rész a meglévő helyméretek belső méreteit és teherbírását írja át, méretkód szerint.
 
 Csak a megadott mezők változnak. A szerver az alkalmazás saját felületén keresztül menti őket, az első aktív adminisztrátor nevében. Ugyanaz az ellenőrzés érvényes, mint a Beállítások oldalon, és a változás a Naplóba is bekerül. A parancs kiírja, mi mire változott.
 

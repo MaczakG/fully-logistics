@@ -7,7 +7,9 @@
 //
 // payload, every part optional:
 //   { "tariffs": { "values": { "order_base": 600, ... }, "storage": { "M": 780, ... } },
-//     "costing": { "rent": 3300000, "racks": { "M": { "area": 1.1, ... } }, ... } }
+//     "costing": { "rent": 3300000, "racks": { "M": { "area": 1.1, ... } }, ... },
+//     "sizes": { "L": { "width_cm": 50, "depth_cm": 50, "height_cm": 60, "max_kg": 125 }, ... } }
+// sizes: inner dimensions and maximum weight of existing location sizes, by code.
 //
 // DB_PATH and the other settings come from the environment (server/config.mjs).
 
@@ -16,21 +18,46 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { first } from '../worker/lib/db.js';
 import { openApi } from './demo-seed.mjs';
 
-// body: what is sent, from the current values and the payload. The tariffs endpoint keeps what it
-// is not given; the costing endpoint saves the whole set, so the payload goes over the current one.
+// run(api, given) saves one part and answers { before, after } (the part's values as they were and
+// are). The tariffs endpoint keeps what it is not given; the costing endpoint saves the whole set,
+// so the payload goes over the current one; sizes are saved one by one.
+const SIZE_KEYS = ['width_cm', 'depth_cm', 'height_cm', 'max_kg'];
 export const PARTS = {
   tariffs: {
-    path: '/api/settings/tariffs', name: 'Alap tarifák',
-    pick: (s) => ({ values: s.values, storage: s.storage }),
-    body: (current, given) => given,
+    name: 'Alap tarifák',
+    async run(api, given) {
+      const pick = (s) => ({ values: s.values, storage: s.storage });
+      const before = pick(await api.get('/api/settings/tariffs'));
+      return { before, after: pick(await api.put('/api/settings/tariffs', given)) };
+    },
   },
   costing: {
-    path: '/api/settings/costing', name: 'Költségkalkuláció',
-    pick: ({ sizes, ...c }) => c,
-    body: (current, given) => {
-      const racks = { ...current.racks };
+    name: 'Költségkalkuláció',
+    async run(api, given) {
+      const pick = ({ sizes, ...c }) => c;
+      const before = pick(await api.get('/api/settings/costing'));
+      const racks = { ...before.racks };
       for (const [code, r] of Object.entries((given && given.racks) || {})) racks[code] = { ...racks[code], ...r };
-      return { ...current, ...given, racks };
+      return { before, after: pick(await api.put('/api/settings/costing', { ...before, ...given, racks })) };
+    },
+  },
+  sizes: {
+    name: 'Helyméretek',
+    async run(api, given) {
+      const list = (await api.get('/api/settings/sizes')).items;
+      const entries = Object.entries(given && typeof given === 'object' ? given : {});
+      const unknown = entries.map(([code]) => code).filter((code) => !list.some((z) => z.code === code));
+      if (unknown.length) throw new Error(`Ismeretlen helyméret: ${unknown.join(', ')}.`);
+      const before = {};
+      const after = {};
+      for (const [code, fields] of entries) {
+        const z = list.find((x) => x.code === code);
+        const body = Object.fromEntries(SIZE_KEYS.filter((k) => fields && k in fields).map((k) => [k, fields[k]]));
+        before[code] = Object.fromEntries(SIZE_KEYS.map((k) => [k, z[k]]));
+        const saved = await api.patch(`/api/settings/sizes/${z.id}`, body);
+        after[code] = Object.fromEntries(SIZE_KEYS.map((k) => [k, saved[k]]));
+      }
+      return { before, after };
     },
   },
 };
@@ -55,9 +82,9 @@ export async function applySettings({ worker, env, adminId, payload, log = conso
   try {
     for (const k of keys) {
       const part = PARTS[k];
-      const current = part.pick(await api.get(part.path));
-      const before = flat(current);
-      const after = flat(part.pick(await api.put(part.path, part.body(current, p[k]))));
+      const res = await part.run(api, p[k]);
+      const before = flat(res.before);
+      const after = flat(res.after);
       changes[k] = Object.keys(after).filter((f) => JSON.stringify(before[f]) !== JSON.stringify(after[f]))
         .map((f) => ({ field: f, before: before[f] ?? null, after: after[f] }));
       log(`${part.name}: ${changes[k].length ? `${changes[k].length} változás` : 'nem változott semmi'}`);

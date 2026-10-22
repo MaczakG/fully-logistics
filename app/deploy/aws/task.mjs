@@ -6,7 +6,8 @@
 //   node deploy/aws/task.mjs backup        a database backup to the bucket now
 //   node deploy/aws/task.mjs settings beallitasok.json
 //                                          settings through the app's API (server/apply-settings.mjs):
-//                                          { "tariffs": { "values": {...}, "storage": {...} }, "costing": {...} }
+//                                          { "tariffs": { "values": {...}, "storage": {...} }, "costing": {...},
+//                                            "sizes": { "L": { "width_cm": 50, ... } } }
 
 import { readFileSync } from 'node:fs';
 import { awsFromEnv, deployBucket, log, randomToken, readConfig, sleep } from './lib.mjs';
