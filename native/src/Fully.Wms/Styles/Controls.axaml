@@ -87,6 +87,10 @@
     <Setter Property="Background" Value="{DynamicResource Ink}" />
     <Setter Property="Foreground" Value="{DynamicResource Paper}" />
   </Style>
+  <!-- Text set inside a dark button (an icon with a label) keeps the button's light colour -->
+  <Style Selector="Button.dark TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource Paper}" />
+  </Style>
   <Style Selector="Button.dark:pointerover /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource Ink2}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Ink2}" />

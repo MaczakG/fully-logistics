@@ -147,6 +147,13 @@ public sealed partial class ShellViewModel : ViewModelBase
         await home.ReloadAsync();
     }
 
+    // After a change of the signed-in user's own name, role or permissions: the menu follows.
+    public async Task RefreshMeAsync()
+    {
+        Me = await Services.Api.GetAsync<Me>("api/me");
+        BuildMenu();
+    }
+
     public void SignedOut(string? message)
     {
         Presenter?.CloseAll();

@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Users"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Users.UserFormView"
+             x:DataType="local:UserFormViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="10">
+      <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding Error}" />
+      </Border>
+      <Border Classes="notice" IsVisible="{Binding IsNew}">
+        <TextBlock Text="Mentés után egy ideiglenes jelszót mutatunk, egyszer. Első belépéskor a munkatársnak saját jelszót kell beállítania." />
+      </Border>
+      <Border Classes="notice" IsVisible="{Binding LockedNote}"><TextBlock Text="Adminisztrátor fiókját csak adminisztrátor módosíthatja." /></Border>
+      <UniformGrid Columns="2">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Név" />
+            <TextBox Text="{Binding Name}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=name}" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=name}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=name}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="E-mail cím" />
+            <TextBox Text="{Binding Email}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=email}" />
+            <TextBlock Classes="muted small" Text="Ezzel lép be." Margin="0,4,0,0" TextWrapping="Wrap" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=email}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=email}" />
+          </StackPanel>
+      </UniformGrid>
+      <UniformGrid Columns="2">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Telefon (nem kötelező)" />
+            <TextBox Text="{Binding Phone}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=phone}" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=phone}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=phone}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Szerepkör" />
+            <ComboBox ItemsSource="{Binding Roles}" SelectedItem="{Binding Role}" HorizontalAlignment="Stretch" IsEnabled="{Binding CanSave}">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=role_id}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=role_id}" />
+          </StackPanel>
+      </UniformGrid>
+      <StackPanel IsVisible="{Binding !IsNew}">
+        <CheckBox Content="Aktív, beléphet" IsChecked="{Binding Active}" IsEnabled="{Binding CanToggleActive}" />
+        <TextBlock Classes="muted small" Text="{Binding ActiveHint}" TextWrapping="Wrap" Margin="0,4,0,0" />
+      </StackPanel>
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="{Binding SubmitText}" Command="{Binding SaveCommand}" IsVisible="{Binding CanSave}" />
+
+      <UniformGrid Columns="2" IsVisible="{Binding !IsNew}" Margin="0,8,0,0">
+        <StackPanel Spacing="6" Margin="0,0,12,0">
+          <TextBlock Classes="section" Text="Bejelentkezések" />
+          <TextBlock Classes="muted small" Text="Nincs aktív munkamenete." IsVisible="{Binding NoSessions}" />
+          <ItemsControl ItemsSource="{Binding Sessions}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="m:UserSession">
+                <StackPanel Margin="0,0,0,6">
+                  <TextBlock FontWeight="SemiBold" Text="{Binding LastSeenAt, Converter={x:Static local:UserFormat.DateTime}}" />
+                  <TextBlock Classes="muted small" Text="{Binding Converter={x:Static local:UserFormat.Device}}" TextWrapping="Wrap" />
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock Classes="muted small" Text="{Binding MoreSessions}" IsVisible="{Binding MoreSessions, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <TextBlock Classes="muted small" Text="{Binding LoginText}" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Spacing="6">
+          <TextBlock Classes="section" Text="Legutóbbi tevékenység" />
+          <TextBlock Classes="muted small" Text="Még nincs rögzített tevékenysége." IsVisible="{Binding NoActivity}" />
+          <ItemsControl ItemsSource="{Binding Activity}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="m:UserActivity">
+                <StackPanel Margin="0,0,0,6">
+                  <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" />
+                  <TextBlock Classes="muted small" Text="{Binding At, Converter={x:Static local:UserFormat.DateTime}}" />
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </UniformGrid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
