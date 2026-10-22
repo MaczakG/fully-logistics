@@ -180,9 +180,9 @@
             <Grid ColumnDefinitions="110,*,70,100,90,100" Margin="10,8">
               <TextBlock Classes="dt" Text="Hely" />
               <TextBlock Grid.Column="1" Classes="dt" Text="Termék" />
-              <TextBlock Grid.Column="2" Classes="dt" Text="Kell" TextAlignment="Right" />
-              <TextBlock Grid.Column="3" Classes="dt" Text="Kiszedve" TextAlignment="Right" />
-              <TextBlock Grid.Column="4" Classes="dt" Text="Állapot" Margin="12,0,0,0" />
+              <TextBlock Grid.Column="2" Classes="dt" Text="Kell" TextAlignment="Right" Margin="0,6,0,0" />
+              <TextBlock Grid.Column="3" Classes="dt" Text="Kiszedve" TextAlignment="Right" Margin="0,6,0,0" />
+              <TextBlock Grid.Column="4" Classes="dt" Text="Állapot" Margin="12,6,0,0" />
             </Grid>
             <ItemsControl ItemsSource="{Binding Tasks}">
               <ItemsControl.ItemTemplate>
@@ -243,8 +243,8 @@
               <TextBlock Classes="dt" Text="Rendelés" />
               <TextBlock Grid.Column="1" Classes="dt" Text="Vevő" />
               <TextBlock Grid.Column="2" Classes="dt" Text="Fuvarozó" />
-              <TextBlock Grid.Column="3" Classes="dt" Text="Kiszedve" TextAlignment="Right" />
-              <TextBlock Grid.Column="4" Classes="dt" Text="Állapot" Margin="12,0,0,0" />
+              <TextBlock Grid.Column="3" Classes="dt" Text="Kiszedve" TextAlignment="Right" Margin="0,6,0,0" />
+              <TextBlock Grid.Column="4" Classes="dt" Text="Állapot" Margin="12,6,0,0" />
               <TextBlock Grid.Column="5" Classes="dt" Text="Csomagolás" />
             </Grid>
             <ItemsControl ItemsSource="{Binding OrdersInWave}">

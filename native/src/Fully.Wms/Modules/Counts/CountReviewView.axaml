@@ -1,0 +1,167 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Counts"
+             x:Class="Fully.Wms.Modules.Counts.CountReviewView"
+             x:DataType="local:CountReviewViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Counts/CountsStyles.axaml" />
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="12">
+      <Border Classes="notice warn" IsVisible="{Binding !CanApprove}">
+        <TextBlock Text="Az eltérések könyveléséhez jóváhagyási jog kell." />
+      </Border>
+      <StackPanel Spacing="12" IsVisible="{Binding Data, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Classes="muted" Text="{Binding Lead}" TextWrapping="Wrap" VerticalAlignment="Center" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,0,0">
+            <Button Command="{Binding PrintCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPrinter}" /><TextBlock Text="Leltárív" /></StackPanel>
+            </Button>
+            <Button Classes="primary" Command="{Binding PostCommand}" IsVisible="{Binding Postable}" IsEnabled="{Binding CanPost}">
+              <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheckCircle}" /><TextBlock Text="Eltérések könyvelése" /></StackPanel>
+            </Button>
+          </StackPanel>
+        </Grid>
+        <Border Classes="notice" Classes.ok="{Binding StatusTone, Converter={x:Static local:CountsFormat.IsOk}}"
+                IsVisible="{Binding StatusNotice, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding StatusNotice}" />
+        </Border>
+
+        <!-- Key figures -->
+        <UniformGrid Columns="{Binding IsCompact, Converter={x:Static local:CountsFormat.KpiColumns}}">
+          <Border Classes="kpi" Margin="0,0,8,8">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Számolt tétel" />
+              <TextBlock Classes="kpivalue" Text="{Binding CountedText}" />
+              <TextBlock Classes="kpihint" Text="{Binding CountedHint}" />
+            </StackPanel>
+          </Border>
+          <Border Classes="kpi" Margin="0,0,8,8">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Egyezik" />
+              <TextBlock Classes="kpivalue" Text="{Binding Summary.Matching, Converter={x:Static local:CountsFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text=" " />
+            </StackPanel>
+          </Border>
+          <Border Classes="kpi" Classes.ok="{Binding Summary.Surplus, Converter={x:Static local:CountsFormat.Positive}, FallbackValue={x:False}}" Margin="0,0,8,8">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Többlet" />
+              <TextBlock Classes="kpivalue" Text="{Binding Summary.Surplus, Converter={x:Static local:CountsFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text="{Binding SurplusHint}" />
+            </StackPanel>
+          </Border>
+          <Border Classes="kpi" Classes.danger="{Binding Summary.Shortage, Converter={x:Static local:CountsFormat.Positive}, FallbackValue={x:False}}" Margin="0,0,8,8">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Hiány" />
+              <TextBlock Classes="kpivalue" Text="{Binding Summary.Shortage, Converter={x:Static local:CountsFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text="{Binding ShortageHint}" />
+            </StackPanel>
+          </Border>
+          <Border Classes="kpi" Classes.warn="{Binding Summary.Changed, Converter={x:Static local:CountsFormat.Positive}, FallbackValue={x:False}}" Margin="0,0,8,8">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Változott készlet" />
+              <TextBlock Classes="kpivalue" Text="{Binding Summary.Changed, Converter={x:Static local:CountsFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text="mozgás a leltár indítása óta" />
+            </StackPanel>
+          </Border>
+        </UniformGrid>
+
+        <Border Classes="notice warn" IsVisible="{Binding ChangedNotice, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding ChangedNotice}" />
+        </Border>
+        <CheckBox Content="Csak az eltérések és a változott tételek" IsChecked="{Binding OnlyDiff}" />
+        <Border Classes="notice ok" IsVisible="{Binding !HasGroups}">
+          <TextBlock Text="{Binding EmptyText}" />
+        </Border>
+
+        <!-- Differences by location -->
+        <Border Classes="panel" Padding="0" IsVisible="{Binding HasGroups}">
+          <StackPanel>
+            <Grid ColumnDefinitions="*,180,70,70,70,100,130" Margin="10,8" IsVisible="{Binding !IsCompact}">
+              <TextBlock Classes="dt" Text="Termék" />
+              <TextBlock Grid.Column="1" Classes="dt" Text="Lot · lejárat" />
+              <TextBlock Grid.Column="2" Classes="dt" Text="Várható" TextAlignment="Right" Margin="0,6,0,0" />
+              <TextBlock Grid.Column="3" Classes="dt" Text="Számolt" TextAlignment="Right" Margin="0,6,0,0" />
+              <TextBlock Grid.Column="4" Classes="dt" Text="Eltérés" TextAlignment="Right" Margin="0,6,0,0" />
+              <TextBlock Grid.Column="5" Classes="dt" Text="Készlet most" TextAlignment="Right" Margin="0,6,0,0" />
+              <TextBlock Grid.Column="6" Classes="dt" Text="Döntés" Margin="12,6,0,0" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding Groups}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="local:ReviewGroup">
+                  <StackPanel>
+                    <Border Classes="grouphead">
+                      <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                          <TextBlock Classes="mono" FontWeight="Bold" Text="{Binding Code}" />
+                          <TextBlock Classes="muted small" Text="{Binding ZoneText}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Command="{Binding RecountCommand}" IsVisible="{Binding CanRecount}">
+                          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconRefresh}" /><TextBlock Text="Újraszámolás" /></StackPanel>
+                        </Button>
+                      </Grid>
+                    </Border>
+                    <ItemsControl ItemsSource="{Binding Lines}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="local:ReviewLineItem">
+                          <Border Classes="taskrow" Classes.changed="{Binding Line.Changed}" Classes.surplus="{Binding IsSurplus}" Classes.shortage="{Binding IsShortage}">
+                            <Panel>
+                              <TextBlock Classes="muted" Text="{Binding EmptyText}" IsVisible="{Binding IsEmptyLine}" />
+                              <Grid ColumnDefinitions="*,180,70,70,70,100,130">
+                                <Grid.IsVisible>
+                                  <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="IsProduct" />
+                                    <Binding Path="!$parent[local:CountReviewView].((local:CountReviewViewModel)DataContext).IsCompact" />
+                                  </MultiBinding>
+                                </Grid.IsVisible>
+                                <StackPanel VerticalAlignment="Center">
+                                  <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Classes="mono" Text="{Binding Line.Sku}" />
+                                    <Border Classes="tag warn" IsVisible="{Binding Line.Added}"><TextBlock Text="talált" /></Border>
+                                  </StackPanel>
+                                  <TextBlock Classes="muted small" Text="{Binding Line.Name}" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Classes="small mono" Text="{Binding Line.LotText}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                <TextBlock Grid.Column="2" Classes="mono" Text="{Binding ExpectedText}" TextAlignment="Right" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="3" Classes="mono" Classes.muted="{Binding NotCounted}" Text="{Binding CountedText}" TextAlignment="Right" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="4" Classes="mono" FontWeight="Bold" Classes.pos="{Binding IsSurplus}" Classes.neg="{Binding IsShortage}"
+                                           Text="{Binding DiffText}" TextAlignment="Right" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="5" Classes="mono" FontWeight="Bold" Text="{Binding CurrentText}" TextAlignment="Right" VerticalAlignment="Center" />
+                                <Panel Grid.Column="6" Margin="12,0,0,0" VerticalAlignment="Center">
+                                  <Border Classes="tag ok" HorizontalAlignment="Left" IsVisible="{Binding ShowPosted}"><TextBlock Text="könyvelve" /></Border>
+                                  <CheckBox Content="Könyvelhető" IsChecked="{Binding Confirmed}" IsVisible="{Binding ShowConfirm}" />
+                                  <TextBlock Classes="small" Text="változott" IsVisible="{Binding ShowChanged}" />
+                                </Panel>
+                              </Grid>
+                              <StackPanel Spacing="2">
+                                <StackPanel.IsVisible>
+                                  <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="IsProduct" />
+                                    <Binding Path="$parent[local:CountReviewView].((local:CountReviewViewModel)DataContext).IsCompact" />
+                                  </MultiBinding>
+                                </StackPanel.IsVisible>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                  <TextBlock Classes="mono" FontWeight="SemiBold" Text="{Binding Line.Sku}" />
+                                  <Border Classes="tag warn" IsVisible="{Binding Line.Added}"><TextBlock Text="talált" /></Border>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Line.Name}" TextWrapping="Wrap" />
+                                <TextBlock Classes="muted small" Text="{Binding CardLine}" TextWrapping="Wrap" />
+                                <Border Classes="tag ok" HorizontalAlignment="Left" IsVisible="{Binding ShowPosted}"><TextBlock Text="könyvelve" /></Border>
+                                <CheckBox Content="Könyvelhető" IsChecked="{Binding Confirmed}" IsVisible="{Binding ShowConfirm}" />
+                              </StackPanel>
+                            </Panel>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
