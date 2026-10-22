@@ -52,7 +52,7 @@
           </StackPanel>
           <StackPanel Margin="0,0,10,8" Width="200">
             <TextBlock Classes="label" Text="Típus" />
-            <ComboBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding Kind}" PlaceholderText="Tárolóhely">
+            <ComboBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding LocationKind}" PlaceholderText="Tárolóhely">
               <ComboBox.ItemTemplate><DataTemplate x:DataType="local:KindChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
             </ComboBox>
           </StackPanel>

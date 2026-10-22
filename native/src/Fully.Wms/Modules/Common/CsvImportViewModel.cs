@@ -15,8 +15,8 @@ namespace Fully.Wms.Modules.Common;
 // expected columns can be saved. Desktop only (needs a file picker).
 public sealed partial class CsvImportViewModel(ShellViewModel shell, CsvImportOptions options) : PageViewModel(shell)
 {
-    public override string Title => options.Title;
-    public override string? Module => options.Module;
+    public override string Title => Options.Title;
+    public override string? Module => Options.Module;
     public override PageKind Kind => PageKind.Dialog;
     public override double DialogWidth => 900;
     public CsvImportOptions Options { get; } = options;

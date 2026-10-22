@@ -103,6 +103,18 @@
     <Setter Property="Foreground" Value="{DynamicResource Danger}" />
   </Style>
 
+  <!-- The answer of a dangerous question (delete, cancel): red, white text -->
+  <Style Selector="Button.primary.danger">
+    <Setter Property="Background" Value="{DynamicResource Danger}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
+    <Setter Property="Foreground" Value="{DynamicResource Paper}" />
+  </Style>
+  <Style Selector="Button.primary.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Danger}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ink}" />
+    <Setter Property="Foreground" Value="{DynamicResource Paper}" />
+  </Style>
+
   <Style Selector="Button.ghost">
     <Setter Property="BorderBrush" Value="Transparent" />
   </Style>

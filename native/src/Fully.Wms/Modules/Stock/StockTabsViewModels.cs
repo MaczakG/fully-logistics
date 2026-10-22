@@ -32,7 +32,7 @@ public sealed partial class LocationsViewModel(ShellViewModel shell) : ListPageV
 {
     public override string Title => "Raktárhelyek";
     public override string? Module => "stock";
-    protected new const int PageSize = 100;
+    private new const int PageSize = 100;
 
     public static readonly (string Key, string Label)[] States = [("", "Mind"), ("empty", "Üres"), ("occupied", "Foglalt")];
     public IReadOnlyList<string> StateLabels { get; } = States.Select((s) => s.Label).ToList();
@@ -47,7 +47,7 @@ public sealed partial class LocationsViewModel(ShellViewModel shell) : ListPageV
     public partial PartnerLookup? Partner { get; set; }
 
     [ObservableProperty]
-    public partial KindChoice? Kind { get; set; }
+    public partial KindChoice? LocationKind { get; set; }
 
     [ObservableProperty]
     public partial List<PartnerLookup> Partners { get; set; } = [];
@@ -69,7 +69,7 @@ public sealed partial class LocationsViewModel(ShellViewModel shell) : ListPageV
     }
 
     protected override string ListPath() => Query.Build("api/stock/locations", ("q", Search.Trim()), ("state", States[StateIndex].Key),
-        ("size_id", Size?.Id), ("partner_id", Partner?.Id), ("kind", Kind?.Key ?? "storage"));
+        ("size_id", Size?.Id), ("partner_id", Partner?.Id), ("kind", LocationKind?.Key ?? "storage"));
 
     protected override async Task<(IReadOnlyList<LocationRow> Items, int Total)> FetchAsync(int offset)
     {
@@ -95,7 +95,7 @@ public sealed partial class LocationsViewModel(ShellViewModel shell) : ListPageV
         StateIndex = 0;
         Size = null;
         Partner = null;
-        Kind = null;
+        LocationKind = null;
         return ReloadAsync();
     }
 
@@ -121,7 +121,7 @@ public sealed partial class MovementsViewModel : ListPageViewModel<Movement>
 
     public override string Title => "Készletmozgások";
     public override string? Module => "stock";
-    protected new const int PageSize = 100;
+    private new const int PageSize = 100;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasProduct))]

@@ -96,10 +96,21 @@ public sealed class WindowPresenter(ShellViewModel shell, Window main) : IPagePr
         return true;
     }
 
+    // The message box being shown, if any.
+    public MessageWindow? Message { get; private set; }
+
     public async Task<bool> ConfirmAsync(DialogViewModel dialog)
     {
         var box = new MessageWindow(dialog);
-        await box.ShowDialog(Top);
+        Message = box;
+        try
+        {
+            await box.ShowDialog(Top);
+        }
+        finally
+        {
+            Message = null;
+        }
         return await dialog.Result;
     }
 

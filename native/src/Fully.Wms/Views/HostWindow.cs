@@ -15,7 +15,7 @@ public sealed class HostWindow : Window
     public HostWindow(PageViewModel page, bool dialog)
     {
         Page = page;
-        IsDialog = dialog;
+        ForDialog = dialog;
         DataContext = page;
         Content = new PageHost { DataContext = page };
         Icon = AppIcon;
@@ -42,7 +42,7 @@ public sealed class HostWindow : Window
     }
 
     public PageViewModel Page { get; }
-    public bool IsDialog { get; }
+    public bool ForDialog { get; }
 
     static WindowIcon? AppIcon => icon ??= LoadIcon();
     static WindowIcon? icon;
@@ -53,7 +53,7 @@ public sealed class HostWindow : Window
         catch (Exception e) when (e is FileNotFoundException or InvalidOperationException) { return null; }
     }
 
-    void UpdateTitle() => Title = IsDialog ? Page.Title : $"{Page.Title} · Fully WMS";
+    void UpdateTitle() => Title = ForDialog ? Page.Title : $"{Page.Title} · Fully WMS";
 
     // The dialog is never taller than the screen it opens on; its page scrolls.
     protected override void OnOpened(EventArgs e)
@@ -63,7 +63,7 @@ public sealed class HostWindow : Window
         {
             var area = screen.WorkingArea.Size.ToSize(screen.Scaling);
             MaxHeight = area.Height * 0.9;
-            if (!IsDialog)
+            if (!ForDialog)
             {
                 Width = Math.Min(Width, area.Width * 0.92);
                 Height = Math.Min(Height, area.Height * 0.9);
@@ -75,12 +75,12 @@ public sealed class HostWindow : Window
     {
         base.OnKeyDown(e);
         if (e.Handled) return;
-        if (e.Key == Key.Escape && IsDialog)
+        if (e.Key == Key.Escape && ForDialog)
         {
             e.Handled = true;
             Close();
         }
-        else if (e.Key == Key.W && e.KeyModifiers.HasFlag(KeyModifiers.Control) && !IsDialog)
+        else if (e.Key == Key.W && e.KeyModifiers.HasFlag(KeyModifiers.Control) && !ForDialog)
         {
             e.Handled = true;
             Close();

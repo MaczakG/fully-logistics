@@ -21,7 +21,8 @@ public sealed class MessageWindow : Window
         CanResize = false;
         ShowInTaskbar = false;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
-        Background = (Avalonia.Media.IBrush?)Application.Current?.FindResource("Paper");
+        // The theme's paper colour, following light and dark.
+        Bind(BackgroundProperty, this.GetResourceObservable("Paper"));
 
         var ok = new Button { Content = dialog.OkText, MinWidth = 110 };
         ok.Classes.Add("primary");
