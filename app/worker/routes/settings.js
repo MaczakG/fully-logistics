@@ -30,6 +30,7 @@ import { occupant } from '../lib/stock.js';
 import { normalizeHeader, parseCsv, toCsv } from '../lib/csv.js';
 import { readUpload } from '../lib/files.js';
 import { maskCredentials } from '../lib/crypto.js';
+import { checkCosting, costingWithDefaults } from '../lib/costing.js';
 import {
   clearCourierCredentials, clearInvoicingCredentials, getCourierAccount, getInvoicingConfig, saveCourierAccount, saveInvoicingConfig, setCourierError,
 } from '../lib/accounts.js';
@@ -635,6 +636,29 @@ export function register(r) {
       await audit(ctx, { module: 'settings', action: 'edit', entity: 'settings', entityId: 'warehouse', summary: 'Raktár beállítások módosítva', details: { changes } });
     }
     return next;
+  }, { perm: ['settings', 'edit'] });
+
+  // ---------------------------------------------------------------- costing (quote internal margin)
+  // Rent, floor area, space per location size, staff cost and minute norms (worker/lib/costing.js).
+  const costingSizes = (db) => all(db, 'SELECT id, code, name FROM location_sizes WHERE active = 1 ORDER BY sort, code');
+
+  r.get('/api/settings/costing', async (ctx) => ({
+    ...costingWithDefaults(await getSetting(ctx.env.DB, 'costing', {})),
+    sizes: await costingSizes(ctx.env.DB),
+  }), { perm: ['settings', 'view'] });
+
+  r.put('/api/settings/costing', async (ctx) => {
+    const db = ctx.env.DB;
+    const { costing, errors } = checkCosting(await ctx.body());
+    if (Object.keys(errors).length) throw badRequest('Ellenőrizd a megjelölt mezőket.', errors);
+    const current = costingWithDefaults(await getSetting(db, 'costing', {}));
+    const next = { ...costing, space: { ...current.space, ...costing.space } };
+    const changes = diff(current, next, Object.keys(next));
+    await setSetting(db, 'costing', next);
+    if (Object.keys(changes).length) {
+      await audit(ctx, { module: 'settings', action: 'edit', entity: 'settings', entityId: 'costing', summary: 'Költségkalkuláció módosítva', details: { changes } });
+    }
+    return { ...next, sizes: await costingSizes(db) };
   }, { perm: ['settings', 'edit'] });
 
   // ---------------------------------------------------------------- default tariffs, quote terms

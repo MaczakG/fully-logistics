@@ -126,13 +126,70 @@
     return { items, net, vat, vatP, gross: net + vat, perOrder: o > 0 ? net / o : 0, yearly: net * 12, oneOff, oneOffTotal, o, avg, storNetMonthly, locations };
   }
 
-  // Internal margin: never printed.
-  function margin(d, r) {
+  /* Internal costing, never printed. d.internal holds the assumptions (worker/lib/costing.js):
+     - staff: the volume of the quote in minutes by the norms (per order, per further item, per
+       received piece, per return) plus the hourly work, divided by a worker's productive hours;
+       its cost is that share of a worker's monthly cost
+     - rent: rent / rented m² is the rent of one m²; a storage location takes its size's m² (aisles
+       included), so the client's locations take area = qty x m², and pay that area's rent
+     - packaging purchase per order
+     What the quote brings in a month (r.net) less these is the margin. */
+  function costing(d, r) {
     const i = d.internal || {};
-    const cost = r.o * (n(i.costLabor) + n(i.costPack)) + r.locations * n(i.costSpace);
+    const v = d.volume || {};
+    const o = r.o;
+    const extraItems = o * Math.max(r.avg - 1, 0);
+    const returns = o * pct(v.retPct) / 100;
+    const work = [
+      { key: 'orders', name: 'Rendelés kiszedése, csomagolása', qty: o, unit: 'rendelés', min: n(i.min_order) },
+      { key: 'items', name: 'További termékek a rendelésekben', qty: extraItems, unit: 'termék', min: n(i.min_item) },
+      { key: 'inbound', name: 'Betárolás', qty: n(v.inbound), unit: 'db', min: n(i.min_inbound) },
+      { key: 'returns', name: 'Visszáru', qty: returns, unit: 'csomag', min: n(i.min_return) },
+    ].map((w) => ({ ...w, hours: (w.qty * w.min) / 60 }));
+    if (n(v.hours) > 0) work.push({ key: 'hourly', name: 'Óradíjas munka', qty: n(v.hours), unit: 'óra', min: 60, hours: n(v.hours) });
+    const hours = work.reduce((a, w) => a + w.hours, 0);
+    const workerHours = n(i.worker_hours);
+    const staff = workerHours > 0 ? hours / workerHours : 0;
+    const labour = staff * n(i.worker_cost);
+    const moveInHours = (n(v.moveIn) * n(i.min_inbound)) / 60;
+
+    const totalArea = n(i.area_m2);
+    const rentPerM2 = totalArea > 0 ? n(i.rent) / totalArea : 0;
+    const space = i.space || {};
+    const sizes = (d.storage || []).map((s) => {
+      const m2 = n(space[s.code]);
+      const qty = n(s.qty);
+      return {
+        code: s.code, name: s.name || s.code, qty, m2, area: qty * m2, price: n(s.price),
+        fits: m2 > 0 && totalArea > 0 ? Math.floor(totalArea / m2) : 0,
+        rentPer: m2 * rentPerM2, rent: qty * m2 * rentPerM2,
+      };
+    });
+    const area = sizes.reduce((a, s) => a + s.area, 0);
+    const rent = sizes.reduce((a, s) => a + s.rent, 0);
+    const pack = o * n(i.costPack);
+    const cost = labour + rent + pack;
     const m = r.net - cost;
-    return { cost, margin: m, pct: r.net > 0 ? (m / r.net) * 100 : 0, perOrder: r.o > 0 ? m / r.o : 0, payback: m > 0 && r.oneOffTotal > 0 ? r.oneOffTotal / m : 0 };
+    return {
+      work, hours, staff, labour, moveInHours, moveInCost: workerHours > 0 ? (moveInHours / workerHours) * n(i.worker_cost) : 0,
+      rentPerM2, sizes, area, areaPct: totalArea > 0 ? (area / totalArea) * 100 : 0, rent, pack, cost,
+      margin: m, pct: r.net > 0 ? (m / r.net) * 100 : 0, perOrder: o > 0 ? m / o : 0,
+      payback: m > 0 && r.oneOffTotal > 0 ? r.oneOffTotal / m : 0,
+      missing: {
+        rent: !(n(i.rent) > 0 && totalArea > 0),
+        staff: !(n(i.worker_cost) > 0 && workerHours > 0),
+        space: sizes.filter((s) => s.qty > 0 && !s.m2).map((s) => s.code),
+      },
+    };
   }
+
+  // The assumptions of a new quote: the settings (Beállítások > Raktár > Költségkalkuláció).
+  const costingFrom = (c = {}) => ({
+    rent: num(c.rent), area_m2: num(c.area_m2), space: { ...(c.space || {}) },
+    worker_cost: num(c.worker_cost), worker_hours: num(c.worker_hours),
+    min_order: num(c.min_order), min_item: num(c.min_item), min_inbound: num(c.min_inbound), min_return: num(c.min_return),
+    costPack: num(c.pack_cost),
+  });
 
   /* ------------------------------------------------------------ helpers */
   const can = (a) => FL.can('quotes', a);
@@ -153,6 +210,7 @@
   const register = (k, def) => (typeof FL.view === 'function' ? FL.view(k, def) : ((FL.views = FL.views || {})[k] = def));
   register('quotes', {
     calc,
+    costing,
     async render(root, ctx) {
       if (!ctx.params[0]) return renderList(root, ctx);
       return renderCalculator(root, ctx);
@@ -396,33 +454,91 @@
 
         <section class="qc-internal no-print" aria-labelledby="qc-int-title">
           <h2 id="qc-int-title">${FL.icon('lock-simple')}Belső fedezetszámítás <span class="muted small">(nem kerül az ajánlatba)</span></h2>
-          <div class="form-grid">
-            ${field('internal.costLabor', 'Bérköltség / rendelés (Ft)', d.internal.costLabor, { type: 'number', step: 10 })}
-            ${field('internal.costPack', 'Csomagolóanyag beszerzés / rendelés (Ft)', d.internal.costPack, { type: 'number', step: 10 })}
-            ${field('internal.costSpace', 'Raktárköltség / tárolóhely / hó (Ft)', d.internal.costSpace, { type: 'number', step: 50 })}
-          </div>
-          <div data-kpis></div>
+          <div class="qc-internal__out" data-kpis></div>
+          <details class="qc-group qc-assume" data-group="assume" ${st.open.has('assume') ? raw('open') : ''}>
+            <summary><span>Feltételezések ennél az ajánlatnál</span></summary>
+            <div class="qc-group__body">
+              <p class="field__hint">Új ajánlatnál a Beállítások > Raktár > Költségkalkuláció értékei. Itt átírhatod őket, a módosítás csak erre az ajánlatra vonatkozik.</p>
+              <p class="qc-sub">Raktár</p>
+              <div class="form-grid">
+                ${field('internal.rent', 'Havi raktárbérleti díj (Ft)', d.internal.rent, { type: 'number', step: 10000 })}
+                ${field('internal.area_m2', 'Bérelt alapterület (m²)', d.internal.area_m2, { type: 'number', step: 10 })}
+                ${d.storage.map((s) => field(`internal.space.${s.code}`, `${s.name || s.code}: helyigény (m²)`, (d.internal.space || {})[s.code] ?? 0, { type: 'number', step: 0.05, hint: 'egy hely, folyosóval együtt' }))}
+              </div>
+              <p class="qc-sub">Munkaerő</p>
+              <div class="form-grid">
+                ${field('internal.worker_cost', 'Egy raktáros havi költsége (Ft)', d.internal.worker_cost, { type: 'number', step: 10000, hint: 'bér és járulékok' })}
+                ${field('internal.worker_hours', 'Hasznos munkaóra / fő / hó', d.internal.worker_hours, { type: 'number', step: 1 })}
+                ${field('internal.min_order', 'Rendelés (perc)', d.internal.min_order, { type: 'number', step: 0.1, hint: 'kiszedés, csomagolás' })}
+                ${field('internal.min_item', 'További termék (perc)', d.internal.min_item, { type: 'number', step: 0.1, hint: 'termékenként' })}
+                ${field('internal.min_inbound', 'Betárolás (perc / db)', d.internal.min_inbound, { type: 'number', step: 0.1 })}
+                ${field('internal.min_return', 'Visszáru (perc / csomag)', d.internal.min_return, { type: 'number', step: 0.5 })}
+              </div>
+              <p class="qc-sub">Anyag</p>
+              <div class="form-grid">
+                ${field('internal.costPack', 'Csomagolóanyag beszerzés / rendelés (Ft)', d.internal.costPack, { type: 'number', step: 10 })}
+              </div>
+              <div class="qc-inline-actions"><button class="btn btn--sm" type="button" data-action="default-costing">${FL.icon('arrow-clockwise')}Beállítások értékeinek betöltése</button></div>
+            </div>
+          </details>
         </section>`);
       renderKpis();
     }
 
+    // Results of the internal costing; redrawn on every edit (the assumption fields stay).
     function renderKpis() {
       const box = formBox.querySelector('[data-kpis]');
       if (!box) return;
       const r = calc(st.data);
-      const m = margin(st.data, r);
-      const tone = m.margin >= 0 ? 'ok' : 'danger';
-      box.innerHTML = String(ui.kpis([
-        { label: 'Becsült közvetlen költség / hó', value: ft(m.cost) },
-        { label: 'Fedezet / hó', value: ft(m.margin), tone },
-        { label: 'Fedezeti arány', value: `${f1(m.pct)}%`, tone },
-        { label: 'Fedezet / rendelés', value: r.o > 0 ? ft(m.perOrder) : 'nincs rendelés', tone: r.o > 0 ? tone : '' },
-        {
-          label: 'Egyszeri kedvezmények megtérülése',
-          value: r.oneOffTotal > 0 ? (m.margin > 0 ? `${f1(m.payback)} hónap` : 'nem térül meg') : 'nincs',
-          tone: r.oneOffTotal > 0 && m.margin <= 0 ? 'danger' : '',
-        },
-      ]));
+      const k = costing(st.data, r);
+      const tone = k.margin >= 0 ? 'ok' : 'danger';
+      const i = st.data.internal;
+      const warn = [];
+      if (k.missing.rent) warn.push('a raktár havi bérleti díja és alapterülete');
+      if (k.missing.staff) warn.push('egy raktáros havi költsége');
+      if (k.missing.space.length) warn.push(`a helyigény ennél a méretnél: ${k.missing.space.join(', ')}`);
+      const settingsLink = FL.can('settings', 'view') ? html` <a href="#/beallitasok/raktar">Beállítások > Raktár</a>` : '';
+      box.innerHTML = String(html`
+        ${warn.length ? ui.notice(html`Hiányzik ${warn.join(', ')}, ezért ez a költség 0 Ft-tal számít. Add meg lent a Feltételezések alatt, vagy a Beállításokban.${settingsLink}`, 'warn') : ''}
+        ${ui.kpis([
+          { label: 'Raktáros', value: `${nf2.format(k.staff)} fő`, hint: `${f1(k.hours)} munkaóra / hó` },
+          { label: 'Foglalt terület', value: `${nf2.format(k.area)} m²`, hint: n(i.area_m2) > 0 ? `a raktár ${nf2.format(k.areaPct)}%-a` : 'nincs megadva alapterület' },
+          { label: 'Közvetlen költség / hó', value: ft(k.cost), hint: 'bér, bérleti díj, csomagolóanyag' },
+          { label: 'Fedezet / hó', value: ft(k.margin), tone, hint: `bevétel ${ft(r.net)}` },
+          { label: 'Fedezeti arány', value: `${f1(k.pct)}%`, tone },
+          { label: 'Fedezet / rendelés', value: r.o > 0 ? ft(k.perOrder) : 'nincs rendelés', tone: r.o > 0 ? tone : '' },
+          {
+            label: 'Egyszeri kedvezmények megtérülése',
+            value: r.oneOffTotal > 0 ? (k.margin > 0 ? `${f1(k.payback)} hónap` : 'nem térül meg') : 'nincs',
+            tone: r.oneOffTotal > 0 && k.margin <= 0 ? 'danger' : '',
+          },
+        ])}
+        <div class="qc-cost">
+          <section class="qc-cost__box" aria-label="Munkaerő">
+            <h3>Munkaerő</h3>
+            <ul class="qc-cost__rows">${k.work.map((w) => html`<li><span>${w.name}<small>${w.key === 'hourly' ? `${f1(w.qty)} óra` : `${f1(w.qty)} ${w.unit} × ${nf2.format(w.min)} perc`}</small></span><b class="num">${f1(w.hours)} óra</b></li>`)}</ul>
+            <p class="qc-cost__total"><span>${nf2.format(k.hours)} óra / ${f0(n(i.worker_hours))} óra = ${nf2.format(k.staff)} fő × ${ft(n(i.worker_cost))}</span><b class="num">${ft(k.labour)}</b></p>
+          </section>
+          <section class="qc-cost__box" aria-label="Tárolás és bérleti díj">
+            <h3>Tárolás és bérleti díj${k.rentPerM2 > 0 ? html` <span class="muted small">${ftu(k.rentPerM2)} / m² / hó</span>` : ''}</h3>
+            ${k.sizes.some((s) => s.qty > 0) ? html`<ul class="qc-cost__rows">${k.sizes.filter((s) => s.qty > 0).map((s) => html`<li><span><span><span class="tag">${s.code}</span> ${s.name}</span>
+              <small>${f0(s.qty)} hely × ${s.m2 ? nf2.format(s.m2) : '?'} m² = ${nf2.format(s.area)} m² · bérlet ${ft(s.rentPer)} / hely, díj ${ft(s.price)} / hely</small>
+              ${s.price < s.rentPer ? html`<small class="diff-neg">A tárolási díj kevesebb, mint a helyre eső bérleti díj.</small>` : ''}</span>
+              <b class="num">${ft(s.rent)}</b></li>`)}</ul>` : html`<p class="muted small">Az ajánlatban nincs tárolóhely.</p>`}
+            <p class="qc-cost__total"><span>Összesen ${nf2.format(k.area)} m²${n(i.area_m2) > 0 ? `, a raktár ${nf2.format(k.areaPct)}%-a` : ''}</span><b class="num">${ft(k.rent)}</b></p>
+          </section>
+          <section class="qc-cost__box" aria-label="Havi összesítés">
+            <h3>Havi összesítés</h3>
+            <ul class="qc-cost__rows">
+              <li><span>Bevétel<small>az ajánlat havi nettó összege</small></span><b class="num">${ft(r.net)}</b></li>
+              <li><span>Bérköltség<small>${nf2.format(k.staff)} fő</small></span><b class="num">−${ft(k.labour)}</b></li>
+              <li><span>Raktárbérlet<small>helyfoglalás szerint, ${nf2.format(k.area)} m²</small></span><b class="num">−${ft(k.rent)}</b></li>
+              <li><span>Csomagolóanyag<small>${f0(r.o)} rendelés × ${ft(n(i.costPack))}</small></span><b class="num">−${ft(k.pack)}</b></li>
+            </ul>
+            <p class="qc-cost__total"><span>Fedezet (profit)</span><b class="num ${k.margin < 0 ? 'diff-neg' : ''}">${ft(k.margin)}</b></p>
+          </section>
+          ${k.moveInHours > 0 ? html`<p class="small muted">Beköltözés egyszer: ${f0(n(st.data.volume.moveIn))} db betárolása kb. ${f1(k.moveInHours)} munkaóra (${ft(k.moveInCost)}), ez nincs benne a havi költségben.</p>` : ''}
+        </div>`);
     }
 
     function renderPaper() {
@@ -462,6 +578,9 @@
       } else if (parts[0] === 'storage') {
         const s = d.storage.find((x) => x.code === parts[1]);
         if (s) s[parts[2]] = val;
+      } else if (parts[0] === 'internal' && parts[1] === 'space') {
+        d.internal.space = d.internal.space || {};
+        d.internal.space[parts[2]] = val;
       } else if (parts[0] === 'custom') {
         const it = d.customItems[Number(parts[1])];
         if (it) it[parts[2]] = val;
@@ -561,6 +680,12 @@
         renderPaper();
         ui.toast('Alapértelmezett tarifák betöltve.', 'ok');
       },
+      'default-costing': () => {
+        st.data.internal = costingFrom(defs.costing);
+        markDirty();
+        renderForm();
+        ui.toast('A Beállítások költségkalkulációs értékei betöltve.', 'ok');
+      },
       'default-terms': () => {
         st.data.terms = [...(defs.quote_terms || [])];
         markDirty();
@@ -640,7 +765,7 @@
       customItems: [],
       terms: [...(defs.quote_terms || [])],
       signer: FL.state.me ? FL.state.me.user.name : '',
-      internal: { costLabor: 0, costPack: 0, costSpace: 0 },
+      internal: costingFrom(defs.costing),
     };
   }
 
@@ -653,6 +778,10 @@
       if (!d.storage.some((x) => x.code === s.code)) d.storage.push({ code: s.code, name: s.name, dims: sizeDims(s), qty: 0, price: num(sd[s.code]) });
     }
     for (const k of ['client', 'volume', 'tariffs', 'discounts', 'internal']) d[k] = d[k] || {};
+    // Quotes saved before the costing had only per order and per location costs: they get the
+    // settings' assumptions, the packaging price stays.
+    if (!(n(d.internal.worker_hours) > 0)) d.internal = { ...costingFrom(defs.costing), costPack: num(d.internal.costPack) || num((defs.costing || {}).pack_cost) };
+    d.internal.space = d.internal.space || {};
     d.customItems = d.customItems || [];
     d.terms = d.terms || [];
     return d;

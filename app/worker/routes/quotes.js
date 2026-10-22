@@ -1,7 +1,8 @@
 // Ajánlatkészítő: saved quotes and the data the calculator needs. Prefix /api/quotes.
 //
 //   GET    /api/quotes                 list: ?q=&status=&partner_id=&limit=&offset=     [view]
-//   GET    /api/quotes/defaults        company, default_tariffs, quote_terms, active sizes, TARIFFS [view]
+//   GET    /api/quotes/defaults        company, default_tariffs, quote_terms, active sizes, TARIFFS,
+//                                      costing (internal margin assumptions)                [view]
 //   GET    /api/quotes/partner/:id     a client's tariffs, storage prices, custom items, contact [view]
 //   GET    /api/quotes/:id             one quote with its calculator state (data)       [view]
 //   POST   /api/quotes                 { partner_id, client_name, status, data }        [create]
@@ -20,6 +21,7 @@ import { audit } from '../lib/audit.js';
 import { STATUSES, TARIFFS } from '../lib/constants.js';
 import { budapestDate, isDate, nowIso } from '../lib/time.js';
 import { PCT_TARIFFS, activeSizes, defaultTariffs, getPartner, loadTariffs, partnerContact } from './partners.js';
+import { costingWithDefaults, looseCosting } from '../lib/costing.js';
 
 const M = 'quotes';
 const MAX_DATA = 200 * 1024;
@@ -36,6 +38,12 @@ const pos = (v, max = 1e9) => {
 };
 
 const COMPANY_KEYS = ['name', 'tax_number', 'company_reg_number', 'eu_vat_number', 'country', 'zip', 'city', 'address', 'email', 'phone', 'bank_account', 'website'];
+
+// The quote's own copy of the costing assumptions; its packaging price is costPack.
+const quoteCosting = (internal) => {
+  const { pack_cost: _settingsOnly, ...rest } = looseCosting(internal);
+  return { ...rest, costPack: pos(internal.costPack, 1e7) };
+};
 
 export function normalizeQuoteData(input) {
   const d = obj(input);
@@ -70,7 +78,9 @@ export function normalizeQuoteData(input) {
     }).filter((i) => i.name),
     terms: terms.map((x) => str(x, 1000)).filter(Boolean).slice(0, 50),
     signer: str(d.signer, 200),
-    internal: { costLabor: pos(internal.costLabor, 1e7), costPack: pos(internal.costPack, 1e7), costSpace: pos(internal.costSpace, 1e7) },
+    // Internal costing, never printed: the assumptions of worker/lib/costing.js as they were set for
+    // this quote, and the packaging purchase price per order.
+    internal: quoteCosting(internal),
     company: Object.fromEntries(COMPANY_KEYS.map((k) => [k, str(company[k], 300)])),
   };
 }
@@ -190,6 +200,7 @@ export function register(r) {
       quote_terms: Array.isArray(terms) ? terms : [],
       sizes: await activeSizes(db),
       tariffs: TARIFFS,
+      costing: costingWithDefaults(await getSetting(db, 'costing', {})),
     };
   }, { perm: [M, 'view'] });
 

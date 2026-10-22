@@ -61,6 +61,33 @@ test('warehouse: cut-off feeds /api/me, opening hours and workdays are checked',
   assert.equal(me.data.warehouse.cutoff, '13:30');
 });
 
+test('costing: defaults, field checks, save, audit, and the quote calculator gets it', async () => {
+  const cur = (await admin.get('/api/settings/costing')).data;
+  assert.equal(cur.rent, 0);
+  assert.equal(cur.worker_hours, 150);
+  assert.equal(cur.min_order, 3);
+  assert.deepEqual(cur.space, { M: 0.15, L: 0.25, XL: 0.4, PAL: 1.2 });
+  assert.deepEqual(cur.sizes.map((z) => z.code), ['M', 'L', 'XL', 'PAL']);
+
+  const bad = await admin.put('/api/settings/costing', { rent: -1, area_m2: 'sok', worker_hours: 0, min_order: 9999, space: { M: -0.1 } });
+  assert.equal(bad.status, 400);
+  for (const f of ['rent', 'area_m2', 'worker_hours', 'min_order', 'space.M']) assert.ok(bad.data.error.fields[f], f);
+
+  const body = { rent: 2400000, area_m2: '1 200', worker_cost: 520000, worker_hours: 150, min_order: 3, min_item: 0.5, min_inbound: 0.3, min_return: 5, pack_cost: 100, space: { M: '0,2', PAL: 1.5 } };
+  const ok = await admin.put('/api/settings/costing', body);
+  assert.equal(ok.status, 200, JSON.stringify(ok.data));
+  assert.equal(ok.data.area_m2, 1200);
+  assert.deepEqual(ok.data.space, { M: 0.2, L: 0.25, XL: 0.4, PAL: 1.5 }, 'sizes left out keep their value');
+  const log = await lastAudit('settings');
+  assert.equal(log.entity_id, 'costing');
+  assert.match(log.details, /area_m2/);
+
+  const defs = (await admin.get('/api/quotes/defaults')).data;
+  assert.equal(defs.costing.rent, 2400000);
+  assert.equal(defs.costing.space.M, 0.2);
+  assert.equal(defs.costing.pack_cost, 100);
+});
+
 test('sizes: create, rename carries the default price, deactivate, delete only when unused', async () => {
   const list = await admin.get('/api/settings/sizes');
   assert.equal(list.data.items.length, 4);
@@ -326,6 +353,8 @@ test('permissions: view only roles read, cannot change; no settings right is 403
   assert.equal((await manager.get('/api/settings/audit')).status, 200);
   assert.equal((await manager.put('/api/settings/company', { name: 'X' })).status, 403);
   assert.equal((await manager.put('/api/settings/warehouse', { cutoff: '10:00', workdays: [1] })).status, 403);
+  assert.equal((await manager.get('/api/settings/costing')).status, 200);
+  assert.equal((await manager.put('/api/settings/costing', { rent: 1, worker_hours: 1 })).status, 403);
   assert.equal((await manager.put('/api/settings/tariffs', { values: { order_base: 1 } })).status, 403);
   assert.equal((await manager.post('/api/settings/sizes', { code: 'Z', name: 'Z' })).status, 403);
   assert.equal((await manager.patch('/api/settings/sizes/1', { name: 'Z' })).status, 403);
@@ -337,7 +366,7 @@ test('permissions: view only roles read, cannot change; no settings right is 403
   assert.match(denied.data.error.message, /Beállítások: raktárhely és méret felvétele/);
 
   const sales = await srv.userWithRole('sales'); // no settings rights
-  for (const path of ['/api/settings/company', '/api/settings/warehouse', '/api/settings/tariffs', '/api/settings/sizes',
+  for (const path of ['/api/settings/company', '/api/settings/warehouse', '/api/settings/costing', '/api/settings/tariffs', '/api/settings/sizes',
     '/api/settings/locations', '/api/settings/locations/export', '/api/settings/couriers', '/api/settings/invoicing',
     '/api/settings/audit', '/api/settings/audit/filters', '/api/settings/integration-log']) {
     assert.equal((await sales.get(path)).status, 403, path);

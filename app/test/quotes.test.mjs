@@ -22,16 +22,20 @@ const EXAMPLE = {
   tariffs: { order_base: 600, item_2: 80, item_3: 60, item_extra: 50, packaging: 150, inbound_unit: 49, return_unit: 499, vat_pct: 27, discount_handling_pct: 10, discount_storage_pct: 0 },
   discounts: { freeMoveIn: 3000, freeStorageMonths: 1, priceLockMonths: 12 },
   terms: ['Az árak nettó árak.'],
-  internal: { costLabor: 450, costPack: 100, costSpace: 250 },
+  internal: {
+    rent: 2400000, area_m2: 1200, space: { M: 0.15, L: 0.25, XL: 0.4, PAL: 1.2 }, worker_cost: 520000, worker_hours: 150,
+    min_order: 3, min_item: 0.5, min_inbound: 0.3, min_return: 5, costPack: 100,
+  },
 };
 
-function loadBrowserCalc() {
+function loadBrowserView() {
   const FL = { views: {} };
   FL.view = (key, def) => { FL.views[key] = def; };
   const context = vm.createContext({ window: { FL }, Intl, console });
   vm.runInContext(readFileSync(join(APP, 'public/assets/js/views/quotes.js'), 'utf8'), context, { filename: 'quotes.js' });
-  return FL.views.quotes.calc;
+  return FL.views.quotes;
 }
+const loadBrowserCalc = () => loadBrowserView().calc;
 
 let srv;
 let fx;
@@ -85,6 +89,46 @@ test('calculation: the original example, and browser and server agree', () => {
   }
 });
 
+test('internal costing: staff from the minute norms, area and rent by occupancy, margin', () => {
+  const { calc, costing } = loadBrowserView();
+  const d = normalizeQuoteData(EXAMPLE);
+  const r = calc(d);
+  const k = costing(d, r);
+  // 300 orders x 3 min + 150 further items x 0.5 + 450 pieces x 0.3 + 9 returns x 5 = 1155 min
+  assert.equal(k.hours, 19.25);
+  assert.equal(Math.round(k.staff * 10000) / 10000, 0.1283);
+  assert.equal(Math.round(k.labour), 66733);
+  // 2 400 000 Ft / 1 200 m² = 2 000 Ft per m²; 20 M x 0.15 + 15 L x 0.25 + 5 XL x 0.4 = 8.75 m²
+  assert.equal(k.rentPerM2, 2000);
+  assert.equal(k.area, 8.75);
+  assert.equal(k.rent, 17500);
+  const m = k.sizes.find((s) => s.code === 'M');
+  assert.equal(m.fits, 8000);
+  assert.equal(m.rentPer, 300);
+  assert.equal(k.sizes.find((s) => s.code === 'PAL').rentPer, 2400);
+  assert.equal(k.pack, 30000);
+  assert.equal(Math.round(k.cost), 114233);
+  assert.equal(Math.round(k.margin), 167308);
+  assert.equal(Math.round(k.pct * 100) / 100, 59.43);
+  assert.deepEqual(JSON.parse(JSON.stringify(k.missing)), { rent: false, staff: false, space: [] });
+  // 3000 pieces moving in: 15 hours once, outside the monthly cost
+  assert.equal(k.moveInHours, 15);
+
+  // Nothing set: no cost, and the screen says what is missing.
+  const empty = normalizeQuoteData({ ...EXAMPLE, internal: {} });
+  const e = costing(empty, calc(empty));
+  assert.equal(e.cost, 0);
+  assert.equal(e.staff, 0);
+  assert.deepEqual(JSON.parse(JSON.stringify(e.missing)), { rent: true, staff: true, space: ['M', 'L', 'XL'] });
+
+  // The server keeps the assumptions, cleans them, and drops the old per order labour cost.
+  const n = normalizeQuoteData({ internal: { costLabor: 450, costSpace: 250, rent: '-5', area_m2: '1 200', worker_hours: 9999, costPack: '120', space: { M: '0,15', X: 'abc' } } });
+  assert.deepEqual(n.internal, {
+    rent: 0, area_m2: 1200, worker_cost: 0, worker_hours: 744, min_order: 0, min_item: 0, min_inbound: 0, min_return: 0,
+    space: { M: 0.15, X: 0 }, costPack: 120,
+  });
+});
+
 test('defaults: company, default tariffs, terms, active sizes, tariff list', async () => {
   const d = okData(await manager.get('/api/quotes/defaults'));
   assert.equal(d.company.name, 'Fully Logistics');
@@ -93,6 +137,7 @@ test('defaults: company, default tariffs, terms, active sizes, tariff list', asy
   assert.equal(d.quote_terms.length, 6);
   assert.deepEqual(d.sizes.map((s) => s.code), ['M', 'L', 'XL', 'PAL']);
   assert.equal(d.tariffs.length, 13);
+  assert.equal(d.costing.worker_hours, 150, 'the costing assumptions come with the defaults');
   assert.equal((await service.get('/api/quotes/defaults')).status, 403);
 });
 

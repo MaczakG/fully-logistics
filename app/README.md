@@ -10,7 +10,7 @@ Fejlesztői leírás: [DEVELOPING.md](DEVELOPING.md). Partner API dokumentáció
 
 ## Első belépés után
 
-Nyisd meg az alkalmazás címét. Az első indításkor a rendszer a telepítési kódot kéri (AWS-en a `provision.mjs` írja ki), és létrehozza az első adminisztrátort. Utána érdemes a lenti 8. pont sorrendjében haladni (Cégadatok, Raktárhelyek, Alap tarifák, Futárok és számlázó, Partnerek, Felhasználók).
+Nyisd meg az alkalmazás címét. Az első indításkor a rendszer a telepítési kódot kéri (AWS-en a `provision.mjs` írja ki), és létrehozza az első adminisztrátort. Utána érdemes a lenti 8. pont sorrendjében haladni (Cégadatok, Raktár, Raktárhelyek, Alap tarifák, Futárok és számlázó, Partnerek, Felhasználók).
 
 ## Telefonon és PDA-n
 
@@ -28,6 +28,16 @@ A beolvasómező mellett két gomb van:
 3. Írd be a beérkezett darabszámot (ha kell, jelöld a sérültet, add meg a sarzsot és a lejáratot), és nyomd meg a **Rögzítés** gombot vagy az Entert.
 
 Amíg a mennyiséget nem rögzíted, semmi sem kerül átvételre. A termék újabb beolvasása eggyel növeli a beírt darabszámot, így darabonként is számolhatsz. Ha a vártnál több lenne az átvett mennyiség, a rendszer rákérdez. A tételnél a **Javítás** gombbal az összesített átvett és sérült mennyiség utólag átírható.
+
+## Ajánlatkészítő: belső fedezetszámítás
+
+Az ajánlat alatti „Belső fedezetszámítás” rész nem kerül az ajánlatba. Megmutatja, hány raktáros kell az ajánlott forgalomhoz, mekkora területet foglal az ügyfél áruja, mennyi raktárbérleti díj esik rá, és mennyi a havi fedezet (profit). Az alapadatokat egyszer kell megadni: **Beállítások > Raktár > Költségkalkuláció**.
+
+- **Létszám:** a havi munkaidő a percnormákból jön. Rendelésenként, a rendelés további termékeiként, betárolt darabonként és visszárunként van egy-egy norma, ehhez jönnek az óradíjas munka órái. Ezt osztja el egy raktáros havi hasznos óráival. A bérköltség ennyi fő része egy raktáros havi költségéből.
+- **Terület és bérleti díj:** az egy m²-re eső bérleti díj a havi bérleti díj osztva a bérelt alapterülettel. Méretenként (M, L, XL, raklaphely) meg kell adni, hogy egy hely hány m²-t foglal a folyosóval együtt. Ebből jön ki, hány hely fér el a raktárban, és mennyi egy hely havi bérleti díja. Az ügyfél tárolóhelyei ennyi területet és bérleti díjat foglalnak.
+- **Fedezet:** az ajánlat havi nettó összege, mínusz a bérköltség, a helyfoglalás szerinti bérleti díj és a csomagolóanyag beszerzési ára.
+
+Az új ajánlat a Beállítások értékeivel indul. Az ajánlatnál a „Feltételezések ennél az ajánlatnál” alatt ezek csak arra az ajánlatra átírhatók. A „Beállítások értékeinek betöltése” gomb visszahozza a Beállítások aktuális értékeit. A mentett ajánlatok a saját értékeiket tartják meg.
 
 ## Alternatíva: egyszeri beállítás a Cloudflare-en
 
@@ -85,11 +95,12 @@ A weboldalhoz: **Workers & Pages > fully-logistics > Settings > Domains & Routes
 Nyisd meg a `https://app.fully.hu` címet. Az első indításkor a rendszer a `SETUP_TOKEN` értékét kéri, és létrehozza az első adminisztrátort. Utána érdemes ebben a sorrendben haladni:
 
 1. **Beállítások > Cégadatok**: a saját cégadatok (ajánlatokon és számlákon jelennek meg).
-2. **Beállítások > Raktárhelyek**: a méretek (M, L, XL, Raklaphely, bővíthető) és a raktárhelyek, tömeges létrehozással.
-3. **Beállítások > Alap tarifák**: a listaárak. Az új partnerek és ajánlatok ezekből indulnak.
-4. **Beállítások > Futárszolgálatok** és **Számlázó**: a hozzáférések, amikor megvannak.
-5. **Partnerek**: ügyfelek, fuvarozók, beszállítók. Az ügyfeleknél a Tarifák és az Integrációk fül.
-6. **Felhasználók**: a munkatársak és a Jogosultságok fülön a szerepkörök jogai.
+2. **Beállítások > Raktár**: munkarend, és a Költségkalkuláció az ajánlatok belső fedezetszámításához (bérleti díj, alapterület, helyigény, bérköltség, percnormák).
+3. **Beállítások > Raktárhelyek**: a méretek (M, L, XL, Raklaphely, bővíthető) és a raktárhelyek, tömeges létrehozással.
+4. **Beállítások > Alap tarifák**: a listaárak. Az új partnerek és ajánlatok ezekből indulnak.
+5. **Beállítások > Futárszolgálatok** és **Számlázó**: a hozzáférések, amikor megvannak.
+6. **Partnerek**: ügyfelek, fuvarozók, beszállítók. Az ügyfeleknél a Tarifák és az Integrációk fül.
+7. **Felhasználók**: a munkatársak és a Jogosultságok fülön a szerepkörök jogai.
 
 ## Helyi futtatás
 

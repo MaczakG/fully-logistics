@@ -1,6 +1,8 @@
 /* Beállítások (module "settings"): route #/beallitasok/<tab>
      cegadatok      company data for quotes and invoices
-     raktar         cut-off (top bar countdown), opening hours, workdays, default carrier
+     raktar         cut-off (top bar countdown), opening hours, workdays, default carrier; costing
+                    assumptions of the quote calculator's internal margin (rent, area, m² per
+                    location size, staff cost, minute norms)
      raktarhelyek   location sizes and locations (filters, bulk create from a pattern, bulk size
                     change, CSV import and export)
      alaptarifak    default tariffs and quote terms for new client partners and new quotes
@@ -123,7 +125,9 @@
   const DAYS = [[1, 'Hétfő'], [2, 'Kedd'], [3, 'Szerda'], [4, 'Csütörtök'], [5, 'Péntek'], [6, 'Szombat'], [7, 'Vasárnap']];
 
   async function warehouseTab(root) {
-    const w = await api.get('/api/settings/warehouse');
+    const [w, cost] = await Promise.all([api.get('/api/settings/warehouse'), api.get('/api/settings/costing')]);
+    const money = (v) => fmt.money(v);
+    const numField = (name, label, value, extra = {}) => ui.field({ name, label, type: 'number', value, min: 0, attrs: 'inputmode="decimal"', ...extra });
     const carriers = Object.entries(meta().carriers || {}).filter(([k]) => k !== 'other').map(([value, label]) => ({ value, label }));
     frame(root, 'raktar', {
       lead: 'Az alsónémedi raktár munkarendje. A napi rendelési határidőt a felső sáv visszaszámlálója mutatja.',
@@ -148,7 +152,64 @@
             </fieldset>
           </fieldset>
           ${can('edit') ? html`<div class="form-actions"><button class="btn btn--primary" type="submit">Mentés</button></div>` : ''}
+        </form>
+        <form class="panel" id="costing-form" novalidate>
+          <div class="panel__head"><h2>Költségkalkuláció</h2></div>
+          <p class="muted">Az Ajánlatkészítő belső fedezetszámítása ezekből számolja ki, hány raktáros kell egy ajánlathoz, mekkora területet foglal az ügyfél áruja, és mennyi raktárbérleti díj esik rá. Új ajánlat ezekkel az értékekkel indul, a meglévő ajánlatok a saját értékeiket tartják meg.</p>
+          <fieldset class="form" ${disabledIf(!can('edit'))}>
+            <legend class="visually-hidden">Költségkalkuláció</legend>
+            <p class="set-sub">Raktár</p>
+            <div class="form-grid">
+              ${numField('rent', 'Havi raktárbérleti díj (Ft, nettó)', cost.rent, { step: 1000 })}
+              ${numField('area_m2', 'Bérelt alapterület (m²)', cost.area_m2, { step: 1 })}
+            </div>
+            <p class="small" data-cost-rentm2></p>
+            <div class="table-wrap"><table class="table table--cards cost-sizes">
+              <caption class="visually-hidden">Helyigény méretenként</caption>
+              <thead><tr><th scope="col">Méret</th><th scope="col">Helyigény (m² / hely, folyosóval)</th><th class="r" scope="col">Ennyi férne el</th><th class="r" scope="col">Bérleti díj / hely / hó</th></tr></thead>
+              <tbody>${cost.sizes.map((z) => html`<tr data-size="${z.code}">
+                <td><span class="tag">${z.code}</span> ${z.name}</td>
+                <td data-label="Helyigény (m²)"><div class="field"><label class="visually-hidden" for="cost-space-${z.id}">${z.name}: helyigény (m²)</label>
+                  <input class="input input--num" id="cost-space-${z.id}" name="space.${z.code}" type="number" min="0" step="0.01" inputmode="decimal" value="${(cost.space || {})[z.code] ?? 0}" aria-describedby="cost-space-${z.id}-err">
+                  <p class="field__error" id="cost-space-${z.id}-err" hidden></p></div></td>
+                <td class="r num" data-label="Ennyi férne el" data-fits></td><td class="r num" data-label="Bérleti díj / hely / hó" data-rent></td></tr>`)}</tbody>
+            </table></div>
+            <p class="field__hint">Egy raktárhely a folyosó rá eső részével együtt ennyi alapterületet foglal. Polcos helynél a polc alapterületét oszd el a szintek számával.</p>
+            <p class="set-sub">Munkaerő</p>
+            <div class="form-grid">
+              ${numField('worker_cost', 'Egy raktáros havi költsége (Ft)', cost.worker_cost, { step: 1000, hint: 'Bér és járulékok együtt.' })}
+              ${numField('worker_hours', 'Hasznos munkaóra / fő / hó', cost.worker_hours, { step: 1, hint: 'Szabadság, szünet nélkül.' })}
+              ${numField('min_order', 'Rendelés kiszedése, csomagolása (perc)', cost.min_order, { step: 0.1 })}
+              ${numField('min_item', 'További termék a rendelésben (perc)', cost.min_item, { step: 0.1 })}
+              ${numField('min_inbound', 'Betárolás (perc / db)', cost.min_inbound, { step: 0.1 })}
+              ${numField('min_return', 'Visszáru (perc / csomag)', cost.min_return, { step: 0.5 })}
+            </div>
+            <p class="set-sub">Anyag</p>
+            <div class="form-grid">
+              ${numField('pack_cost', 'Csomagolóanyag beszerzés / rendelés (Ft)', cost.pack_cost, { step: 10 })}
+            </div>
+          </fieldset>
+          ${can('edit') ? html`<div class="form-actions"><button class="btn btn--primary" type="submit">Mentés</button></div>` : ''}
         </form>`,
+    });
+    const costForm = root.querySelector('#costing-form');
+    // Rent of one m² and, per size, how many locations would fit and the rent of one of them.
+    const preview = () => {
+      const v = (name) => Math.max(Number(String((costForm.elements[name] || {}).value || '').replace(',', '.')) || 0, 0);
+      const area = v('area_m2');
+      const perM2 = area > 0 ? v('rent') / area : 0;
+      costForm.querySelector('[data-cost-rentm2]').textContent = perM2 > 0 ? `Bérleti díj: ${fmt.num(perM2)} Ft / m² / hó.` : 'Add meg a bérleti díjat és az alapterületet.';
+      for (const row of costForm.querySelectorAll('[data-size]')) {
+        const m2 = v(`space.${row.dataset.size}`);
+        row.querySelector('[data-fits]').textContent = m2 > 0 && area > 0 ? `${fmt.int(Math.floor(area / m2))} db` : '';
+        row.querySelector('[data-rent]').textContent = m2 > 0 && perM2 > 0 ? money(m2 * perM2) : '';
+      }
+    };
+    costForm.addEventListener('input', preview);
+    preview();
+    bindForm(costForm, async (values) => {
+      await api.put('/api/settings/costing', nested(values));
+      ui.toast('Költségkalkuláció mentve. Az új ajánlatok ezekkel az értékekkel indulnak.', 'ok');
     });
     const form = root.querySelector('#warehouse-form');
     bindForm(form, async (values) => {
