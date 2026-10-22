@@ -83,6 +83,9 @@
     <Setter Property="Foreground" Value="{DynamicResource Paper}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Ink}" />
   </Style>
+  <Style Selector="ToggleButton.chip:checked TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource Paper}" />
+  </Style>
   <Style Selector="Border.kpi.ok">
     <Setter Property="BorderBrush" Value="{DynamicResource Ok}" />
   </Style>
