@@ -16,6 +16,7 @@ public sealed class PageLocator : IDataTemplate
         [typeof(HomeViewModel)] = () => new HomeView(),
         [typeof(ProfileViewModel)] = () => new ProfileView(),
         [typeof(PlaceholderViewModel)] = () => new PlaceholderView(),
+        [typeof(Modules.Common.CsvImportViewModel)] = () => new Modules.Common.CsvImportView(),
     };
 
     public static void Register<TViewModel>(Func<Control> create) where TViewModel : PageViewModel => Views[typeof(TViewModel)] = create;

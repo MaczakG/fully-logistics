@@ -26,6 +26,8 @@ public partial class MainView : UserControl
     protected override void OnDataContextChanged(EventArgs e)
     {
         base.OnDataContextChanged(e);
-        if (DataContext is ShellViewModel shell) Classes.Set("compact", shell.IsCompact);
+        if (DataContext is not ShellViewModel shell) return;
+        Classes.Set("compact", shell.IsCompact);
+        shell.View = this;
     }
 }

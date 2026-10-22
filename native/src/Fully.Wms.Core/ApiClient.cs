@@ -67,6 +67,23 @@ public sealed class ApiClient : IDisposable
         }
     }
 
+    // Uploads a file as multipart/form-data under "file", with extra form fields (CSV imports:
+    // preview=1 answers what would be imported, preview=0 imports).
+    public async Task<T> UploadAsync<T>(string path, byte[] file, string fileName, IReadOnlyDictionary<string, string>? fields = null, CancellationToken ct = default)
+    {
+        using var req = Request(HttpMethod.Post, path);
+        var form = new MultipartFormDataContent();
+        foreach (var (k, v) in fields ?? new Dictionary<string, string>()) form.Add(new StringContent(v), k);
+        var content = new ByteArrayContent(file);
+        content.Headers.ContentType = new MediaTypeHeaderValue(fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) ? "text/csv" : "application/octet-stream");
+        form.Add(content, "file", fileName);
+        req.Content = form;
+        using var res = await Send(req, ct).ConfigureAwait(false);
+        var text = await res.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        if (!res.IsSuccessStatusCode) throw Error(res, text);
+        return JsonSerializer.Deserialize<T>(text, Json.Options)!;
+    }
+
     // A file from the server (PDF documents, CSV exports): its bytes, type and name.
     public async Task<DownloadedFile> DownloadAsync(string path, CancellationToken ct = default)
     {

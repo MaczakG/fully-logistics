@@ -29,6 +29,9 @@ public sealed partial class ShellViewModel : ViewModelBase
     public AppServices Services { get; }
     public bool IsPhone => Services.Platform.IsPhone;
 
+    // The main view, set when it is shown: file pickers and the clipboard are reached through it.
+    public Avalonia.Visual? View { get; set; }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSignedIn), nameof(ShowSidebar), nameof(UserName), nameof(UserRole))]
     public partial Me? Me { get; set; }
