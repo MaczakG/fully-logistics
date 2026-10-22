@@ -46,7 +46,7 @@ public sealed class MessageWindow : Window
         Closed += (_, _) => dialog.CancelCommand.Execute(null);
     }
 
-    void Answer(bool yes)
+    public void Answer(bool yes)
     {
         if (yes) dialog.OkCommand.Execute(null);
         else dialog.CancelCommand.Execute(null);

@@ -10,13 +10,18 @@
   </UserControl.Styles>
   <ScrollViewer>
     <StackPanel Margin="16" Spacing="12" IsVisible="{Binding Data, Converter={x:Static ObjectConverters.IsNotNull}}">
-      <StackPanel Spacing="4">
-        <WrapPanel>
-          <TextBlock Text="{Binding Title}" Classes="h1" Margin="0,0,10,4" VerticalAlignment="Center" TextWrapping="Wrap" />
-          <ctl:StatusTag Group="partner" Status="{Binding Status}" Margin="0,0,6,4" VerticalAlignment="Center" />
-        </WrapPanel>
-        <TextBlock Text="{Binding Lead}" Classes="muted" />
-      </StackPanel>
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <WrapPanel>
+            <TextBlock Text="{Binding Title}" Classes="h1" Margin="0,0,10,4" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <ctl:StatusTag Group="partner" Status="{Binding Status}" Margin="0,0,6,4" VerticalAlignment="Center" />
+          </WrapPanel>
+          <TextBlock Text="{Binding Lead}" Classes="muted" />
+        </StackPanel>
+        <Button Grid.Column="1" Command="{Binding QuoteCommand}" IsVisible="{Binding CanQuote}" VerticalAlignment="Top">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconQuotes}" /><TextBlock Text="Ajánlat készítése" /></StackPanel>
+        </Button>
+      </Grid>
 
       <ItemsControl ItemsSource="{Binding Tabs}">
         <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>

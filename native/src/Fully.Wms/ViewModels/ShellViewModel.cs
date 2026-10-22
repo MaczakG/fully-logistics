@@ -174,6 +174,8 @@ public sealed partial class ShellViewModel : ViewModelBase
     [RelayCommand]
     async Task LogoutAsync()
     {
+        if (HasUnsaved && !await ConfirmAsync("Nem mentett változások", "Egy megnyitott ablakban nem mentett módosítások vannak. Kijelentkezel mentés nélkül?",
+            "Kijelentkezés", "Mégse", danger: true)) return;
         try
         {
             await Services.Api.PostAsync("api/auth/logout");
@@ -235,12 +237,16 @@ public sealed partial class ShellViewModel : ViewModelBase
         await page.ReloadAsync();
     }
 
+    // Changes not saved in an open record window, or in the page in front (the phone's stack).
+    public bool HasUnsaved => Presenter?.HasUnsaved == true || stack.Any((p) => p.HasUnsavedChanges);
+
     [RelayCommand]
     public async Task BackAsync()
     {
         // On the desktop: closes the dialog (or the record window) the call came from.
         if (Presenter is not null && await Presenter.BackAsync()) return;
         if (stack.Count <= 1) return;
+        if (stack[^1].HasUnsavedChanges && !await ConfirmAsync("Nem mentett változások", PageViewModel.UnsavedQuestion, "Bezárás mentés nélkül", "Mégse", danger: true)) return;
         stack.RemoveAt(stack.Count - 1);
         Current = stack[^1];
         UpdateActive();

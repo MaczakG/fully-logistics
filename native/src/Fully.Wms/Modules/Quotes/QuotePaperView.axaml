@@ -1,0 +1,230 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Quotes"
+             x:Class="Fully.Wms.Modules.Quotes.QuotePaperView"
+             x:DataType="local:PaperModel">
+  <!-- The quote as printed: a white sheet whatever the theme. -->
+  <UserControl.Styles>
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="#121518" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style Selector="TextBlock.pm">
+      <Setter Property="Foreground" Value="#59616A" />
+    </Style>
+    <Style Selector="TextBlock.sm">
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="TextBlock.xs">
+      <Setter Property="FontSize" Value="11" />
+    </Style>
+    <Style Selector="TextBlock.sec">
+      <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+      <Setter Property="FontSize" Value="10" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="#59616A" />
+      <Setter Property="LetterSpacing" Value="0.8" />
+    </Style>
+    <Style Selector="TextBlock.r">
+      <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="TextAlignment" Value="Right" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+    <Style Selector="TextBlock.ok">
+      <Setter Property="Foreground" Value="#1D6B3F" />
+    </Style>
+    <Style Selector="Border.row">
+      <Setter Property="BorderBrush" Value="#D3D7DB" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="0,6" />
+    </Style>
+  </UserControl.Styles>
+  <Border Background="White" BorderBrush="#D3D7DB" BorderThickness="1" Padding="28,0,28,28" MaxWidth="820" BoxShadow="0 2 12 0 #26000000">
+    <StackPanel>
+      <!-- Hazard stripe -->
+      <Border Height="8" Margin="-28,0,-28,20" ClipToBounds="True">
+        <Border.Background>
+          <VisualBrush TileMode="Tile" DestinationRect="0,0,24,8" SourceRect="0,0,24,8" Stretch="None" AlignmentX="Left" AlignmentY="Top">
+            <VisualBrush.Visual>
+              <Canvas Width="24" Height="8" Background="#121518">
+                <Path Fill="#E8BE3C" Data="M0,8 L8,0 L20,0 L12,8 Z M20,8 L24,4 L24,8 Z" />
+              </Canvas>
+            </VisualBrush.Visual>
+          </VisualBrush>
+        </Border.Background>
+      </Border>
+
+      <Grid ColumnDefinitions="*,Auto">
+        <Grid ColumnDefinitions="Auto,*">
+          <Canvas Width="40" Height="40" VerticalAlignment="Top" Margin="0,0,12,0">
+            <Rectangle Width="40" Height="40" Fill="#E8BE3C" />
+            <Path Fill="#121518" Data="M10,8.75 L31.25,8.75 L31.25,15.6 L17.5,15.6 L17.5,20 L28.75,20 L28.75,26.9 L17.5,26.9 L17.5,32.5 L10,32.5 Z" />
+          </Canvas>
+          <StackPanel Grid.Column="1">
+            <TextBlock Text="{Binding CompanyName}" FontWeight="ExtraBold" FontSize="18" LetterSpacing="1" />
+            <ItemsControl ItemsSource="{Binding CompanyLines}" Margin="0,4,0,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String"><TextBlock Classes="pm sm" Text="{Binding}" /></DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Grid>
+        <Grid Grid.Column="1" ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto,Auto" Margin="16,0,0,0" VerticalAlignment="Top">
+          <TextBlock Classes="pm sm" Text="Ajánlatszám" TextAlignment="Right" Margin="0,0,10,2" />
+          <TextBlock Grid.Column="1" Classes="sm" FontFamily="{StaticResource MonoFont}" FontWeight="SemiBold" Text="{Binding Number}" TextAlignment="Right" />
+          <TextBlock Grid.Row="1" Classes="pm sm" Text="Kelte" TextAlignment="Right" Margin="0,0,10,2" />
+          <TextBlock Grid.Row="1" Grid.Column="1" Classes="sm" FontWeight="SemiBold" Text="{Binding DateText}" TextAlignment="Right" />
+          <TextBlock Grid.Row="2" Classes="pm sm" Text="Érvényes" TextAlignment="Right" Margin="0,0,10,0" />
+          <TextBlock Grid.Row="2" Grid.Column="1" Classes="sm" FontWeight="SemiBold" Text="{Binding ValidText}" TextAlignment="Right" />
+        </Grid>
+      </Grid>
+      <Border Height="2" Background="#121518" Margin="0,14,0,0" />
+
+      <TextBlock Text="Fulfillment árajánlat" FontSize="26" FontWeight="ExtraBold" Margin="0,20,0,4" />
+      <TextBlock Classes="pm" Text="{Binding Sub}" Margin="0,0,0,16" />
+
+      <Grid ColumnDefinitions="*,24,*" Margin="0,0,0,20">
+        <StackPanel>
+          <TextBlock Classes="sec" Text="AJÁNLATKÉRŐ" Margin="0,0,0,4" />
+          <TextBlock Text="{Binding ClientName}" FontWeight="Bold" IsVisible="{Binding !NoClient}" />
+          <TextBlock Classes="pm" Text="{Binding ClientName}" FontStyle="Italic" IsVisible="{Binding NoClient}" />
+          <ItemsControl ItemsSource="{Binding ClientLines}">
+            <ItemsControl.ItemTemplate><DataTemplate x:DataType="x:String"><TextBlock Text="{Binding}" /></DataTemplate></ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+        <StackPanel Grid.Column="2">
+          <TextBlock Classes="sec" Text="A KALKULÁCIÓ ALAPJA (HAVI)" Margin="0,0,0,4" />
+          <ItemsControl ItemsSource="{Binding Basis}">
+            <ItemsControl.ItemTemplate><DataTemplate x:DataType="x:String"><TextBlock Text="{Binding}" /></DataTemplate></ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Grid>
+
+      <TextBlock Classes="sec" Text="HAVI DÍJAK RÉSZLETEZÉSE" Margin="0,0,0,6" />
+      <Border BorderBrush="#121518" BorderThickness="0,0,0,2" Padding="0,0,0,6">
+        <Grid ColumnDefinitions="*,120,110,120">
+          <TextBlock Classes="sec" Text="TÉTEL" />
+          <TextBlock Grid.Column="1" Classes="sec" Text="MENNYISÉG" TextAlignment="Right" />
+          <TextBlock Grid.Column="2" Classes="sec" Text="EGYSÉGÁR" TextAlignment="Right" />
+          <TextBlock Grid.Column="3" Classes="sec" Text="HAVI ÖSSZEG" TextAlignment="Right" />
+        </Grid>
+      </Border>
+      <ItemsControl ItemsSource="{Binding Lines}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="local:PaperLine">
+            <Panel>
+              <Border Background="#F1F2F4" BorderBrush="#D3D7DB" BorderThickness="0,0,0,1" Padding="8,5" IsVisible="{Binding IsGroup}">
+                <TextBlock Classes="sec" Foreground="#3A4046" Text="{Binding Name}" />
+              </Border>
+              <Border Classes="row" IsVisible="{Binding IsItem}">
+                <Grid ColumnDefinitions="*,120,110,120">
+                  <StackPanel Margin="0,0,8,0">
+                    <TextBlock Text="{Binding Name}" Classes.ok="{Binding IsDiscount}" />
+                    <TextBlock Classes="pm xs" Text="{Binding Note}" IsVisible="{Binding HasNote}" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="1" Classes="r" Text="{Binding QtyText}" Classes.ok="{Binding IsDiscount}" />
+                  <TextBlock Grid.Column="2" Classes="r" Text="{Binding PriceText}" Classes.ok="{Binding IsDiscount}" />
+                  <TextBlock Grid.Column="3" Classes="r" Text="{Binding SumText}" Classes.ok="{Binding IsDiscount}" />
+                </Grid>
+              </Border>
+            </Panel>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <Grid ColumnDefinitions="*,Auto,140" RowDefinitions="Auto,Auto,Auto" HorizontalAlignment="Right" Width="340" Margin="0,12,0,0">
+        <TextBlock Text="Nettó havi díj" Margin="0,4" />
+        <TextBlock Grid.Column="2" Classes="r" FontSize="13" Text="{Binding NetText}" Margin="0,4" />
+        <TextBlock Grid.Row="1" Text="{Binding VatLabel}" Margin="0,4" />
+        <TextBlock Grid.Row="1" Grid.Column="2" Classes="r" FontSize="13" Text="{Binding VatText}" Margin="0,4" />
+        <Border Grid.Row="2" Grid.ColumnSpan="3" BorderBrush="#121518" BorderThickness="0,2,0,0" Padding="0,8,0,0" Margin="0,4,0,0">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="Bruttó havi díj" FontWeight="ExtraBold" FontSize="16" />
+            <TextBlock Grid.Column="1" Classes="r" Text="{Binding GrossText}" FontWeight="ExtraBold" FontSize="16" />
+          </Grid>
+        </Border>
+      </Grid>
+
+      <Grid ColumnDefinitions="*,10,*,10,*" Margin="0,16,0,0">
+        <Border Background="#F1F2F4" BorderBrush="#121518" BorderThickness="1,4,1,1" Padding="12,10">
+          <StackPanel>
+            <TextBlock Classes="pm xs" Text="Teljes költség / rendelés (nettó)" />
+            <TextBlock FontFamily="{StaticResource MonoFont}" FontWeight="SemiBold" FontSize="16" Text="{Binding PerOrderText}" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="2" Background="#F1F2F4" BorderBrush="#121518" BorderThickness="1,4,1,1" Padding="12,10">
+          <StackPanel>
+            <TextBlock Classes="pm xs" Text="Becsült éves díj (nettó)" />
+            <TextBlock FontFamily="{StaticResource MonoFont}" FontWeight="SemiBold" FontSize="16" Text="{Binding YearlyText}" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="4" Background="#F1F2F4" BorderBrush="#121518" BorderThickness="1,4,1,1" Padding="12,10">
+          <StackPanel>
+            <TextBlock Classes="pm xs" Text="Egyszeri kedvezmények értéke" />
+            <TextBlock FontFamily="{StaticResource MonoFont}" FontWeight="SemiBold" FontSize="16" Text="{Binding OneOffTotalText}" />
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <StackPanel IsVisible="{Binding HasOneOff}">
+        <TextBlock Classes="sec" Text="EGYSZERI KEDVEZMÉNYEK INDULÁSKOR" Margin="0,20,0,6" />
+        <ItemsControl ItemsSource="{Binding OneOff}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:PaperValue">
+              <Border Classes="row">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Classes="ok" Text="{Binding Name}" />
+                  <TextBlock Grid.Column="1" Classes="r ok" Text="{Binding Value}" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <TextBlock Classes="sec" Text="EGYSÉGÁRAK" Margin="0,20,0,6" />
+      <ItemsControl ItemsSource="{Binding UnitPrices}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="local:PaperPair">
+            <Border Classes="row">
+              <Grid ColumnDefinitions="*,Auto,36,*,Auto">
+                <TextBlock Text="{Binding A}" />
+                <TextBlock Grid.Column="1" Classes="r" Text="{Binding AValue}" Margin="8,0,0,0" />
+                <TextBlock Grid.Column="3" Text="{Binding B}" />
+                <TextBlock Grid.Column="4" Classes="r" Text="{Binding BValue}" Margin="8,0,0,0" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <StackPanel IsVisible="{Binding HasTerms}">
+        <TextBlock Classes="sec" Text="FELTÉTELEK" Margin="0,20,0,6" />
+        <ItemsControl ItemsSource="{Binding Terms}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="x:String">
+              <Grid ColumnDefinitions="18,*" Margin="0,2">
+                <Border Width="6" Height="6" Background="#121518" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="2,7,0,0" />
+                <TextBlock Grid.Column="1" Text="{Binding}" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <TextBlock Classes="pm sm" Margin="0,14,0,0"
+                 Text="A havi díj a megadott forgalom alapján készült becslés, a számlázás a ténylegesen teljesített mennyiségek szerint történik." />
+
+      <Grid ColumnDefinitions="*,40,*" Margin="0,36,0,0">
+        <Border BorderBrush="#121518" BorderThickness="0,1,0,0" Padding="0,4,0,0">
+          <TextBlock Classes="pm sm" Text="{Binding SignLeft}" TextAlignment="Center" />
+        </Border>
+        <Border Grid.Column="2" BorderBrush="#121518" BorderThickness="0,1,0,0" Padding="0,4,0,0">
+          <TextBlock Classes="pm sm" Text="{Binding SignRight}" TextAlignment="Center" />
+        </Border>
+      </Grid>
+    </StackPanel>
+  </Border>
+</UserControl>

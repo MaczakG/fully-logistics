@@ -24,6 +24,9 @@ public interface IPagePresenter
     // Brings the main window to the front (a module was chosen in its menu).
     void ActivateMain();
 
-    // Closes every record and dialog window (sign-out).
+    // A record window has changes not saved yet.
+    bool HasUnsaved { get; }
+
+    // Closes every record and dialog window (sign-out), without asking.
     void CloseAll();
 }

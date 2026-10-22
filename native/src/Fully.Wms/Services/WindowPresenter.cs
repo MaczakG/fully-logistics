@@ -116,9 +116,15 @@ public sealed class WindowPresenter(ShellViewModel shell, Window main) : IPagePr
 
     public void ActivateMain() => main.Activate();
 
+    public bool HasUnsaved => records.Any((r) => r.Page.HasUnsavedChanges);
+
     public void CloseAll()
     {
         foreach (var d in dialogs.ToList()) d.Close();
-        foreach (var r in records.ToList()) r.Close();
+        foreach (var r in records.ToList())
+        {
+            r.Force = true;
+            r.Close();
+        }
     }
 }

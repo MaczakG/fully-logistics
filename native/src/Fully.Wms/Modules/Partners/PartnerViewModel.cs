@@ -38,7 +38,7 @@ public sealed partial class PartnerViewModel : PageViewModel
     public PartnerSummaryTab Summary { get; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Title), nameof(Lead), nameof(Status), nameof(IsClient))]
+    [NotifyPropertyChangedFor(nameof(Title), nameof(Lead), nameof(Status), nameof(IsClient), nameof(CanQuote))]
     public partial PartnerDetail? Data { get; set; }
 
     [ObservableProperty]
@@ -57,6 +57,8 @@ public sealed partial class PartnerViewModel : PageViewModel
 
     public string? Status => Data?.Status;
     public bool IsClient => Data?.Type == "client";
+    // A quote for a client starts with its data and tariffs.
+    public bool CanQuote => IsClient && Shell.Me?.Can("quotes", "create") == true;
     public string Lead => Data is { } p
         ? MetaInfo.Label(Shell.Meta.PartnerTypes, p.Type)
           + (p.Type == "carrier" && !string.IsNullOrEmpty(p.CarrierCode) ? $", {MetaInfo.Label(Shell.Meta.Carriers, p.CarrierCode)}" : "")
@@ -96,6 +98,9 @@ public sealed partial class PartnerViewModel : PageViewModel
 
     PartnerTabChip Tab(string key, string label, int? count) =>
         new(key, count is { } n ? $"{label} {Fmt.Int(n)}" : label) { IsSelected = key == SelectedKey };
+
+    [RelayCommand]
+    Task QuoteAsync() => Shell.NavigateAsync(new Quotes.QuoteViewModel(Shell, null, Id));
 
     [RelayCommand]
     Task SelectTabAsync(PartnerTabChip tab)

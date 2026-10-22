@@ -37,6 +37,14 @@ public abstract partial class PageViewModel(ShellViewModel shell) : ViewModelBas
     // Dialogs: the width of the window (its height follows the content).
     public virtual double DialogWidth => 560;
 
+    // Records: the width of their window.
+    public virtual double RecordWidth => 1120;
+
+    // Changes not saved yet (a quote being written): closing its window asks first.
+    public virtual bool HasUnsavedChanges => false;
+
+    public const string UnsavedQuestion = "A módosítások nincsenek mentve. Bezárod mentés nélkül?";
+
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
 

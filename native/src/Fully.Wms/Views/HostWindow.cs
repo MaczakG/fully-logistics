@@ -33,7 +33,7 @@ public sealed class HostWindow : Window
         }
         else
         {
-            Width = 1120;
+            Width = page.RecordWidth;
             Height = 780;
             MinWidth = 420;
             MinHeight = 400;
@@ -43,6 +43,25 @@ public sealed class HostWindow : Window
 
     public PageViewModel Page { get; }
     public bool ForDialog { get; }
+
+    // Closes without asking about unsaved changes (signing out, already asked).
+    public bool Force { get; set; }
+
+    // A page with unsaved changes is closed only after a yes.
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        base.OnClosing(e);
+        if (e.Cancel || Force || e.CloseReason != WindowCloseReason.WindowClosing || !Page.HasUnsavedChanges) return;
+        e.Cancel = true;
+        _ = AskAsync();
+    }
+
+    async Task AskAsync()
+    {
+        if (!await Page.Shell.ConfirmAsync("Nem mentett változások", PageViewModel.UnsavedQuestion, "Bezárás mentés nélkül", "Mégse", danger: true)) return;
+        Force = true;
+        Close();
+    }
 
     static WindowIcon? AppIcon => icon ??= LoadIcon();
     static WindowIcon? icon;

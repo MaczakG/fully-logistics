@@ -16,6 +16,15 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
+    async Task AskAsync(ViewModels.ShellViewModel shell)
+    {
+        if (!await shell.ConfirmAsync("Nem mentett változások", "Egy megnyitott ablakban nem mentett módosítások vannak. Kilépsz mentés nélkül?",
+            "Kilépés", "Mégse", danger: true)) return;
+        leaving = true;
+        shell.Presenter?.CloseAll();
+        Close();
+    }
+
     public MainWindow(AppServices services) : this()
     {
         this.services = services;
@@ -49,9 +58,18 @@ public partial class MainWindow : Window
         }
     }
 
+    bool leaving;
+
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         base.OnClosing(e);
+        // A record window with unsaved changes: closing the app asks first.
+        if (!leaving && !e.Cancel && DataContext is ViewModels.ShellViewModel { HasUnsaved: true } shell)
+        {
+            e.Cancel = true;
+            _ = AskAsync(shell);
+            return;
+        }
         if (services is null) return;
         if (WindowState == WindowState.Normal)
         {
