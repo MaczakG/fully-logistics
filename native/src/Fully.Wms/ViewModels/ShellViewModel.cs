@@ -64,6 +64,18 @@ public sealed partial class ShellViewModel : ViewModelBase
     public string UserName => Me?.User.Name ?? "";
     public string UserRole => Me is null ? "" : $"{Me.User.Role.Name} · {Me.Company.Name}";
 
+    // A page's title can change once its data has arrived (a product page shows the SKU).
+    partial void OnCurrentChanged(PageViewModel? oldValue, PageViewModel? newValue)
+    {
+        if (oldValue is not null) oldValue.PropertyChanged -= OnPagePropertyChanged;
+        if (newValue is not null) newValue.PropertyChanged += OnPagePropertyChanged;
+    }
+
+    void OnPagePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(PageViewModel.Title) or null) OnPropertyChanged(nameof(Title));
+    }
+
     partial void OnIsCompactChanged(bool value)
     {
         foreach (var p in stack) p.OnCompactChanged();
@@ -157,7 +169,7 @@ public sealed partial class ShellViewModel : ViewModelBase
     {
         Menu.Clear();
         if (Me is null) return;
-        var visible = Modules.All.Where((m) => Me.Can(m.Key) && (!IsPhone || m.OnPhone));
+        var visible = AppModules.All.Where((m) => Me.Can(m.Key) && (!IsPhone || m.OnPhone));
         foreach (var g in visible.GroupBy((m) => m.Group))
             Menu.Add(new MenuGroupViewModel(g.Key, g.Select((m) => new MenuItemViewModel(this, m)).ToList()));
     }
@@ -175,7 +187,7 @@ public sealed partial class ShellViewModel : ViewModelBase
     [RelayCommand]
     public async Task OpenModuleAsync(string key)
     {
-        var def = Modules.Find(key);
+        var def = AppModules.Find(key);
         if (def is null || Me is null || !Me.Can(key)) return;
         while (stack.Count > 1) stack.RemoveAt(stack.Count - 1);
         await ShowAsync(def.Open(this));

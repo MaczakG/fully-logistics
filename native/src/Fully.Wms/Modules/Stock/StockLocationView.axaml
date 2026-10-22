@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Stock"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Stock.StockLocationView"
+             x:DataType="local:StockLocationViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14" IsVisible="{Binding Data, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <TextBlock Text="{Binding Location.Code, FallbackValue=''}" Classes="h1 mono" />
+        <Border Classes="tag" VerticalAlignment="Center"><TextBlock Text="{Binding Location.SizeCode, FallbackValue=''}" /></Border>
+        <Border Classes="tag warn" VerticalAlignment="Center" IsVisible="{Binding !Location.Active, FallbackValue={x:False}}"><TextBlock Text="inaktív" /></Border>
+      </StackPanel>
+      <Border Classes="card">
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+          <TextBlock Classes="dt" Text="Típus" />
+          <TextBlock Grid.Column="1" Classes="dd" Text="{Binding Location.KindLabel, FallbackValue=''}" />
+          <TextBlock Grid.Row="1" Classes="dt" Text="Zóna" />
+          <TextBlock Grid.Row="1" Grid.Column="1" Classes="dd" Text="{Binding Location.Zone, FallbackValue=''}" />
+          <TextBlock Grid.Row="2" Classes="dt" Text="Méret" />
+          <TextBlock Grid.Row="2" Grid.Column="1" Classes="dd" Text="{Binding Location.SizeName, FallbackValue=''}" />
+          <TextBlock Grid.Row="3" Classes="dt" Text="Dedikált ügyfél" />
+          <TextBlock Grid.Row="3" Grid.Column="1" Classes="dd" Text="{Binding Dedicated}" />
+          <TextBlock Grid.Row="4" Classes="dt" Text="Utolsó mozgás" />
+          <TextBlock Grid.Row="4" Grid.Column="1" Classes="dd" Text="{Binding LastMovementText}" />
+        </Grid>
+      </Border>
+
+      <TextBlock Classes="section" Text="A helyen lévő áru" />
+      <Border Classes="notice ok" IsVisible="{Binding IsEmpty}">
+        <TextBlock Text="A hely üres." />
+      </Border>
+      <ItemsControl ItemsSource="{Binding Rows}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="m:LocationStockRow">
+            <Button Classes="link" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="0,0,0,6"
+                    Command="{Binding $parent[local:StockLocationView].((local:StockLocationViewModel)DataContext).OpenProductCommand}" CommandParameter="{Binding}">
+              <Border Classes="card" Padding="12,10">
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="{Binding Sku}" Classes="mono" FontWeight="Bold" FontSize="16" TextDecorations="{x:Null}" />
+                      <Border Classes="tag"><TextBlock Text="{Binding PartnerCode}" TextDecorations="{x:Null}" /></Border>
+                    </StackPanel>
+                    <TextBlock Text="{Binding Name}" Classes="muted" TextWrapping="Wrap" TextDecorations="{x:Null}" />
+                    <TextBlock Classes="muted small" Text="{Binding Converter={x:Static local:StockFormat.LocationLotExpiry}}" TextDecorations="{x:Null}" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="1" Text="{Binding Qty, Converter={x:Static local:StockFormat.Int}}" Classes="big" VerticalAlignment="Center" TextDecorations="{x:Null}" />
+                </Grid>
+              </Border>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

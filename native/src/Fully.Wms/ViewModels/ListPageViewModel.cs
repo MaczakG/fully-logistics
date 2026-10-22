@@ -33,28 +33,35 @@ public abstract partial class ListPageViewModel<T>(ShellViewModel shell) : PageV
     // The list's address and filters, e.g. Query.Build("api/inbound", ("status", Status), ("q", Search)).
     protected abstract string ListPath();
 
-    // After a page arrived (status counts for the filter chips ...).
-    protected virtual void OnPage(Paged<T> page, bool first) { }
+    // One page from the server. Lists whose answer carries more than { items, total, counts }
+    // (a summary ...) override this and keep the rest.
+    protected virtual async Task<(IReadOnlyList<T> Items, int Total)> FetchAsync(int offset)
+    {
+        var page = await Api.GetAsync<Paged<T>>(Query.Build(ListPath(), ("limit", PageSize), ("offset", offset)));
+        OnCounts(page.Counts);
+        return (page.Items, page.Total);
+    }
+
+    // Per status counts of the list (the filter chips), where it has them.
+    protected virtual void OnCounts(Dictionary<string, int>? counts) { }
 
     public override async Task LoadAsync()
     {
-        var page = await Api.GetAsync<Paged<T>>(Query.Build(ListPath(), ("limit", PageSize), ("offset", 0)));
+        var (items, total) = await FetchAsync(0);
         Items.Clear();
-        foreach (var it in page.Items) Items.Add(it);
-        Total = page.Total;
+        foreach (var it in items) Items.Add(it);
+        Total = total;
         HasMore = Items.Count < Total;
         Loaded = true;
-        OnPage(page, true);
     }
 
     [RelayCommand]
     Task MoreAsync() => RunAsync(async () =>
     {
-        var page = await Api.GetAsync<Paged<T>>(Query.Build(ListPath(), ("limit", PageSize), ("offset", Items.Count)));
-        foreach (var it in page.Items) Items.Add(it);
-        Total = page.Total;
-        HasMore = Items.Count < Total && page.Items.Count > 0;
-        OnPage(page, false);
+        var (items, total) = await FetchAsync(Items.Count);
+        foreach (var it in items) Items.Add(it);
+        Total = total;
+        HasMore = Items.Count < Total && items.Count > 0;
     });
 
     [RelayCommand]

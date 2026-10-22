@@ -34,7 +34,7 @@ public class ShellUiTests
         await Screens.SignInAsync(shell, LiveServer.Worker);
         Screens.Settle();
         Assert.False(shell.ShowSidebar);
-        Assert.All(shell.MenuItems, (m) => Assert.True(Modules.Find(m.Key)!.OnPhone));
+        Assert.All(shell.MenuItems, (m) => Assert.True(AppModules.Find(m.Key)!.OnPhone));
         Screens.Save(window, "phone-home");
 
         await shell.OpenModuleAsync(shell.MenuItems.First().Key);

@@ -108,5 +108,5 @@ FL_TEST_SERVER=http://localhost:8899 FL_SCREENSHOTS=/tmp/kepek dotnet test tests
 - **Széles ablak:** bal oldalt a menü.
 - **Keskeny ablak és telefon:** a kezdőképernyőn nagy csempék, fent Vissza és Kezdőlap gomb.
 
-A modulok a saját fájljukból jelentkeznek be (`Modules.Use`, `PageLocator.Register`), így egy új
+A modulok a saját fájljukból jelentkeznek be (`AppModules.Use`, `PageLocator.Register`), így egy új
 modul felvételéhez nem kell a közös listákat szerkeszteni.

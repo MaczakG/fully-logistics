@@ -205,6 +205,63 @@
     <Setter Property="Background" Value="{DynamicResource OkBg}" />
   </Style>
 
+  <!-- Key figures (web app: .kpi) -->
+  <Style Selector="Border.kpi">
+    <Setter Property="Background" Value="{DynamicResource Panel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+    <Setter Property="BorderThickness" Value="1,4,1,1" />
+    <Setter Property="Padding" Value="14,10" />
+    <Setter Property="Margin" Value="0,0,10,10" />
+  </Style>
+  <Style Selector="Border.kpi.warn">
+    <Setter Property="BorderBrush" Value="{DynamicResource Warn}" />
+  </Style>
+  <Style Selector="Border.kpi.danger">
+    <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
+  </Style>
+  <Style Selector="Border.kpi TextBlock.kpilabel">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{DynamicResource Ink3}" />
+  </Style>
+  <Style Selector="Border.kpi TextBlock.kpivalue">
+    <Setter Property="FontSize" Value="26" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+  </Style>
+  <Style Selector="Border.kpi TextBlock.kpihint">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource Ink3}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <!-- Section heading with a line (web app: .panel__head) -->
+  <Style Selector="TextBlock.section">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="ExtraBold" />
+    <Setter Property="Margin" Value="0,8,0,8" />
+  </Style>
+
+  <!-- Label / value pairs (web app: dl.dl) -->
+  <Style Selector="TextBlock.dt">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{DynamicResource Ink3}" />
+    <Setter Property="Margin" Value="0,6,16,0" />
+  </Style>
+  <Style Selector="TextBlock.dd">
+    <Setter Property="Margin" Value="0,6,0,0" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <!-- Positive and negative quantities -->
+  <Style Selector="TextBlock.pos">
+    <Setter Property="Foreground" Value="{DynamicResource Ok}" />
+  </Style>
+  <Style Selector="TextBlock.neg">
+    <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+  </Style>
+
   <!-- Status tags (Tag control, see Controls/StatusTag) -->
   <Style Selector="Border.tag">
     <Setter Property="Padding" Value="6,2" />

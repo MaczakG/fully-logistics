@@ -9,13 +9,13 @@ public sealed class ModuleDef(string key, string label, string hint, string icon
     public string Hint { get; } = hint;
     public string Icon { get; } = icon;
     public string Group { get; } = group;
-    public bool OnPhone => Group == Modules.Warehouse;
+    public bool OnPhone => Group == AppModules.Warehouse;
 
-    // The module's first page. Set by the module itself (Modules.Use); until then a placeholder.
+    // The module's first page. Set by the module itself (AppModules.Use); until then a placeholder.
     public Func<ShellViewModel, PageViewModel> Open { get; internal set; } = (s) => new PlaceholderViewModel(s, key, label);
 }
 
-public static class Modules
+public static class AppModules
 {
     public const string Warehouse = "Raktár";
     public const string Commercial = "Kereskedelem";
@@ -41,7 +41,7 @@ public static class Modules
 
     // Each module registers its first page and its views from its own file, with a module
     // initializer, so modules can be added without touching this list:
-    //   [ModuleInitializer] internal static void Register() { Modules.Use("stock", (s) => new StockViewModel(s)); ... }
+    //   [ModuleInitializer] internal static void Register() { AppModules.Use("stock", (s) => new StockViewModel(s)); ... }
     public static void Use(string key, Func<ShellViewModel, PageViewModel> open) =>
         (Find(key) ?? throw new ArgumentException($"Ismeretlen modul: {key}", nameof(key))).Open = open;
 }

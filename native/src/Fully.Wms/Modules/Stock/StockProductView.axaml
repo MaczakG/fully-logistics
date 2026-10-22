@@ -1,0 +1,157 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Stock"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Stock.StockProductView"
+             x:DataType="local:StockProductViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14" IsVisible="{Binding Data, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <!-- Head -->
+      <StackPanel Spacing="4">
+        <TextBlock Text="{Binding Product.Name, FallbackValue=''}" Classes="h1" TextWrapping="Wrap" />
+        <WrapPanel>
+          <TextBlock Text="{Binding Product.Sku, FallbackValue=''}" Classes="mono" FontWeight="Bold" Margin="0,0,8,4" VerticalAlignment="Center" />
+          <Border Classes="tag" Margin="0,0,8,4"><TextBlock Text="{Binding Product.PartnerCode, FallbackValue=''}" /></Border>
+          <TextBlock Text="{Binding Product.PartnerName, FallbackValue=''}" Classes="muted" Margin="0,0,0,4" VerticalAlignment="Center" TextWrapping="Wrap" />
+        </WrapPanel>
+      </StackPanel>
+      <Border Classes="notice warn" IsVisible="{Binding !Product.Active, FallbackValue={x:False}}">
+        <TextBlock Text="Ez a cikk inaktív: nem rendelhető, és új betárolásra sem vehető fel." />
+      </Border>
+
+      <WrapPanel>
+        <Button Classes="primary" Command="{Binding TransferCommand}" CommandParameter="{x:Null}" IsVisible="{Binding CanTransfer}" Margin="0,0,10,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconTransfer}" /><TextBlock Text="Áttárolás" /></StackPanel>
+        </Button>
+        <Button Command="{Binding AdjustCommand}" CommandParameter="{x:Null}" IsVisible="{Binding CanApprove}" Margin="0,0,10,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconEdit}" /><TextBlock Text="Készletkorrekció" /></StackPanel>
+        </Button>
+      </WrapPanel>
+
+      <!-- Availability -->
+      <WrapPanel>
+        <Border Classes="kpi" MinWidth="140">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Készleten" />
+            <TextBlock Classes="kpivalue" Text="{Binding Availability.OnHand, Converter={x:Static local:StockFormat.Int}, FallbackValue=''}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" MinWidth="140">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Foglalt" />
+            <TextBlock Classes="kpivalue" Text="{Binding Availability.Reserved, Converter={x:Static local:StockFormat.Int}, FallbackValue=''}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" MinWidth="140" Classes.danger="{Binding Availability.Blocked, Converter={x:Static local:StockFormat.NonZero}, FallbackValue={x:False}}">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Zárolt" />
+            <TextBlock Classes="kpivalue" Text="{Binding Availability.Blocked, Converter={x:Static local:StockFormat.Int}, FallbackValue=''}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" MinWidth="140">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Elérhető" />
+            <TextBlock Classes="kpivalue" Text="{Binding Availability.Available, Converter={x:Static local:StockFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text="{Binding Availability.StatusLabel, FallbackValue=''}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" MinWidth="140">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Beérkező" />
+            <TextBlock Classes="kpivalue" Text="{Binding Availability.Incoming, Converter={x:Static local:StockFormat.Int}, FallbackValue=''}" />
+          </StackPanel>
+        </Border>
+      </WrapPanel>
+
+      <!-- Stock by location -->
+      <TextBlock Classes="section" Text="Készlet helyenként (első lejárat elöl)" />
+      <Border Classes="notice" IsVisible="{Binding !HasRows}">
+        <TextBlock Text="Ebből a cikkből nincs készlet." />
+      </Border>
+      <ItemsControl ItemsSource="{Binding Rows}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="m:StockLocationRow">
+            <Border Classes="card" Padding="12,10" Margin="0,0,0,6">
+              <Grid ColumnDefinitions="*,Auto,Auto">
+                <Button Classes="link" Command="{Binding $parent[local:StockProductView].((local:StockProductViewModel)DataContext).OpenLocationCommand}" CommandParameter="{Binding}" VerticalAlignment="Center">
+                  <StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="{Binding Code}" Classes="mono" FontWeight="Bold" FontSize="16" />
+                      <Border Classes="tag"><TextBlock Text="{Binding SizeCode}" /></Border>
+                      <TextBlock Text="{Binding KindLabel}" Classes="muted small" VerticalAlignment="Center" IsVisible="{Binding Kind, Converter={x:Static local:StockFormat.NotStorage}}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Converter={x:Static local:StockFormat.LotExpiry}}" Classes="muted small" TextDecorations="{x:Null}" />
+                  </StackPanel>
+                </Button>
+                <TextBlock Grid.Column="1" Text="{Binding Qty, Converter={x:Static local:StockFormat.Int}}" Classes="big" VerticalAlignment="Center" Margin="12,0" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                  <Button ToolTip.Tip="Áttárolás innen" AutomationProperties.Name="Áttárolás innen"
+                          IsVisible="{Binding $parent[local:StockProductView].((local:StockProductViewModel)DataContext).CanEdit}"
+                          Command="{Binding $parent[local:StockProductView].((local:StockProductViewModel)DataContext).TransferCommand}" CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource IconTransfer}" />
+                  </Button>
+                  <Button ToolTip.Tip="Készletkorrekció" AutomationProperties.Name="Készletkorrekció"
+                          IsVisible="{Binding $parent[local:StockProductView].((local:StockProductViewModel)DataContext).CanApprove}"
+                          Command="{Binding $parent[local:StockProductView].((local:StockProductViewModel)DataContext).AdjustCommand}" CommandParameter="{Binding}">
+                    <PathIcon Data="{StaticResource IconEdit}" />
+                  </Button>
+                </StackPanel>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- Product data -->
+      <TextBlock Classes="section" Text="Cikkadatok" />
+      <Border Classes="card">
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+          <TextBlock Classes="dt" Text="EAN" />
+          <StackPanel Grid.Column="1">
+            <TextBlock Classes="dd mono" Text="{Binding Product.Ean, Converter={x:Static local:StockFormat.OrDash}, FallbackValue=''}" />
+            <TextBlock Classes="small" Foreground="{DynamicResource Warn}" TextWrapping="Wrap" Text="{Binding Product.EanWarning, FallbackValue=''}"
+                       IsVisible="{Binding Product.EanWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue={x:False}}" />
+          </StackPanel>
+          <TextBlock Grid.Row="1" Classes="dt" Text="Egység" />
+          <TextBlock Grid.Row="1" Grid.Column="1" Classes="dd" Text="{Binding Product.UnitText, FallbackValue=''}" />
+          <TextBlock Grid.Row="2" Classes="dt" Text="Súly" />
+          <TextBlock Grid.Row="2" Grid.Column="1" Classes="dd" Text="{Binding Product.WeightKg, Converter={x:Static local:StockFormat.Kg}, FallbackValue=''}" />
+          <TextBlock Grid.Row="3" Classes="dt" Text="Méretek" />
+          <TextBlock Grid.Row="3" Grid.Column="1" Classes="dd" Text="{Binding Dimensions}" />
+          <TextBlock Grid.Row="4" Classes="dt" Text="Minimum készlet" />
+          <TextBlock Grid.Row="4" Grid.Column="1" Classes="dd" Text="{Binding Product.MinStock, Converter={x:Static local:StockFormat.Int}, FallbackValue=''}" />
+          <TextBlock Grid.Row="5" Classes="dt" Text="Követés" />
+          <TextBlock Grid.Row="5" Grid.Column="1" Classes="dd" Text="{Binding Tracking}" />
+          <TextBlock Grid.Row="6" Classes="dt" Text="Megjegyzés" IsVisible="{Binding Product.Notes, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue={x:False}}" />
+          <TextBlock Grid.Row="6" Grid.Column="1" Classes="dd" Text="{Binding Product.Notes, FallbackValue=''}" />
+        </Grid>
+      </Border>
+
+      <!-- Reservations -->
+      <TextBlock Classes="section" Text="Foglalások (nyitott rendelések)" IsVisible="{Binding HasReservations}" />
+      <ItemsControl ItemsSource="{Binding Reservations}" IsVisible="{Binding HasReservations}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="m:StockReservation">
+            <Border Classes="card" Padding="12,8" Margin="0,0,0,6">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding Number}" Classes="mono" FontWeight="Bold" />
+                    <ctl:StatusTag Group="order" Status="{Binding Status}" />
+                  </StackPanel>
+                  <TextBlock Text="{Binding CustomerName}" Classes="muted small" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding Qty, Converter={x:Static local:StockFormat.Int}}" Classes="mono" FontWeight="Bold" VerticalAlignment="Center" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- Movements -->
+      <TextBlock Classes="section" Text="Utolsó mozgások" />
+      <local:MovementList Items="{Binding Movements}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
