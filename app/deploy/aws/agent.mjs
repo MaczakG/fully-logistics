@@ -4,7 +4,8 @@
 //   releases/current.json   { version, sha256 }  the release that should run
 //   releases/<version>.tar.gz                    the bundle (app/ with dist, worker, server, migrations)
 //   deploy/config.json      { hostnames: [...] } the names Caddy serves with HTTPS certificates
-//   tasks/current.json      { id, task }          a one-off job (demo data, backup), see TASKS
+//   tasks/current.json      { id, task }          a one-off job (demo data, backup, settings), see TASKS
+//   tasks/payload-<id>.json                       the data of a task that takes some (settings)
 //   status/agent.json       written here: what runs, whether the last install worked, and why not
 //
 // Installing a release: download and check it, back up the database, apply the migrations, switch
@@ -16,7 +17,8 @@
 
 import { realpathSync } from 'node:fs';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, readdir, readlink, rename, rm, stat, statfs, symlink, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, readdir, readlink, rename, rm, stat, statfs, symlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
@@ -218,10 +220,13 @@ async function syncCaddy(bucket) {
 // One-off jobs, asked for through the bucket (tasks/current.json: { id, task }). Only the scripts
 // named here can run, from the installed release, as the app's user, each id once; the result
 // goes to status/task-<id>.json. deploy/aws/task.mjs publishes a task and waits for the result.
+// PAYLOAD stands for a file with tasks/payload-<id>.json (the task fails without one).
+const PAYLOAD = Symbol('payload');
 const TASKS = {
   'demo-seed': ['server/demo-seed.mjs'],
   'demo-remove': ['server/demo-seed.mjs', '--remove'],
   backup: ['server/backup.mjs'],
+  settings: ['server/apply-settings.mjs', PAYLOAD],
 };
 const TASK_TIMEOUT_MS = 15 * 60 * 1000;
 
@@ -236,8 +241,23 @@ async function runTask(bucket, env, state) {
   if (!/^[A-Za-z0-9_-]{6,64}$/.test(String(t.id)) || !spec) result = { ok: false, output: `unknown task: ${String(t.task).slice(0, 40)}` };
   else if (!existsSync(join(CURRENT, 'app', spec[0]))) result = { ok: false, output: `this release has no ${spec[0]}` };
   else {
-    const r = asApp(env, join(CURRENT, 'app', spec[0]), spec.slice(1), { timeout: TASK_TIMEOUT_MS });
-    result = { ok: r.ok, output: r.out.slice(-6000) };
+    const file = join(tmpdir(), `fully-app-task-${t.id}.json`);
+    try {
+      let args = spec.slice(1);
+      if (args.includes(PAYLOAD)) {
+        const payload = await bucket.get(`tasks/payload-${t.id}.json`);
+        if (!payload) throw new Error(`no payload: tasks/payload-${t.id}.json is missing`);
+        await writeFile(file, Buffer.from(await payload.arrayBuffer()));
+        await chmod(file, 0o644); // the app's user reads it
+        args = args.map((a) => (a === PAYLOAD ? file : a));
+      }
+      const r = asApp(env, join(CURRENT, 'app', spec[0]), args, { timeout: TASK_TIMEOUT_MS });
+      result = { ok: r.ok, output: r.out.slice(-6000) };
+    } catch (err) {
+      result = { ok: false, output: String(err.message || err) };
+    } finally {
+      await rm(file, { force: true });
+    }
   }
   const report = { id: t.id, task: t.task, at: new Date().toISOString(), ...result };
   await bucket.put(`status/task-${t.id}.json`, JSON.stringify(report, null, 2), { httpMetadata: { contentType: 'application/json' } });

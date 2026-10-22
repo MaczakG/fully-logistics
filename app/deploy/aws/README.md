@@ -86,6 +86,21 @@ node deploy/aws/task.mjs demo-remove   # törlés; a valódi adatokhoz nem nyúl
 
 `node deploy/aws/task.mjs backup` azonnali adatbázis-mentést készít.
 
+### Beállítások böngésző nélkül
+
+Az alap tarifák és a költségkalkuláció egy JSON fájlból is beírhatók:
+
+```bash
+node deploy/aws/task.mjs settings beallitasok.json
+```
+
+```json
+{ "tariffs": { "values": { "cod_fixed": 190, "cod_pct": 1.5 }, "storage": { "PAL": 3990 } },
+  "costing": { "pack_cost": 90, "racks": { "M": { "levels": 5 } } } }
+```
+
+Csak a megadott mezők változnak. A szerver az alkalmazás saját felületén keresztül menti őket, az első aktív adminisztrátor nevében. Ugyanaz az ellenőrzés érvényes, mint a Beállítások oldalon, és a változás a Naplóba is bekerül. A parancs kiírja, mi mire változott.
+
 ## Állapot
 
 ```bash

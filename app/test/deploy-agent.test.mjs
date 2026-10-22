@@ -181,5 +181,14 @@ test('first install, a release that does not start, a failing migration, then a 
   const refused = await task('feladat-2', 'rm -rf /');
   assert.equal(refused.ok, false);
   assert.match(refused.output, /unknown task/);
+  // A task with a payload: the file from tasks/payload-<id>.json reaches the script, which saves the
+  // settings through the app's API; without the file the task fails.
+  await bucket.put('tasks/payload-feladat-3.json', JSON.stringify({ tariffs: { values: { cod_pct: 1.5 } } }), { httpMetadata: { contentType: 'application/json' } });
+  const settings = await task('feladat-3', 'settings');
+  assert.equal(settings.ok, true, settings.output);
+  assert.match(settings.output, /values\.cod_pct: \S+ -> 1\.5/);
+  const noPayload = await task('feladat-4', 'settings');
+  assert.equal(noPayload.ok, false);
+  assert.match(noPayload.output, /no payload: tasks\/payload-feladat-4\.json is missing/);
   assert.ok(await health());
 });
