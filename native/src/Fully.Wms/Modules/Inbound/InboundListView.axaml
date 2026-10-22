@@ -1,0 +1,211 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Inbound"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Inbound.InboundListView"
+             x:DataType="local:InboundListViewModel">
+  <UserControl.Styles>
+    <Style Selector="ToggleButton.chip">
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="Padding" Value="12,0" />
+      <Setter Property="Margin" Value="0,0,6,6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LineStrong}" />
+      <Setter Property="Background" Value="{DynamicResource Panel}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="ToggleButton.chip:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Ink}" />
+      <Setter Property="Foreground" Value="{DynamicResource Paper}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Ink}" />
+    </Style>
+    <Style Selector="Button.kpibutton">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Stretch" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+  </UserControl.Styles>
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Margin="16,16,16,6" Spacing="10">
+      <Grid ColumnDefinitions="*,Auto">
+        <ctl:ScanField Command="{Binding ScanCommand}" Placeholder="Betárolás száma vagy szállítólevél" AutoFocus="False" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,0,0" IsVisible="{Binding CanCreate}">
+          <Button Command="{Binding ImportCommand}" IsVisible="{Binding CanImport}">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconUpload}" /><TextBlock Text="CSV import" /></StackPanel>
+          </Button>
+          <Button Classes="primary" Command="{Binding NewCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Új betárolás" IsVisible="{Binding !IsCompact}" /></StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+
+      <!-- Key figures, each opens its list -->
+      <Grid ColumnDefinitions="*,*,*,*" IsVisible="{Binding !IsCompact}">
+        <Button Classes="kpibutton" Command="{Binding ShowCommand}" CommandParameter="today">
+          <Border Classes="kpi" Classes.warn="{Binding Kpis.Overdue, Converter={x:Static local:InboundFormat.NonZero}, FallbackValue={x:False}}">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Várható ma" />
+              <TextBlock Classes="kpivalue" Text="{Binding Kpis.ExpectedToday, Converter={x:Static local:InboundFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text="{Binding Kpis.Overdue, Converter={x:Static local:InboundListFormat.Overdue}, FallbackValue=''}" />
+            </StackPanel>
+          </Border>
+        </Button>
+        <Button Grid.Column="1" Classes="kpibutton" Command="{Binding ShowCommand}" CommandParameter="arrived">
+          <Border Classes="kpi">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Megérkezett" />
+              <TextBlock Classes="kpivalue" Text="{Binding Kpis.Arrived, Converter={x:Static local:InboundFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text="átvételre vár" />
+            </StackPanel>
+          </Border>
+        </Button>
+        <Button Grid.Column="2" Classes="kpibutton" Command="{Binding ShowCommand}" CommandParameter="receiving">
+          <Border Classes="kpi">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Átvétel alatt" />
+              <TextBlock Classes="kpivalue" Text="{Binding Kpis.Receiving, Converter={x:Static local:InboundFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text="számlálás, polcra helyezés" />
+            </StackPanel>
+          </Border>
+        </Button>
+        <Button Grid.Column="3" Classes="kpibutton" Command="{Binding ShowCommand}" CommandParameter="discrepancy">
+          <Border Classes="kpi" Classes.danger="{Binding Kpis.Discrepancy30d, Converter={x:Static local:InboundFormat.NonZero}, FallbackValue={x:False}}">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Eltéréssel lezárt" />
+              <TextBlock Classes="kpivalue" Text="{Binding Kpis.Discrepancy30d, Converter={x:Static local:InboundFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text="elmúlt 30 nap" />
+            </StackPanel>
+          </Border>
+        </Button>
+      </Grid>
+
+      <!-- Status tabs -->
+      <ItemsControl ItemsSource="{Binding StatusTabs}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="local:StatusTab">
+            <ToggleButton Classes="chip" Content="{Binding Text}" IsChecked="{Binding IsSelected, Mode=OneWay}"
+                          Command="{Binding $parent[local:InboundListView].((local:InboundListViewModel)DataContext).SelectTabCommand}" CommandParameter="{Binding}" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <Expander Header="Szűrők" IsExpanded="False" HorizontalAlignment="Stretch">
+        <WrapPanel>
+          <StackPanel Margin="0,0,10,8" Width="240">
+            <TextBlock Classes="label" Text="Keresés" />
+            <TextBox Text="{Binding Search}" Watermark="Betárolás száma vagy külső hivatkozás">
+              <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding ApplyCommand}" /></TextBox.KeyBindings>
+            </TextBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="220">
+            <TextBlock Classes="label" Text="Ügyfél" />
+            <ComboBox ItemsSource="{Binding Clients}" SelectedItem="{Binding Client}" PlaceholderText="Minden ügyfél">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="m:PartnerLookup"><TextBlock Text="{Binding Display}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="220">
+            <TextBlock Classes="label" Text="Beszállító" />
+            <ComboBox ItemsSource="{Binding Suppliers}" SelectedItem="{Binding Supplier}" PlaceholderText="Minden beszállító">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="m:PartnerLookup"><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="170">
+            <TextBlock Classes="label" Text="Várható ettől" />
+            <CalendarDatePicker SelectedDate="{Binding From}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="170">
+            <TextBlock Classes="label" Text="Várható eddig" />
+            <CalendarDatePicker SelectedDate="{Binding To}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom" Margin="0,0,0,8">
+            <Button Classes="dark" Content="Szűrés" Command="{Binding ApplyCommand}" />
+            <Button Content="Szűrők törlése" Command="{Binding ClearFiltersCommand}" />
+          </StackPanel>
+        </WrapPanel>
+      </Expander>
+      <Border Classes="notice" IsVisible="{Binding DiscrepancyNotice, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding DiscrepancyNotice}" />
+      </Border>
+    </StackPanel>
+
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="16,6,16,12">
+      <TextBlock Text="{Binding TotalText}" Classes="muted" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Továbbiak" Command="{Binding MoreCommand}" IsVisible="{Binding HasMore}" />
+    </Grid>
+
+    <Panel Margin="16,0">
+      <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
+        <TextBlock Text="Nincs betárolás ebben az állapotban, vagy a szűrésnek megfelelő." />
+      </Border>
+      <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False" CanUserSortColumns="False">
+        <DataGrid.Columns>
+          <DataGridTemplateColumn Header="Szám" Width="170">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:InboundRow">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Number}" Classes="mono" FontWeight="Bold" />
+                  <TextBlock Text="{Binding ExternalRef}" Classes="muted small" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Ügyfél" Width="*" MinWidth="160">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:InboundRow">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding PartnerName}" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Text="{Binding PartnerCode}" Classes="muted small" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn x:DataType="m:InboundRow" Header="Beszállító" Binding="{Binding SupplierName}" Width="150" />
+          <DataGridTemplateColumn Header="Várható" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:InboundRow">
+                <StackPanel Margin="10,0" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding ExpectedDate, Converter={x:Static local:InboundFormat.Date}}" Classes.neg="{Binding Converter={x:Static local:InboundListFormat.IsLate}}" />
+                  <TextBlock Text="késésben" Classes="small neg" IsVisible="{Binding Converter={x:Static local:InboundListFormat.IsLate}}" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Állapot" Width="170">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:InboundRow">
+                <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0" VerticalAlignment="Center">
+                  <ctl:StatusTag Group="inbound" Status="{Binding Status}" />
+                  <Border Classes="tag danger" IsVisible="{Binding HasDiscrepancy}"><TextBlock Text="Eltérés" /></Border>
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn x:DataType="m:InboundRow" Header="Tétel" Binding="{Binding LineCount}" Width="65" />
+          <DataGridTextColumn x:DataType="m:InboundRow" Header="Átvett / várt" Binding="{Binding Converter={x:Static local:InboundListFormat.ReceivedOfExpected}}" Width="115" />
+          <DataGridTextColumn x:DataType="m:InboundRow" Header="Polcon" Binding="{Binding PutawayQty}" Width="75" />
+          <DataGridTextColumn x:DataType="m:InboundRow" Header="Forrás" Binding="{Binding Source, Converter={x:Static local:InboundFormat.SourceLabel}}" Width="75" />
+        </DataGrid.Columns>
+      </DataGrid>
+      <ListBox Classes="rows" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding IsCompact}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="m:InboundRow">
+            <StackPanel Margin="14,10" Spacing="4">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding Number}" Classes="mono" FontWeight="Bold" FontSize="16" />
+                <ctl:StatusTag Grid.Column="1" Group="inbound" Status="{Binding Status}" />
+              </Grid>
+              <TextBlock Text="{Binding PartnerName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding Converter={x:Static local:InboundListFormat.CardLine}}" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Panel>
+  </DockPanel>
+</UserControl>

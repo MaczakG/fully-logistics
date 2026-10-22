@@ -18,7 +18,12 @@ public interface IPlatformServices
     // Shows a downloaded document (PDF label, delivery note, CSV): opens it on the desktop, shares
     // or previews it on the phone.
     Task OpenFileAsync(DownloadedFile file);
+
+    // A short vibration after a scan on the phone: success, warning or error. Nothing on the desktop.
+    void Haptic(HapticKind kind);
 }
+
+public enum HapticKind { Success, Warning, Error }
 
 public interface IBarcodeScanner
 {
@@ -32,6 +37,8 @@ public class DefaultPlatformServices : IPlatformServices
     public virtual bool IsPhone => false;
     public virtual string? SettingsFolder => null;
     public virtual IBarcodeScanner? Scanner => null;
+
+    public virtual void Haptic(HapticKind kind) { }
 
     public virtual Task OpenFileAsync(DownloadedFile file)
     {

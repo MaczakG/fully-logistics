@@ -146,6 +146,9 @@
 
   <!-- Text boxes -->
   <Style Selector="TextBox">
+    <!-- Selected text in hi-vis, like the web app's ::selection -->
+    <Setter Property="SelectionBrush" Value="{StaticResource HiVis}" />
+    <Setter Property="SelectionForegroundBrush" Value="{StaticResource OnHiVis}" />
     <Setter Property="MinHeight" Value="40" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
     <Setter Property="BorderThickness" Value="2" />

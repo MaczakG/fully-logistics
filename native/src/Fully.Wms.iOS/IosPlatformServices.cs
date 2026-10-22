@@ -17,6 +17,13 @@ public sealed class IosPlatformServices : IPlatformServices
 
     public IBarcodeScanner? Scanner { get; } = new CameraScanner();
 
+    public void Haptic(HapticKind kind) => new UINotificationFeedbackGenerator().NotificationOccurred(kind switch
+    {
+        HapticKind.Success => UINotificationFeedbackType.Success,
+        HapticKind.Warning => UINotificationFeedbackType.Warning,
+        _ => UINotificationFeedbackType.Error,
+    });
+
     public Task OpenFileAsync(DownloadedFile file)
     {
         var folder = Path.Combine(Path.GetTempPath(), "FullyWms");
