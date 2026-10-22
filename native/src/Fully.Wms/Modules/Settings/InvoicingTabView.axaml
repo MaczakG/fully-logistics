@@ -1,0 +1,106 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Settings"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Settings.InvoicingTabView"
+             x:DataType="local:InvoicingTab">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <StackPanel Spacing="12">
+    <Border Classes="notice" IsVisible="{Binding ReadOnly}">
+      <TextBlock Text="Ezt a részt csak megtekintheted: a módosításhoz Beállítások módosítása jog kell." />
+    </Border>
+    <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <TextBlock Text="{Binding Error}" />
+    </Border>
+    <Border Classes="notice danger" IsVisible="{Binding ServerError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Text="{Binding ServerError}" TextWrapping="Wrap" VerticalAlignment="Center" />
+        <Button Grid.Column="1" Classes="danger" Content="Hozzáférés törlése" Command="{Binding ClearCommand}" IsVisible="{Binding CanClear}" Margin="8,0,0,0" />
+      </Grid>
+    </Border>
+    <Border Classes="panel">
+      <StackPanel Spacing="10">
+        <TextBlock Classes="section" Text="Számlázó szolgáltatás" />
+        <ItemsControl ItemsSource="{Binding Choices}">
+          <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:ProviderChoice">
+              <RadioButton GroupName="invoicing" Content="{Binding Label}" IsChecked="{Binding IsChosen}" Margin="0,0,20,6"
+                           IsEnabled="{Binding $parent[local:InvoicingTabView].((local:InvoicingTab)DataContext).CanEdit}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=provider}"
+                   IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=provider}" />
+        <Border Classes="notice" IsVisible="{Binding Manual}">
+          <TextBlock Text="Kézi számlázás: a jóváhagyott elszámolásból a számlát a könyvelés állítja ki, a számlaszámot kézzel rögzítitek." />
+        </Border>
+        <Border Classes="notice warn" IsVisible="{Binding NotInstalled}">
+          <TextBlock Text="{Binding NotInstalledText}" />
+        </Border>
+        <StackPanel IsVisible="{Binding HasCredentials}" Spacing="6">
+          <TextBlock Classes="section" Text="Hozzáférési adatok" />
+          <TextBlock Classes="muted small" Text="Titkosítva tároljuk, és soha nem jelenítjük meg. Üresen hagyva a tárolt érték marad." TextWrapping="Wrap" />
+          <ItemsControl ItemsSource="{Binding Credentials}">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="p:PlatformInput">
+                <StackPanel Margin="0,0,8,10">
+                  <TextBlock Classes="label" Text="{Binding LabelText}" IsVisible="{Binding !IsCheck}" />
+                  <TextBox Text="{Binding Text}" PasswordChar="{Binding SecretChar}" PlaceholderText="{Binding Placeholder}" IsVisible="{Binding IsText}"
+                           IsReadOnly="{Binding $parent[UserControl].((local:InvoicingTab)DataContext).ReadOnly}"
+                           Classes.invalid="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding Choice}" PlaceholderText="Válassz" IsVisible="{Binding IsSelect}" HorizontalAlignment="Stretch"
+                            IsEnabled="{Binding $parent[UserControl].((local:InvoicingTab)DataContext).CanEditFields}">
+                    <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+                  </ComboBox>
+                  <CheckBox Content="{Binding Label}" IsChecked="{Binding Checked}" IsVisible="{Binding IsCheck}"
+                            IsEnabled="{Binding $parent[UserControl].((local:InvoicingTab)DataContext).CanEditFields}" />
+                  <TextBlock Classes="muted small" Text="{Binding Hint}" TextWrapping="Wrap" Margin="0,4,0,0" IsVisible="{Binding Hint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  <TextBlock Classes="fielderror" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+        <StackPanel IsVisible="{Binding HasSettings}" Spacing="6">
+          <TextBlock Classes="section" Text="Beállítások" />
+          <ItemsControl ItemsSource="{Binding Settings}">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="p:PlatformInput">
+                <StackPanel Margin="0,0,8,10">
+                  <TextBlock Classes="label" Text="{Binding LabelText}" IsVisible="{Binding !IsCheck}" />
+                  <TextBox Text="{Binding Text}" PasswordChar="{Binding SecretChar}" PlaceholderText="{Binding Placeholder}" IsVisible="{Binding IsText}"
+                           IsReadOnly="{Binding $parent[UserControl].((local:InvoicingTab)DataContext).ReadOnly}"
+                           Classes.invalid="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding Choice}" PlaceholderText="Válassz" IsVisible="{Binding IsSelect}" HorizontalAlignment="Stretch"
+                            IsEnabled="{Binding $parent[UserControl].((local:InvoicingTab)DataContext).CanEditFields}">
+                    <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+                  </ComboBox>
+                  <CheckBox Content="{Binding Label}" IsChecked="{Binding Checked}" IsVisible="{Binding IsCheck}"
+                            IsEnabled="{Binding $parent[UserControl].((local:InvoicingTab)DataContext).CanEditFields}" />
+                  <TextBlock Classes="muted small" Text="{Binding Hint}" TextWrapping="Wrap" Margin="0,4,0,0" IsVisible="{Binding Hint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  <TextBlock Classes="fielderror" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" IsVisible="{Binding CanEdit}">
+      <Button Command="{Binding TestCommand}" IsVisible="{Binding CanTest}">
+        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlug}" /><TextBlock Text="Kapcsolat tesztelése" /></StackPanel>
+      </Button>
+      <Button Classes="primary" Command="{Binding SaveCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheck}" /><TextBlock Text="Mentés" /></StackPanel>
+      </Button>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

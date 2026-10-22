@@ -147,6 +147,13 @@ public sealed partial class ShellViewModel : ViewModelBase
         await home.ReloadAsync();
     }
 
+    // After a change of the lookups (a location size added or renamed): the other screens follow.
+    public async Task RefreshMetaAsync()
+    {
+        Meta = await Services.Api.GetAsync<MetaInfo>("api/meta");
+        App.Meta = Meta;
+    }
+
     // After a change of the signed-in user's own name, role or permissions: the menu follows.
     public async Task RefreshMeAsync()
     {

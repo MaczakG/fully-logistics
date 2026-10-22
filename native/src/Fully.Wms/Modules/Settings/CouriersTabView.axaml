@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Settings"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Settings.CouriersTabView"
+             x:DataType="local:CouriersTab">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <StackPanel Spacing="12">
+    <Border Classes="notice" IsVisible="{Binding ReadOnly}">
+      <TextBlock Text="Ezt a részt csak megtekintheted: a módosításhoz Beállítások módosítása jog kell." />
+    </Border>
+    <Border Classes="notice" IsVisible="{Binding NoCouriers}"><TextBlock Text="Nincs telepített futárcsatlakozás." /></Border>
+    <ItemsControl ItemsSource="{Binding Cards}">
+      <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="local:CourierCard">
+          <Border Classes="panel" Margin="0,0,10,10">
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="h3" Text="{Binding Account.Name}" VerticalAlignment="Center" />
+                <Panel Grid.Column="1">
+                  <Border Classes="tag ok" IsVisible="{Binding IsActive}"><TextBlock Text="{Binding StateText}" /></Border>
+                  <Border Classes="tag warn" IsVisible="{Binding IsOff}"><TextBlock Text="{Binding StateText}" /></Border>
+                  <Border Classes="tag" IsVisible="{Binding IsNew}"><TextBlock Text="{Binding StateText}" /></Border>
+                </Panel>
+              </Grid>
+              <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto">
+                <TextBlock Classes="muted small" Text="Fuvarozó partner" />
+                <TextBlock Grid.Column="1" Classes="small" Text="{Binding CarrierText}" Classes.muted="{Binding NoCarrier}" TextWrapping="Wrap" />
+                <TextBlock Grid.Row="1" Classes="muted small" Text="Hozzáférés" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Classes="small" Text="{Binding AccessText}" />
+                <TextBlock Grid.Row="2" Classes="muted small" Text="Utoljára mentve" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Classes="small" Text="{Binding SavedText}" />
+              </Grid>
+              <ItemsControl ItemsSource="{Binding Features}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="x:String">
+                    <Border Classes="tag" Margin="0,0,6,4"><TextBlock Text="{Binding}" /></Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <Border Classes="notice danger" IsVisible="{Binding Account.Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding Account.Error}" />
+              </Border>
+              <TextBlock Classes="small neg" TextWrapping="Wrap" Text="{Binding Account.LastError, StringFormat='Utolsó hiba: {0}'}"
+                         IsVisible="{Binding Account.LastError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              <WrapPanel>
+                <Button Classes="primary" Command="{Binding EditCommand}" Margin="0,0,8,0">
+                  <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconSettings}" /><TextBlock Text="{Binding EditText}" /></StackPanel>
+                </Button>
+                <Button Command="{Binding TestCommand}" IsVisible="{Binding CanTest}" Margin="0,0,8,0">
+                  <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlug}" /><TextBlock Text="Kapcsolat tesztelése" /></StackPanel>
+                </Button>
+                <Button Classes="danger" Content="Hozzáférés törlése" Command="{Binding ClearCommand}" IsVisible="{Binding CanClear}" />
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+  </StackPanel>
+</UserControl>

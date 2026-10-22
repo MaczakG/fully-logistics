@@ -182,6 +182,7 @@
   <Style Selector="CalendarDatePicker">
     <Setter Property="SelectedDateFormat" Value="Custom" />
     <Setter Property="CustomDateFormatString" Value="yyyy. MM. dd." />
+    <Setter Property="PlaceholderText" Value="éééé. hh. nn." />
   </Style>
   <Style Selector="ComboBox">
     <Setter Property="MinHeight" Value="40" />
