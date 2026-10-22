@@ -1,13 +1,20 @@
 # The native apps in native/: tests, desktop downloads (Windows, macOS, Linux) and the iOS build.
-# Runs when something under native/ changes, or by hand (Actions > Native apps > Run workflow).
+# Runs when something under native/ changes (pull requests and main), or by hand (Actions >
+# Native apps > Run workflow).
 name: Native apps
 
 on:
   push:
+    branches: [main]
     paths: ['native/**', '.github/workflows/native.yml']
   pull_request:
     paths: ['native/**', '.github/workflows/native.yml']
   workflow_dispatch:
+    inputs:
+      testflight:
+        description: 'Az iPhone-os PDA feltöltése a TestFlightba (Apple fejlesztői fiók és a titkok kellenek hozzá, lásd native/README.md)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -70,3 +77,52 @@ jobs:
         run: >
           dotnet build native/src/Fully.Wms.iOS -c Release -r iossimulator-arm64
           -p:ValidateXcodeVersion=false
+
+  # The PDA to TestFlight, by hand only. Needs an Apple Developer Program membership and these
+  # repository secrets (Settings > Secrets and variables > Actions), see native/README.md:
+  #   APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_KEY_IDENTIFIER, APP_STORE_CONNECT_PRIVATE_KEY
+  #     an App Store Connect API key (Users and Access > Integrations), role App Manager
+  #   CERTIFICATE_PRIVATE_KEY
+  #     an RSA private key made once (ssh-keygen -t rsa -b 2048 -m PEM -f fully_cert_key -N ""); the
+  #     signing certificate is made for it on the first run and reused on every later one
+  # Signing files are made and fetched with codemagic-cli-tools (open source), so no Mac is needed.
+  testflight:
+    name: TestFlight
+    needs: ios
+    if: github.event_name == 'workflow_dispatch' && inputs.testflight
+    runs-on: macos-26
+    env:
+      BUNDLE_ID: hu.fully.pda
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+      CERTIFICATE_PRIVATE_KEY: ${{ secrets.CERTIFICATE_PRIVATE_KEY }}
+    steps:
+      - name: Secrets present
+        run: |
+          missing=""
+          for v in APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_KEY_IDENTIFIER APP_STORE_CONNECT_PRIVATE_KEY CERTIFICATE_PRIVATE_KEY; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then echo "::error::Hiányzó titkok:$missing (lásd native/README.md)"; exit 1; fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: native/global.json
+      - name: iOS workload
+        run: dotnet workload install ios
+      - name: Signing certificate and profile
+        run: |
+          pip3 install --break-system-packages codemagic-cli-tools
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
+          keychain add-certificates
+      - name: Build the app (ipa)
+        run: >
+          dotnet publish native/src/Fully.Wms.iOS -c Release -r ios-arm64
+          -p:ArchiveOnBuild=true -p:CodesignKey="Apple Distribution"
+          -p:ApplicationVersion=${{ github.run_number }}
+          -p:ValidateXcodeVersion=false
+          -o out/ios
+      - name: Upload to TestFlight
+        run: app-store-connect publish --path "$(ls out/ios/*.ipa | head -1)"

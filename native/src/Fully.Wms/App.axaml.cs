@@ -15,6 +15,9 @@ public partial class App : Application
     // Set by the platform project before the app starts (desktop: Program, iOS: AppDelegate).
     public static IPlatformServices Platform { get; set; } = new DefaultPlatformServices();
 
+    // The server's lookups (status labels ...) for converters and controls; set at sign-in.
+    public static Fully.Wms.Core.Models.MetaInfo Meta { get; set; } = Fully.Wms.Core.Models.MetaInfo.Empty;
+
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
     public override void OnFrameworkInitializationCompleted()

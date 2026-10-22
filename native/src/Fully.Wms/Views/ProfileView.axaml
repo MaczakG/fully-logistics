@@ -43,9 +43,6 @@
               <ComboBoxItem Content="Sötét" />
             </ComboBox>
           </StackPanel>
-          <CheckBox IsChecked="{Binding ScanKeyboard}" IsVisible="{Binding Shell.IsPhone}">
-            <TextBlock Text="Képernyő-billentyűzet a vonalkódmezőkben (kapcsold ki, ha a telefonhoz Bluetooth-os olvasó tartozik)" TextWrapping="Wrap" />
-          </CheckBox>
           <StackPanel>
             <TextBlock Classes="label" Text="Szerver" />
             <TextBlock Text="{Binding Server}" Classes="mono" />

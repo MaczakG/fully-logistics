@@ -45,6 +45,9 @@ public sealed partial class ShellViewModel : ViewModelBase
     [ObservableProperty]
     public partial DialogViewModel? Dialog { get; set; }
 
+    // Status labels and other lookups of the server (GET /api/meta), loaded after sign-in.
+    public MetaInfo Meta { get; private set; } = MetaInfo.Empty;
+
     // A user action is running (buttons that start one are disabled meanwhile).
     [ObservableProperty]
     public partial bool IsBusy { get; set; }
@@ -101,6 +104,15 @@ public sealed partial class ShellViewModel : ViewModelBase
     {
         Me = me;
         Services.SaveSettings();
+        try
+        {
+            Meta = await Services.Api.GetAsync<MetaInfo>("api/meta");
+        }
+        catch (ApiException) when (Meta != MetaInfo.Empty)
+        {
+            // Keep the lookups of the previous sign-in.
+        }
+        App.Meta = Meta;
         BuildMenu();
         stack.Clear();
         if (me.User.MustChangePassword)

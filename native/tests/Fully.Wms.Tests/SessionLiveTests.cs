@@ -17,6 +17,18 @@ public class SessionLiveTests
     }
 
     [Fact]
+    public async Task Meta_has_the_status_labels()
+    {
+        using var api = await LiveServer.SignInAsync(LiveServer.Worker);
+        var meta = await api.GetAsync<MetaInfo>("api/meta", TestContext.Current.CancellationToken);
+        Assert.Equal("Várható", meta.Status("inbound", "expected").Label);
+        Assert.Equal("accent", meta.Status("wave", "picking").Tone);
+        Assert.NotEmpty(meta.Sizes);
+        Assert.Equal("Tárolóhely", MetaInfo.Label(meta.LocationKinds, "storage"));
+        Assert.Equal("ismeretlen", meta.Status("inbound", "ismeretlen").Label);
+    }
+
+    [Fact]
     public async Task Wrong_password_is_a_readable_error()
     {
         LiveServer.SkipIfMissing();

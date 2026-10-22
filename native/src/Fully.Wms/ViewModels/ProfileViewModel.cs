@@ -5,8 +5,7 @@ using Fully.Wms.Core.Models;
 
 namespace Fully.Wms.ViewModels;
 
-// The signed-in user's own data (PATCH /api/me) and this device's settings: theme, scan keyboard,
-// server address.
+// The signed-in user's own data (PATCH /api/me) and this device's settings: theme, server address.
 public sealed partial class ProfileViewModel : PageViewModel
 {
     public ProfileViewModel(ShellViewModel shell) : base(shell)
@@ -14,7 +13,6 @@ public sealed partial class ProfileViewModel : PageViewModel
         Name = shell.Me?.User.Name ?? "";
         Phone = shell.Me?.User.Phone ?? "";
         Theme = shell.Services.Settings.Theme switch { "Light" => 1, "Dark" => 2, _ => 0 };
-        ScanKeyboard = shell.Services.Settings.ScanKeyboard;
     }
 
     public override string Title => "Saját fiók";
@@ -37,20 +35,11 @@ public sealed partial class ProfileViewModel : PageViewModel
     [ObservableProperty]
     public partial int Theme { get; set; }
 
-    [ObservableProperty]
-    public partial bool ScanKeyboard { get; set; }
-
     partial void OnThemeChanged(int value)
     {
         Shell.Services.Settings.Theme = value switch { 1 => "Light", 2 => "Dark", _ => null };
         Shell.Services.SaveSettings();
         App.ApplyTheme(Shell.Services.Settings.Theme);
-    }
-
-    partial void OnScanKeyboardChanged(bool value)
-    {
-        Shell.Services.Settings.ScanKeyboard = value;
-        Shell.Services.SaveSettings();
     }
 
     [RelayCommand]

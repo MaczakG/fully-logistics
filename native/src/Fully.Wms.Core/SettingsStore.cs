@@ -16,8 +16,6 @@ public sealed class AppSettings
     public string? Session { get; set; }
     // Desktop window position and size; null on first start (the window then opens centred).
     public WindowBounds? Window { get; set; }
-    // Scan fields: show the on-screen keyboard (phones without a hardware scanner).
-    public bool ScanKeyboard { get; set; } = true;
     // "Light", "Dark" or null (follow the system).
     public string? Theme { get; set; }
 }
