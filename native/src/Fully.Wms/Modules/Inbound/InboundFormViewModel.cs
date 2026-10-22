@@ -37,6 +37,8 @@ public sealed partial class InboundFormViewModel : PageViewModel
 
     public override string Title => existing is null ? "Új betárolás" : $"{existing.Number} szerkesztése";
     public override string? Module => "inbound";
+    public override PageKind Kind => PageKind.Dialog;
+    public override double DialogWidth => 1000;
     public string SubmitText => existing is null ? "Betárolás rögzítése" : "Mentés";
 
     public ObservableCollection<InboundFormLine> Lines { get; } = [];

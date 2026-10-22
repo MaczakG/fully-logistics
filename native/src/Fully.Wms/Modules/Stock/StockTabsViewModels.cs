@@ -330,6 +330,8 @@ public sealed partial class ProductFormViewModel : PageViewModel
     public bool IsNew => existing is null;
     public override string Title => IsNew ? "Új cikk" : $"{existing!.Sku} szerkesztése";
     public override string? Module => "stock";
+    public override PageKind Kind => PageKind.Dialog;
+    public override double DialogWidth => 880;
     public string SubmitText => IsNew ? "Cikk felvétele" : "Mentés";
     public string? FixedPartner => existing is null ? null : $"{existing.PartnerName} ({existing.PartnerCode})";
 

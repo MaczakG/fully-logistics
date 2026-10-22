@@ -14,6 +14,10 @@ public sealed partial class ChangePasswordViewModel(ShellViewModel shell, bool f
     public override string Title => "Jelszó módosítása";
     public bool Forced { get; } = forced;
 
+    // Forced after the first login: the whole main window; otherwise a small window.
+    public override PageKind Kind => Forced ? PageKind.Page : PageKind.Dialog;
+    public override double DialogWidth => 480;
+
     [ObservableProperty]
     public partial string Current { get; set; } = "";
 

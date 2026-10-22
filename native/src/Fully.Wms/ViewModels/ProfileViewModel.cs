@@ -16,6 +16,8 @@ public sealed partial class ProfileViewModel : PageViewModel
     }
 
     public override string Title => "Saját fiók";
+    public override PageKind Kind => PageKind.Dialog;
+    public override double DialogWidth => 600;
 
     public string Email => Shell.Me?.User.Email ?? "";
     public string RoleName => Shell.Me?.User.Role.Name ?? "";

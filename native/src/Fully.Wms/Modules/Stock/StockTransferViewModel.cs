@@ -20,6 +20,8 @@ public sealed partial class StockTransferViewModel : PageViewModel
 
     public override string Title => $"Áttárolás: {Product.Sku}";
     public override string? Module => "stock";
+    public override PageKind Kind => PageKind.Dialog;
+    public override double DialogWidth => 600;
 
     public ProductInfo Product { get; }
     public IReadOnlyList<StockLocationRow> Rows { get; }

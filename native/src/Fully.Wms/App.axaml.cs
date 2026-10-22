@@ -18,7 +18,11 @@ public partial class App : Application
     // The server's lookups (status labels ...) for converters and controls; set at sign-in.
     public static Fully.Wms.Core.Models.MetaInfo Meta { get; set; } = Fully.Wms.Core.Models.MetaInfo.Empty;
 
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+        Controls.RowOpen.Register();
+    }
 
     public override void OnFrameworkInitializationCompleted()
     {
@@ -26,7 +30,10 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var shell = CreateShell();
-            desktop.MainWindow = new MainWindow(shell.Services) { DataContext = shell };
+            var window = new MainWindow(shell.Services) { DataContext = shell };
+            desktop.MainWindow = window;
+            // Records in their own windows, forms in modal dialogs (like a Windows application).
+            shell.Presenter = new WindowPresenter(shell, window);
             desktop.ShutdownRequested += (_, _) => shell.Services.SaveSettings();
             _ = shell.StartAsync();
         }

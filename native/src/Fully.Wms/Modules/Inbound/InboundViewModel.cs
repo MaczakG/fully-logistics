@@ -28,6 +28,8 @@ public sealed partial class InboundViewModel(ShellViewModel shell, int id) : Pag
     public int Id { get; } = id;
     public override string Title => Data?.Number ?? "Betárolás";
     public override string? Module => "inbound";
+    public override PageKind Kind => PageKind.Record;
+    public override string? RecordKey => $"inbound:{Id}";
 
     bool modeChosen;
     LocationRef? putLocationRef;

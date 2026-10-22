@@ -24,6 +24,8 @@ public sealed partial class StockAdjustViewModel : PageViewModel
 
     public override string Title => $"Készletkorrekció: {Product.Sku}";
     public override string? Module => "stock";
+    public override PageKind Kind => PageKind.Dialog;
+    public override double DialogWidth => 620;
 
     public ProductInfo Product { get; }
     public IReadOnlyList<AdjustChoice> Choices { get; }

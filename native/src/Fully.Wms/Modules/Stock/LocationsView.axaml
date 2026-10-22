@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:Fully.Wms.Modules.Stock"
              xmlns:m="using:Fully.Wms.Core.Models"
+             xmlns:ctl="using:Fully.Wms.Controls"
              x:Class="Fully.Wms.Modules.Stock.LocationsView"
              x:DataType="local:LocationsViewModel">
   <DockPanel>
@@ -70,7 +71,7 @@
       <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
         <TextBlock Text="Nincs a szűrésnek megfelelő raktárhely." />
       </Border>
-      <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False">
+      <DataGrid ItemsSource="{Binding Items}" ctl:RowOpen.Item="{Binding Selected}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False">
         <DataGrid.Columns>
           <DataGridTextColumn x:DataType="m:LocationRow" Header="Hely" Binding="{Binding Code}" Width="120" FontFamily="{StaticResource MonoFont}" FontWeight="Bold" />
           <DataGridTextColumn x:DataType="m:LocationRow" Header="Zóna" Binding="{Binding Zone}" Width="70" />

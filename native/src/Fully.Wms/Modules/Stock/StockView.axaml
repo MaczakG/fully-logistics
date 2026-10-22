@@ -86,7 +86,7 @@
       </Border>
 
       <!-- Desktop: table -->
-      <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding !IsCompact}"
+      <DataGrid ItemsSource="{Binding Items}" ctl:RowOpen.Item="{Binding Selected}" IsVisible="{Binding !IsCompact}"
                 AutoGenerateColumns="False" CanUserSortColumns="False">
         <DataGrid.Columns>
           <DataGridTextColumn x:DataType="m:StockRow" Header="Ügyfél" Binding="{Binding PartnerCode}" Width="140" />

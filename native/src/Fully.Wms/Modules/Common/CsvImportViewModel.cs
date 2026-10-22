@@ -17,6 +17,8 @@ public sealed partial class CsvImportViewModel(ShellViewModel shell, CsvImportOp
 {
     public override string Title => options.Title;
     public override string? Module => options.Module;
+    public override PageKind Kind => PageKind.Dialog;
+    public override double DialogWidth => 900;
     public CsvImportOptions Options { get; } = options;
 
     byte[]? file;

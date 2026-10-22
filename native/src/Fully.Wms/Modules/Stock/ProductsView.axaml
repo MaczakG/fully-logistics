@@ -49,7 +49,7 @@
       <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
         <TextBlock Text="Nincs a szűrésnek megfelelő cikk. Vegyél fel egyet, vagy importáld CSV-ből." />
       </Border>
-      <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False">
+      <DataGrid ItemsSource="{Binding Items}" ctl:RowOpen.Item="{Binding Selected}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False">
         <DataGrid.Columns>
           <DataGridTextColumn x:DataType="m:ProductRow" Header="Ügyfél" Binding="{Binding PartnerCode}" Width="140" />
           <DataGridTextColumn x:DataType="m:ProductRow" Header="Cikkszám" Binding="{Binding Sku}" Width="125" FontFamily="{StaticResource MonoFont}" FontWeight="Bold" />

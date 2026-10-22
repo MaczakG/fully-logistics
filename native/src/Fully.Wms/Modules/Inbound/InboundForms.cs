@@ -25,6 +25,7 @@ public sealed partial class InboundArriveViewModel : PageViewModel
     public bool First => Inbound.Status == "expected";
     public override string Title => First ? "Szállítmány megérkezett" : "Érkezési adatok";
     public override string? Module => "inbound";
+    public override PageKind Kind => PageKind.Dialog;
     public string SubmitText => First ? "Megérkezett, kezdjük az átvételt" : "Mentés";
 
     [ObservableProperty]
@@ -58,6 +59,8 @@ public sealed partial class InboundCompleteViewModel(ShellViewModel shell, Inbou
     public InboundDetail Inbound { get; } = d;
     public override string Title => $"{Inbound.Number} lezárása";
     public override string? Module => "inbound";
+    public override PageKind Kind => PageKind.Dialog;
+    public override double DialogWidth => 760;
 
     public IReadOnlyList<InboundLine> Issues { get; } = d.Lines.Where((l) => l.HasDiscrepancy).ToList();
     public bool HasIssues => Issues.Count > 0;
@@ -100,6 +103,7 @@ public sealed partial class InboundCancelViewModel(ShellViewModel shell, Inbound
     public InboundDetail Inbound { get; } = d;
     public override string Title => $"{Inbound.Number} sztornózása";
     public override string? Module => "inbound";
+    public override PageKind Kind => PageKind.Dialog;
 
     [ObservableProperty]
     public partial string Reason { get; set; } = "";
@@ -132,6 +136,7 @@ public sealed partial class InboundLineEditViewModel : PageViewModel
     public InboundLine Line { get; }
     public override string Title => $"{Line.Sku} átvétele";
     public override string? Module => "inbound";
+    public override PageKind Kind => PageKind.Dialog;
     public bool CanTrack => Line.PutawayQty == 0;
     public string Info => $"{Line.Name}. Várt: {Fmt.Int(Line.ExpectedQty)} {Line.UnitText}{(Line.PutawayQty > 0 ? $", polcon már {Fmt.Int(Line.PutawayQty)}" : "")}.";
 
@@ -188,6 +193,8 @@ public sealed partial class InboundAddLineViewModel(ShellViewModel shell, Inboun
     public InboundDetail Inbound { get; } = d;
     public override string Title => "Nem várt termék vagy új sarzs";
     public override string? Module => "inbound";
+    public override PageKind Kind => PageKind.Dialog;
+    public override double DialogWidth => 660;
 
     public ObservableCollection<ProductLookup> Products { get; } = [];
 

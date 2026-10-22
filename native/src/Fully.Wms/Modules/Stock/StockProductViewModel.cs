@@ -12,6 +12,8 @@ public sealed partial class StockProductViewModel(ShellViewModel shell, int prod
 {
     public override string Title => Data?.Product.Sku ?? "Cikk";
     public override string? Module => "stock";
+    public override PageKind Kind => PageKind.Record;
+    public override string? RecordKey => $"product:{ProductId}";
 
     public int ProductId { get; } = productId;
 

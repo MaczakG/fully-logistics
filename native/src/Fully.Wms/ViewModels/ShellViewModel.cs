@@ -32,6 +32,10 @@ public sealed partial class ShellViewModel : ViewModelBase
     // The main view, set when it is shown: file pickers and the clipboard are reached through it.
     public Avalonia.Visual? View { get; set; }
 
+    // The desktop's windows for records and dialogs (Services/WindowPresenter). Null on the phone
+    // and in tests: then every page is shown in the main view.
+    public IPagePresenter? Presenter { get; set; }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSignedIn), nameof(ShowSidebar), nameof(UserName), nameof(UserRole))]
     public partial Me? Me { get; set; }
@@ -145,6 +149,7 @@ public sealed partial class ShellViewModel : ViewModelBase
 
     public void SignedOut(string? message)
     {
+        Presenter?.CloseAll();
         if (!IsSignedIn && Current is LoginViewModel) return;
         Services.Api.SessionToken = null;
         Services.SaveSettings();
@@ -192,15 +197,18 @@ public sealed partial class ShellViewModel : ViewModelBase
     {
         var def = AppModules.Find(key);
         if (def is null || Me is null || !Me.Can(key)) return;
+        Presenter?.ActivateMain();
         while (stack.Count > 1) stack.RemoveAt(stack.Count - 1);
         await ShowAsync(def.Open(this));
     }
 
-    public Task NavigateAsync(PageViewModel page) => ShowAsync(page);
+    public Task NavigateAsync(PageViewModel page) =>
+        Presenter is not null && Presenter.Takes(page) ? Presenter.ShowAsync(page) : ShowAsync(page);
 
     // Another page in place of the current one (the tabs of a module): Back goes where it went.
     public async Task ReplaceAsync(PageViewModel page)
     {
+        if (Presenter is not null && Presenter.Replace(page)) return;
         if (stack.Count > 1) stack.RemoveAt(stack.Count - 1);
         await ShowAsync(page);
     }
@@ -216,6 +224,8 @@ public sealed partial class ShellViewModel : ViewModelBase
     [RelayCommand]
     public async Task BackAsync()
     {
+        // On the desktop: closes the dialog (or the record window) the call came from.
+        if (Presenter is not null && await Presenter.BackAsync()) return;
         if (stack.Count <= 1) return;
         stack.RemoveAt(stack.Count - 1);
         Current = stack[^1];
@@ -239,6 +249,7 @@ public sealed partial class ShellViewModel : ViewModelBase
     [RelayCommand]
     Task OpenProfileAsync()
     {
+        if (Presenter is not null) return Presenter.ShowAsync(new ProfileViewModel(this));
         if (Current is ProfileViewModel) return Task.CompletedTask;
         while (stack.Count > 1) stack.RemoveAt(stack.Count - 1);
         return ShowAsync(new ProfileViewModel(this));
@@ -296,6 +307,8 @@ public sealed partial class ShellViewModel : ViewModelBase
     public async Task<bool> ConfirmAsync(string title, string message, string ok = "Rendben", string cancel = "Mégse", bool danger = false)
     {
         var dialog = new DialogViewModel(title, message, ok, cancel, danger);
+        // The desktop asks in a message box over the window in use.
+        if (Presenter is not null) return await Presenter.ConfirmAsync(dialog);
         Dialog = dialog;
         try
         {

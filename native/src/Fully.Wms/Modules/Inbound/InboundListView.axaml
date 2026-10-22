@@ -143,7 +143,7 @@
       <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
         <TextBlock Text="Nincs betárolás ebben az állapotban, vagy a szűrésnek megfelelő." />
       </Border>
-      <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False" CanUserSortColumns="False">
+      <DataGrid ItemsSource="{Binding Items}" ctl:RowOpen.Item="{Binding Selected}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False" CanUserSortColumns="False">
         <DataGrid.Columns>
           <DataGridTemplateColumn Header="Szám" Width="170">
             <DataGridTemplateColumn.CellTemplate>

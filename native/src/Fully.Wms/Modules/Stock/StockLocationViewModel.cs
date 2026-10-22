@@ -10,6 +10,8 @@ public sealed partial class StockLocationViewModel(ShellViewModel shell, int loc
 {
     public override string Title => Data?.Location.Code ?? "Raktárhely";
     public override string? Module => "stock";
+    public override PageKind Kind => PageKind.Record;
+    public override string? RecordKey => $"location:{locationId}";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Title), nameof(Location), nameof(Rows), nameof(IsEmpty), nameof(LastMovementText), nameof(Dedicated))]
