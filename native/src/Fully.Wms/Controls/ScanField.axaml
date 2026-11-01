@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Controls.ScanField"
+             x:DataType="ctl:ScanField">
+  <!-- The scan strip: a field that takes a code from a hand scanner (which types it and presses
+       Enter) or from the keyboard, plus the camera on the phone. Like the web app's .scan field. -->
+  <Border Classes="scan">
+    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+      <PathIcon Data="{StaticResource IconBarcode}" Foreground="{StaticResource HiVis}" Width="28" Height="28" Margin="4,0,10,0" />
+      <TextBox x:Name="Input" Grid.Column="1"
+               Watermark="{Binding $parent[ctl:ScanField].Placeholder}"
+               TextInputOptions.ContentType="Normal"
+               TextInputOptions.AutoCapitalization="False"
+               TextInputOptions.ShowSuggestions="False"
+               TextInputOptions.ReturnKeyType="Go"
+               AutomationProperties.Name="{Binding $parent[ctl:ScanField].Placeholder}" />
+      <Button x:Name="CameraButton" Grid.Column="2" Margin="8,0,0,0" ToolTip.Tip="Beolvasás kamerával" AutomationProperties.Name="Beolvasás kamerával">
+        <PathIcon Data="{StaticResource IconCamera}" Width="24" Height="24" />
+      </Button>
+      <Button x:Name="GoButton" Grid.Column="3" Classes="primary" Margin="8,0,0,0" ToolTip.Tip="Keresés" AutomationProperties.Name="Keresés">
+        <PathIcon Data="{StaticResource IconCaretRight}" Width="22" Height="22" />
+      </Button>
+    </Grid>
+  </Border>
+</UserControl>

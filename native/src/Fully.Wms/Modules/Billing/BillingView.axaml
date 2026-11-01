@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Billing"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Billing.BillingView"
+             x:DataType="local:BillingViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="12">
+      <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding Lead}" />
+      <ItemsControl ItemsSource="{Binding Tabs}">
+        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="p:PartnerTabChip">
+            <ToggleButton Classes="chip" Content="{Binding Text}" IsChecked="{Binding IsSelected, Mode=OneWay}"
+                          Command="{Binding $parent[local:BillingView].((local:BillingViewModel)DataContext).SelectTabCommand}" CommandParameter="{Binding}" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Időszak" />
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Button Command="{Binding PrevCommand}" ToolTip.Tip="Előző hónap">
+            <PathIcon Data="{StaticResource IconCaretRight}"><PathIcon.RenderTransform><ScaleTransform ScaleX="-1" /></PathIcon.RenderTransform></PathIcon>
+          </Button>
+          <ComboBox ItemsSource="{Binding Periods}" SelectedItem="{Binding Period}" Width="220">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Command="{Binding NextCommand}" IsEnabled="{Binding CanNext}" ToolTip.Tip="Következő hónap"><PathIcon Data="{StaticResource IconCaretRight}" /></Button>
+        </StackPanel>
+      </StackPanel>
+      <Panel IsVisible="{Binding IsStatements}"><local:OverviewTabView DataContext="{Binding Overview}" /></Panel>
+      <Panel IsVisible="{Binding IsEntries}"><local:EntriesTabView DataContext="{Binding Entries}" /></Panel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

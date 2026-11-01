@@ -1,0 +1,10 @@
+# Deploy agent: makes the server match the bucket (release, Caddy hostnames). See deploy/aws/agent.mjs.
+[Unit]
+Description=Fully Logistics deploy agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/node --no-warnings /opt/fully-app/agent/app/deploy/aws/agent.mjs
+TimeoutStartSec=15min

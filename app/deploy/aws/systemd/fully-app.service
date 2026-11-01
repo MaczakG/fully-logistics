@@ -1,0 +1,31 @@
+# Fully Logistics app (installed and updated by the deploy agent from the release bundle).
+[Unit]
+Description=Fully Logistics WMS (app)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=fullyapp
+Group=fullyapp
+EnvironmentFile=/etc/fully-app/env
+WorkingDirectory=/opt/fully-app/current/app
+ExecStart=/usr/bin/node --no-warnings server/index.mjs
+Restart=always
+RestartSec=3
+TimeoutStopSec=25
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+ReadWritePaths=/var/lib/fully-app
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target

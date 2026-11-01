@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Partners"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Partners.ApiKeyFormView"
+             x:DataType="local:ApiKeyFormViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="10">
+      <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding Error}" />
+      </Border>
+        <StackPanel Margin="0,0,8,8">
+          <TextBlock Classes="label" Text="Mire használják?" />
+          <TextBox Text="{Binding Name}" PlaceholderText="pl. Webshop backend, ERP" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=name}" />
+          <TextBlock Classes="muted small" Text="Ezzel különböztetitek meg a kulcsokat a listában." Margin="0,4,0,0" TextWrapping="Wrap" />
+          <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=name}"
+                     IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=name}" />
+        </StackPanel>
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="Kulcs létrehozása" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

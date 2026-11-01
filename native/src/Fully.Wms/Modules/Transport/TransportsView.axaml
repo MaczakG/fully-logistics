@@ -1,0 +1,166 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Transport"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Transport.TransportsView"
+             x:DataType="local:TransportsViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Margin="16,16,16,6" Spacing="10">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Classes="muted" TextWrapping="Wrap" VerticalAlignment="Center" IsVisible="{Binding !IsCompact}"
+                   Text="Raklapos és kamionos fuvarok ügyfeleinknek: ajánlatkéréstől a leszállításig." />
+        <Button Grid.Column="1" Classes="primary" Margin="10,0,0,0" Command="{Binding NewCommand}" IsVisible="{Binding CanCreate}">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Új fuvar" /></StackPanel>
+        </Button>
+      </Grid>
+
+      <WrapPanel>
+        <ToggleButton Classes="chip" IsChecked="False" Command="{Binding BoardCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconPackage}" /><TextBlock Text="Futárátvételek" /></StackPanel>
+        </ToggleButton>
+        <ToggleButton Classes="chip" IsChecked="True" IsHitTestVisible="False">
+          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconTransport}" /><TextBlock Text="Raklapos fuvarok" /></StackPanel>
+        </ToggleButton>
+      </WrapPanel>
+
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <ComboBox ItemsSource="{x:Static local:TransportsViewModel.StatusChoices}" SelectedItem="{Binding Status}" Width="150" Margin="0,0,8,0">
+          <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+        <TextBox Grid.Column="1" Text="{Binding Search}" PlaceholderText="Szám, cím, jármű, hivatkozás">
+          <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding ApplyCommand}" /></TextBox.KeyBindings>
+        </TextBox>
+        <Button Grid.Column="2" Margin="8,0,0,0" Command="{Binding ApplyCommand}" ToolTip.Tip="Keresés">
+          <PathIcon Data="{StaticResource IconSearch}" />
+        </Button>
+      </Grid>
+      <Expander Header="Szűrők" HorizontalAlignment="Stretch">
+        <WrapPanel>
+          <StackPanel Margin="0,0,10,8" Width="150">
+            <TextBlock Classes="label" Text="Irány" />
+            <ComboBox ItemsSource="{x:Static local:TransportsViewModel.DirectionChoices}" SelectedItem="{Binding Direction}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="210">
+            <TextBlock Classes="label" Text="Ügyfél" />
+            <ComboBox ItemsSource="{Binding Clients}" SelectedItem="{Binding Client}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="160">
+            <TextBlock Classes="label" Text="Naptól" />
+            <CalendarDatePicker SelectedDate="{Binding From}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="160">
+            <TextBlock Classes="label" Text="Napig" />
+            <CalendarDatePicker SelectedDate="{Binding To}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <Button Content="Szűrők törlése" Command="{Binding ClearFiltersCommand}" VerticalAlignment="Bottom" Margin="0,0,0,8" />
+        </WrapPanel>
+      </Expander>
+    </StackPanel>
+
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="16,6,16,12">
+      <TextBlock Text="{Binding TotalText}" Classes="muted" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Továbbiak" Command="{Binding MoreCommand}" IsVisible="{Binding HasMore}" />
+    </Grid>
+
+    <Panel Margin="16,0">
+      <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
+        <TextBlock Text="{Binding EmptyText}" />
+      </Border>
+      <DataGrid ItemsSource="{Binding Items}" ctl:RowOpen.Item="{Binding Selected}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False" CanUserSortColumns="False">
+        <DataGrid.Columns>
+          <DataGridTemplateColumn Header="Nap" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:TransportRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding DateText}" />
+                  <TextBlock Text="{Binding WindowText}" Classes="muted small mono" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Szám, irány" Width="140">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:TransportRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Row.Number}" Classes="mono" FontWeight="Bold" />
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <PathIcon Data="{StaticResource IconInbound}" Width="12" Height="12" IsVisible="{Binding IsIn}" />
+                    <PathIcon Data="{StaticResource IconUpload}" Width="12" Height="12" IsVisible="{Binding !IsIn}" />
+                    <TextBlock Text="{Binding DirectionText}" Classes="muted small" />
+                  </StackPanel>
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Ügyfél" Width="130">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:TransportRowItem">
+                <TextBlock Margin="10,6" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding ClientText}" Classes.muted="{Binding NoClient}" ToolTip.Tip="{Binding Row.PartnerName}" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Útvonal" Width="*" MinWidth="180">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:TransportRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding From}" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Text="{Binding ToText}" Classes="muted small" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Rakomány" Width="115">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:TransportRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Pallets}" Classes="mono" />
+                  <TextBlock Text="{Binding Weight}" Classes="muted small mono" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Fuvarozó" Width="140">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:TransportRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding CarrierText}" Classes.muted="{Binding NoCarrier}" ToolTip.Tip="{Binding Row.CarrierName}" />
+                  <TextBlock Text="{Binding CarrierSub}" Classes="muted small" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn x:DataType="local:TransportRowItem" Header="Díj" Binding="{Binding PriceText}" Width="110" />
+          <DataGridTemplateColumn Header="Állapot" Width="130">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:TransportRowItem">
+                <ctl:StatusTag Margin="10,6" Group="transport" Status="{Binding Row.Status}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+      <ListBox Classes="rows" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding IsCompact}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="local:TransportRowItem">
+            <StackPanel Margin="14,10" Spacing="4">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding Row.Number}" Classes="mono" FontWeight="Bold" FontSize="16" />
+                <ctl:StatusTag Grid.Column="1" Group="transport" Status="{Binding Row.Status}" />
+              </Grid>
+              <TextBlock Text="{Binding Route}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding CardLine}" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Panel>
+  </DockPanel>
+</UserControl>

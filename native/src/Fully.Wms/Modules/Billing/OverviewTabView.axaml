@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Billing"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Billing.OverviewTabView"
+             x:DataType="local:OverviewTab">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <StackPanel Spacing="12">
+    <WrapPanel HorizontalAlignment="Right">
+      <Button Command="{Binding ExportCommand}" Margin="0,0,8,4">
+        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconDownload}" /><TextBlock Text="Export" /></StackPanel>
+      </Button>
+      <Button Command="{Binding SnapshotCommand}" IsVisible="{Binding CanCreate}" Margin="0,0,8,4">
+        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconStock}" /><TextBlock Text="Pillanatkép rögzítése most" /></StackPanel>
+      </Button>
+      <Button Classes="primary" Command="{Binding GenerateCommand}" IsVisible="{Binding CanCreate}" Margin="0,0,0,4">
+        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconBilling}" /><TextBlock Text="{Binding GenerateText}" /></StackPanel>
+      </Button>
+    </WrapPanel>
+    <Border Classes="notice warn" Classes.danger="{Binding InvoicingError}" IsVisible="{Binding InvoicingWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <TextBlock Text="{Binding InvoicingWarning}" />
+    </Border>
+    <Border Classes="notice warn" IsVisible="{Binding SnapshotWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <TextBlock Text="{Binding SnapshotWarning}" />
+    </Border>
+    <TextBlock Classes="muted small" Text="{Binding SnapshotInfo}" />
+    <Grid ColumnDefinitions="*,*,*,*,*">
+      <Border Classes="kpi"><StackPanel>
+        <TextBlock Classes="kpilabel" Text="Nettó összesen" /><TextBlock Classes="kpivalue" Text="{Binding TotalNet}" FontSize="22" /><TextBlock Classes="kpihint" Text="{Binding TotalHint}" />
+      </StackPanel></Border>
+      <Border Grid.Column="1" Classes="kpi" Classes.ok="{Binding InvoicedOk}"><StackPanel>
+        <TextBlock Classes="kpilabel" Text="Számlázva" /><TextBlock Classes="kpivalue" Text="{Binding InvoicedNet}" FontSize="22" /><TextBlock Classes="kpihint" Text="{Binding InvoicedHint}" />
+      </StackPanel></Border>
+      <Border Grid.Column="2" Classes="kpi" Classes.warn="{Binding DraftWarn}"><StackPanel>
+        <TextBlock Classes="kpilabel" Text="Jóváhagyásra vár" /><TextBlock Classes="kpivalue" Text="{Binding DraftCount}" FontSize="22" /><TextBlock Classes="kpihint" Text="{Binding DraftNet}" />
+      </StackPanel></Border>
+      <Border Grid.Column="3" Classes="kpi"><StackPanel>
+        <TextBlock Classes="kpilabel" Text="Számlázásra vár" /><TextBlock Classes="kpivalue" Text="{Binding ApprovedCount}" FontSize="22" /><TextBlock Classes="kpihint" Text="{Binding ApprovedNet}" />
+      </StackPanel></Border>
+      <Border Grid.Column="4" Classes="kpi"><StackPanel>
+        <TextBlock Classes="kpilabel" Text="Nincs elszámolás" /><TextBlock Classes="kpivalue" Text="{Binding MissingCount}" FontSize="22" /><TextBlock Classes="kpihint" Text="aktív ügyfél" />
+      </StackPanel></Border>
+    </Grid>
+
+    <Border Classes="notice" IsVisible="{Binding IsEmpty}"><TextBlock Text="Nincs aktív ügyfél." /></Border>
+    <Border Classes="panel" Padding="0" IsVisible="{Binding !IsEmpty}">
+      <StackPanel>
+        <Grid ColumnDefinitions="40,*,140,150,120,120,150" Margin="20,8,20,4">
+          <TextBlock Grid.Column="1" Classes="dt" Text="Ügyfél" />
+          <TextBlock Grid.Column="2" Classes="dt" Text="Állapot" />
+          <TextBlock Grid.Column="3" Classes="dt" Text="Elszámolás" />
+          <TextBlock Grid.Column="4" Classes="dt" Text="Nettó" TextAlignment="Right" Margin="0,6,8,0" />
+          <TextBlock Grid.Column="5" Classes="dt" Text="Bruttó" TextAlignment="Right" Margin="0,6,8,0" />
+          <TextBlock Grid.Column="6" Classes="dt" Text="Számla" />
+        </Grid>
+        <ItemsControl ItemsSource="{Binding Items}" Margin="10,0">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:OverviewItem">
+              <Border Classes="taskrow">
+                <Grid ColumnDefinitions="40,*,140,150,120,120,150">
+                  <CheckBox IsChecked="{Binding IsSelected}" IsVisible="{Binding CanSelect}" VerticalAlignment="Center" ToolTip.Tip="Kijelölés" />
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
+                    <Button Classes="link" Command="{Binding OpenCommand}" IsVisible="{Binding HasStatement}" HorizontalAlignment="Left">
+                      <TextBlock Text="{Binding Row.Name}" FontWeight="SemiBold" />
+                    </Button>
+                    <TextBlock Text="{Binding Row.Name}" FontWeight="SemiBold" IsVisible="{Binding !HasStatement}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Classes="muted small" Text="{Binding Sub}" />
+                  </StackPanel>
+                  <Panel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <Border Classes="tag" IsVisible="{Binding IsNone}"><TextBlock Text="Nincs elszámolás" /></Border>
+                    <ctl:StatusTag Group="statement" Status="{Binding Row.Status}" IsVisible="{Binding !IsNone}" />
+                  </Panel>
+                  <TextBlock Grid.Column="3" Classes="mono" Text="{Binding Row.Number}" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="4" Classes="mono" Text="{Binding NetText}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="5" Classes="mono" Text="{Binding GrossText}" TextAlignment="Right" Margin="0,0,8,0" VerticalAlignment="Center" />
+                  <Panel Grid.Column="6" VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <TextBlock Classes="mono" Text="{Binding Row.InvoiceNumber}" />
+                    <Border Classes="tag danger" IsVisible="{Binding HasInvoiceError}" ToolTip.Tip="{Binding Row.InvoiceError}"><TextBlock Text="Hiba" /></Border>
+                  </Panel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Border BorderBrush="{DynamicResource Ink}" BorderThickness="0,2,0,0" Margin="10,0,10,10" Padding="10,8">
+          <Grid ColumnDefinitions="40,*,140,150,120,120,150">
+            <TextBlock Grid.Column="1" Grid.ColumnSpan="3" Text="Összesen (érvénytelenítettek nélkül)" FontWeight="Bold" />
+            <TextBlock Grid.Column="4" Classes="mono" Text="{Binding TotalNet}" FontWeight="Bold" TextAlignment="Right" Margin="0,0,8,0" />
+            <TextBlock Grid.Column="5" Classes="mono" Text="{Binding SumGross}" FontWeight="Bold" TextAlignment="Right" Margin="0,0,8,0" />
+          </Grid>
+        </Border>
+      </StackPanel>
+    </Border>
+    <TextBlock Classes="muted small" TextWrapping="Wrap"
+               Text="A piszkozatok újraszámolhatók, a kézi tételek megmaradnak. Jóváhagyott és számlázott elszámolásokhoz az újraszámolás nem nyúl. Inaktív ügyfélnek csak akkor készül elszámolás, ha volt forgalma a hónapban." />
+  </StackPanel>
+</UserControl>

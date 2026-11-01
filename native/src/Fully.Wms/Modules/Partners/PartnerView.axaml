@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Partners"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Partners.PartnerView"
+             x:DataType="local:PartnerViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="12" IsVisible="{Binding Data, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <WrapPanel>
+            <TextBlock Text="{Binding Title}" Classes="h1" Margin="0,0,10,4" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <ctl:StatusTag Group="partner" Status="{Binding Status}" Margin="0,0,6,4" VerticalAlignment="Center" />
+          </WrapPanel>
+          <TextBlock Text="{Binding Lead}" Classes="muted" />
+        </StackPanel>
+        <Button Grid.Column="1" Command="{Binding QuoteCommand}" IsVisible="{Binding CanQuote}" VerticalAlignment="Top">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconQuotes}" /><TextBlock Text="Ajánlat készítése" /></StackPanel>
+        </Button>
+      </Grid>
+
+      <ItemsControl ItemsSource="{Binding Tabs}">
+        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="local:PartnerTabChip">
+            <ToggleButton Classes="chip" Content="{Binding Text}" IsChecked="{Binding IsSelected, Mode=OneWay}"
+                          Command="{Binding $parent[local:PartnerView].((local:PartnerViewModel)DataContext).SelectTabCommand}" CommandParameter="{Binding}" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <Panel IsVisible="{Binding IsBasic}"><local:PartnerBasicView DataContext="{Binding Basic}" /></Panel>
+      <Panel IsVisible="{Binding IsContacts}"><local:PartnerContactsView DataContext="{Binding Contacts}" /></Panel>
+      <Panel IsVisible="{Binding IsContracts}"><local:PartnerContractsView DataContext="{Binding Contracts}" /></Panel>
+      <Panel IsVisible="{Binding IsTariffs}"><local:PartnerTariffsView DataContext="{Binding Tariffs}" /></Panel>
+      <Panel IsVisible="{Binding IsIntegrations}"><local:PartnerIntegrationsView DataContext="{Binding Integrations}" /></Panel>
+      <Panel IsVisible="{Binding IsSummary}"><local:PartnerSummaryView DataContext="{Binding Summary}" /></Panel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

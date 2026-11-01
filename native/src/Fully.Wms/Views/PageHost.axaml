@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Fully.Wms.ViewModels"
+             x:Class="Fully.Wms.Views.PageHost"
+             x:DataType="vm:PageViewModel"
+             Background="{DynamicResource Paper}">
+  <!-- One page in its own window (a record or a dialog on the desktop): busy line, the page or its
+       load error, and the messages of the app while this window is in use. -->
+  <Grid RowDefinitions="Auto,*">
+    <ProgressBar IsIndeterminate="True" Height="3" MinHeight="3" Foreground="{StaticResource HiVis}" Background="Transparent">
+      <ProgressBar.IsVisible>
+        <MultiBinding Converter="{x:Static BoolConverters.Or}">
+          <Binding Path="Shell.IsBusy" />
+          <Binding Path="IsLoading" />
+        </MultiBinding>
+      </ProgressBar.IsVisible>
+    </ProgressBar>
+    <Panel Grid.Row="1">
+      <ContentControl Content="{Binding}" IsVisible="{Binding LoadError, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
+      <Border Classes="notice danger" VerticalAlignment="Top" Margin="16" IsVisible="{Binding LoadError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <StackPanel Spacing="12">
+          <TextBlock Text="{Binding LoadError}" FontWeight="SemiBold" />
+          <Button Classes="dark" Content="Újra" HorizontalAlignment="Left" x:Name="Retry" />
+        </StackPanel>
+      </Border>
+      <ItemsControl ItemsSource="{Binding Shell.Toasts}" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="16,16,16,20"
+                    IsVisible="{Binding $parent[Window].IsActive, FallbackValue={x:True}}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:ToastViewModel">
+            <Border Classes="toast" Classes.error="{Binding IsError}" Classes.success="{Binding IsSuccess}">
+              <TextBlock Text="{Binding Message}" />
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Panel>
+  </Grid>
+</UserControl>

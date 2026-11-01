@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Inbound"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Inbound.InboundAddLineView"
+             x:DataType="local:InboundAddLineViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14" MaxWidth="620" HorizontalAlignment="Stretch">
+      <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding Inbound.PartnerName, StringFormat='Csak {0} termékei közül választhatsz. Ugyanannak a terméknek egy másik sarzsát is így veheted fel.'}" />
+      <ctl:ScanField Command="{Binding ScanCommand}" Placeholder="Termék: EAN vagy cikkszám" AutoFocus="False" />
+      <StackPanel>
+        <TextBlock Classes="label" Text="Termék keresése" />
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBox Text="{Binding ProductSearch}" Watermark="Cikkszám, név vagy EAN">
+            <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding FindCommand}" /></TextBox.KeyBindings>
+          </TextBox>
+          <Button Grid.Column="1" Classes="dark" Content="Keresés" Command="{Binding FindCommand}" Margin="8,0,0,0" />
+        </Grid>
+      </StackPanel>
+      <ListBox Classes="rows" ItemsSource="{Binding Products}" SelectedItem="{Binding Product}" MaxHeight="260">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="m:ProductLookup">
+            <StackPanel Margin="12,8">
+              <TextBlock Text="{Binding Sku}" Classes="mono" FontWeight="Bold" />
+              <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
+              <TextBlock Text="{Binding Ean}" Classes="muted small" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+      <Grid ColumnDefinitions="*,*">
+        <StackPanel Margin="0,0,8,0">
+          <TextBlock Classes="label" Text="Átvett mennyiség" />
+          <TextBox Text="{Binding Received}" Classes="num" TextInputOptions.ContentType="Digits" />
+        </StackPanel>
+        <StackPanel Grid.Column="1">
+          <TextBlock Classes="label" Text="Ebből sérült" />
+          <TextBox Text="{Binding Damaged}" Classes="num" TextInputOptions.ContentType="Digits" />
+        </StackPanel>
+      </Grid>
+      <Grid ColumnDefinitions="*,*">
+        <StackPanel Margin="0,0,8,0">
+          <TextBlock Classes="label" Text="Sarzs (nem kötelező)" />
+          <TextBox Text="{Binding Lot}" Classes="mono" />
+        </StackPanel>
+        <StackPanel Grid.Column="1">
+          <TextBlock Classes="label" Text="Lejárat (ÉÉÉÉ-HH-NN)" />
+          <TextBox Text="{Binding Expiry}" Classes="mono" Watermark="2027-03-31" />
+        </StackPanel>
+      </Grid>
+      <TextBlock Classes="error" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="Tétel felvétele" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

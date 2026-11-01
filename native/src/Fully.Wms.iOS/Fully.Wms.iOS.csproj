@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The PDA on iPhone and iPad: the warehouse screens with big buttons and camera scanning. Builds on
+       a Mac with Xcode, or in the macOS job of .github/workflows/native.yml. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-ios</TargetFramework>
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <RootNamespace>Fully.Wms.iOS</RootNamespace>
+    <ApplicationId>hu.fully.pda</ApplicationId>
+    <ApplicationTitle>Fully PDA</ApplicationTitle>
+    <ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.iOS" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Fully.Wms\Fully.Wms.csproj" />
+  </ItemGroup>
+</Project>

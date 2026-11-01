@@ -1,0 +1,193 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.History"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.History.HistoryView"
+             x:DataType="local:HistoryViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Margin="16,16,16,6" Spacing="10">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Classes="muted" TextWrapping="Wrap" VerticalAlignment="Center" IsVisible="{Binding !IsCompact}"
+                   Text="Feladott, kézbesített, visszáru és sztornózott rendelések. Kereshetsz rendelésszámra, vevőre, városra és nyomkövetési számra is." />
+        <Button Grid.Column="1" Margin="10,0,0,0" Command="{Binding ExportCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconDownload}" /><TextBlock Text="Exportálás (CSV)" /></StackPanel>
+        </Button>
+      </Grid>
+
+      <Grid ColumnDefinitions="*,*,*,*">
+        <Button Classes="kpibutton" Command="{Binding ShowCommand}" CommandParameter="shipped" Margin="0,0,6,0">
+          <Border Classes="kpi">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Feladva" />
+              <TextBlock Classes="kpivalue" Text="{Binding Kpis.Shipped, Converter={x:Static o:OrdersFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text="úton a vevőhöz" />
+            </StackPanel>
+          </Border>
+        </Button>
+        <Button Grid.Column="1" Classes="kpibutton" Command="{Binding ShowCommand}" CommandParameter="delivered" Margin="0,0,6,0">
+          <Border Classes="kpi ok">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Kézbesítve" />
+              <TextBlock Classes="kpivalue" Text="{Binding Kpis.Delivered, Converter={x:Static o:OrdersFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text=" " />
+            </StackPanel>
+          </Border>
+        </Button>
+        <Button Grid.Column="2" Classes="kpibutton" Command="{Binding ShowCommand}" CommandParameter="returned" Margin="0,0,6,0">
+          <Border Classes="kpi" Classes.warn="{Binding Kpis.Returned, Converter={x:Static o:OrdersFormat.NonZero}, FallbackValue={x:False}}">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Visszáru" />
+              <TextBlock Classes="kpivalue" Text="{Binding Kpis.Returned, Converter={x:Static o:OrdersFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text=" " />
+            </StackPanel>
+          </Border>
+        </Button>
+        <Button Grid.Column="3" Classes="kpibutton" Command="{Binding ShowCommand}" CommandParameter="cancelled">
+          <Border Classes="kpi">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Sztornózva" />
+              <TextBlock Classes="kpivalue" Text="{Binding Kpis.Cancelled, Converter={x:Static o:OrdersFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text=" " />
+            </StackPanel>
+          </Border>
+        </Button>
+      </Grid>
+
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBox Text="{Binding Search}" PlaceholderText="Rendelésszám, vevő, város, nyomkövetési szám">
+          <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding ApplyCommand}" /></TextBox.KeyBindings>
+        </TextBox>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="8,0,0,0">
+          <Button Classes="ghost" Content="Ma" Command="{Binding RangeCommand}" CommandParameter="0" />
+          <Button Classes="ghost" Content="7 nap" Command="{Binding RangeCommand}" CommandParameter="7" />
+          <Button Classes="ghost" Content="30 nap" Command="{Binding RangeCommand}" CommandParameter="30" />
+        </StackPanel>
+      </Grid>
+      <Expander Header="Szűrők" HorizontalAlignment="Stretch">
+        <WrapPanel>
+          <StackPanel Margin="0,0,10,8" Width="170">
+            <TextBlock Classes="label" Text="Dátum szerint" />
+            <ComboBox ItemsSource="{x:Static local:HistoryViewModel.DateFields}" SelectedItem="{Binding DateField}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="160">
+            <TextBlock Classes="label" Text="Ettől" />
+            <CalendarDatePicker SelectedDate="{Binding From}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="160">
+            <TextBlock Classes="label" Text="Eddig" />
+            <CalendarDatePicker SelectedDate="{Binding To}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="210">
+            <TextBlock Classes="label" Text="Ügyfél" />
+            <ComboBox ItemsSource="{Binding Clients}" SelectedItem="{Binding Client}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="190">
+            <TextBlock Classes="label" Text="Fuvarozó" />
+            <ComboBox ItemsSource="{Binding Carriers}" SelectedItem="{Binding Carrier}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="170">
+            <TextBlock Classes="label" Text="Állapot" />
+            <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding Status}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom" Margin="0,0,0,8">
+            <Button Classes="dark" Content="Szűrés" Command="{Binding ApplyCommand}" />
+            <Button Content="Szűrők törlése" Command="{Binding ClearFiltersCommand}" />
+          </StackPanel>
+        </WrapPanel>
+      </Expander>
+    </StackPanel>
+
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="16,6,16,12">
+      <TextBlock Text="{Binding TotalText}" Classes="muted" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Továbbiak" Command="{Binding MoreCommand}" IsVisible="{Binding HasMore}" />
+    </Grid>
+
+    <Panel Margin="16,0">
+      <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
+        <TextBlock Text="{Binding EmptyText}" />
+      </Border>
+      <DataGrid ItemsSource="{Binding Items}" ctl:RowOpen.Item="{Binding Selected}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False" CanUserSortColumns="False">
+        <DataGrid.Columns>
+          <DataGridTemplateColumn Header="Rendelés" Width="140">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:HistoryRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Row.Number}" Classes="mono" FontWeight="Bold" />
+                  <TextBlock Text="{Binding Row.ExternalNumber}" Classes="muted small" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Vevő" Width="*" MinWidth="160">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:HistoryRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Row.CustomerName}" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Text="{Binding PartnerPlace}" Classes="muted small" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Row.PartnerName}" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Fuvarozó" Width="130">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:HistoryRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding CarrierText}" ToolTip.Tip="{Binding Row.CarrierName}" />
+                  <TextBlock Text="{Binding Row.TrackingNumber}" Classes="muted small mono" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn x:DataType="local:HistoryRowItem" Header="Db" Binding="{Binding ItemsText}" Width="60" />
+          <DataGridTextColumn x:DataType="local:HistoryRowItem" Header="Utánvét" Binding="{Binding CodText}" Width="100" />
+          <DataGridTemplateColumn Header="Feladva" Width="180">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:HistoryRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding ShippedText}" Classes.muted="{Binding NotShipped}" />
+                  <TextBlock Text="{Binding ShippedSub}" Classes="muted small" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Állapot" Width="140">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:HistoryRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center" Spacing="2">
+                  <ctl:StatusTag Group="order" Status="{Binding Row.Status}" HorizontalAlignment="Left" />
+                  <TextBlock Text="{Binding ReturnsText}" Classes="muted small" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+      <ListBox Classes="rows" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding IsCompact}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="local:HistoryRowItem">
+            <StackPanel Margin="14,10" Spacing="4">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding Row.Number}" Classes="mono" FontWeight="Bold" FontSize="16" />
+                <ctl:StatusTag Grid.Column="1" Group="order" Status="{Binding Row.Status}" />
+              </Grid>
+              <TextBlock Text="{Binding Row.CustomerName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding CardLine}" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Panel>
+  </DockPanel>
+</UserControl>

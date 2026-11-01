@@ -15,3 +15,12 @@ screenshots/
 
 # Wrangler local state
 .wrangler/
+
+# Local Worker secrets (app/.dev.vars)
+.dev.vars
+
+# Claude Code agent worktrees
+.claude/worktrees/
+
+# Local data of the Node runtime (npm start)
+app/data/

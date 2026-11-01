@@ -1,0 +1,76 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Common"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Common.CsvImportView"
+             x:DataType="local:CsvImportViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14" MaxWidth="900" HorizontalAlignment="Stretch">
+      <TextBlock Text="{Binding Options.Help}" TextWrapping="Wrap" />
+      <StackPanel>
+        <TextBlock Classes="label" Text="Oszlopok (fejléccel, pontosvesszővel vagy vesszővel elválasztva)" />
+        <TextBlock Classes="mono small" TextWrapping="Wrap" Text="{Binding Options.TemplateColumns, Converter={x:Static local:CsvFormat.Columns}}" />
+      </StackPanel>
+      <WrapPanel>
+        <Button Classes="primary" Command="{Binding ChooseCommand}" Margin="0,0,10,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconUpload}" /><TextBlock Text="CSV fájl kiválasztása" /></StackPanel>
+        </Button>
+        <Button Command="{Binding TemplateCommand}" Margin="0,0,10,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconDownload}" /><TextBlock Text="Minta letöltése" /></StackPanel>
+        </Button>
+      </WrapPanel>
+      <TextBlock Text="{Binding FileName}" Classes="mono" IsVisible="{Binding HasFile}" />
+
+      <StackPanel Spacing="12" IsVisible="{Binding HasPreview}">
+        <WrapPanel>
+          <Border Classes="kpi" MinWidth="150">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Sorok" />
+              <TextBlock Classes="kpivalue" Text="{Binding Preview.Rows, FallbackValue=''}" />
+            </StackPanel>
+          </Border>
+          <Border Classes="kpi" MinWidth="150">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Importálható" />
+              <TextBlock Classes="kpivalue" Text="{Binding Preview.Valid, FallbackValue=''}" />
+            </StackPanel>
+          </Border>
+          <Border Classes="kpi" MinWidth="150" Classes.danger="{Binding Errors.Count, Converter={x:Static local:CsvFormat.NonZero}}">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Hibás" />
+              <TextBlock Classes="kpivalue" Text="{Binding Errors.Count}" />
+            </StackPanel>
+          </Border>
+        </WrapPanel>
+        <Border Classes="notice" Classes.ok="{Binding VerdictTone, Converter={x:Static local:CsvFormat.IsOk}}"
+                Classes.warn="{Binding VerdictTone, Converter={x:Static local:CsvFormat.IsWarn}}"
+                Classes.danger="{Binding VerdictTone, Converter={x:Static local:CsvFormat.IsDanger}}">
+          <TextBlock Text="{Binding Verdict}" />
+        </Border>
+        <TextBlock Classes="section" Text="Hibák" IsVisible="{Binding Errors.Count, Converter={x:Static local:CsvFormat.NonZero}}" />
+        <ItemsControl ItemsSource="{Binding Errors}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="m:CsvLineMessage">
+              <Grid ColumnDefinitions="70,*" Margin="0,2">
+                <TextBlock Classes="mono neg" Text="{Binding Line, StringFormat='{}{0}. sor'}" />
+                <TextBlock Grid.Column="1" Text="{Binding Message}" TextWrapping="Wrap" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Classes="section" Text="Figyelmeztetések (ezek a sorok is importálódnak)" IsVisible="{Binding Warnings.Count, Converter={x:Static local:CsvFormat.NonZero}}" />
+        <ItemsControl ItemsSource="{Binding Warnings}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="m:CsvLineMessage">
+              <Grid ColumnDefinitions="70,*" Margin="0,2">
+                <TextBlock Classes="mono" Text="{Binding Line, StringFormat='{}{0}. sor'}" />
+                <TextBlock Grid.Column="1" Text="{Binding Message}" TextWrapping="Wrap" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button Classes="primary" Content="Importálás" Command="{Binding ImportCommand}" IsEnabled="{Binding CanImport}" HorizontalAlignment="Left" />
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

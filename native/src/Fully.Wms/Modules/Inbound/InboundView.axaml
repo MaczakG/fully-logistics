@@ -1,0 +1,405 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Inbound"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Inbound.InboundView"
+             x:DataType="local:InboundViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Inbound/InboundStyles.axaml" />
+  </UserControl.Styles>
+  <ScrollViewer x:Name="Scroller">
+    <Grid Margin="16" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" IsVisible="{Binding Data, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+      <!-- Head -->
+      <StackPanel Spacing="6" Margin="0,0,0,12">
+        <WrapPanel>
+          <TextBlock Text="{Binding Data.Number, FallbackValue=''}" Classes="h1 mono" Margin="0,0,10,4" VerticalAlignment="Center" />
+          <ctl:StatusTag Group="inbound" Status="{Binding Status}" Margin="0,0,6,4" />
+          <Border Classes="tag danger" Margin="0,0,6,4" IsVisible="{Binding Data.HasDiscrepancy, FallbackValue={x:False}}"><TextBlock Text="Eltéréssel lezárva" /></Border>
+          <Border Classes="tag" Margin="0,0,6,4" IsVisible="{Binding Data.ExternalRef, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue={x:False}}">
+            <TextBlock Text="{Binding Data.ExternalRef, FallbackValue=''}" />
+          </Border>
+        </WrapPanel>
+        <TextBlock Text="{Binding Lead}" Classes="muted" TextWrapping="Wrap" />
+      </StackPanel>
+
+      <!-- Actions, figures, notices: above the work on the desktop, below it on the phone (the
+           scan field comes first there) -->
+      <StackPanel Grid.Row="{Binding IsCompact, Converter={x:Static local:InboundFormat.RowOfSummary}}" Spacing="12" Margin="0,0,0,12">
+        <WrapPanel>
+          <Button Classes="primary" Command="{Binding ArriveCommand}" IsVisible="{Binding CanArrive}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconTransport}" /><TextBlock Text="Megérkezett" /></StackPanel>
+          </Button>
+          <Button Command="{Binding ArriveCommand}" IsVisible="{Binding CanArriveData}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconTransport}" /><TextBlock Text="Érkezési adatok" /></StackPanel>
+          </Button>
+          <Button Command="{Binding CompleteCommand}" IsVisible="{Binding CanComplete}" Classes.primary="{Binding AllPutAway}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheckCircle}" /><TextBlock Text="Lezárás" /></StackPanel>
+          </Button>
+          <Button Command="{Binding EditCommand}" IsVisible="{Binding CanEditInbound}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconEdit}" /><TextBlock Text="Szerkesztés" /></StackPanel>
+          </Button>
+          <Button Command="{Binding ReportCommand}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPrinter}" /><TextBlock Text="Jegyzőkönyv" /></StackPanel>
+          </Button>
+          <Button Classes="danger" Command="{Binding CancelInboundCommand}" IsVisible="{Binding CanCancel}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconClose}" /><TextBlock Text="Sztornó" /></StackPanel>
+          </Button>
+        </WrapPanel>
+      <!-- Key figures -->
+        <Grid ColumnDefinitions="*,*,*,*" IsVisible="{Binding !IsCompact}">
+          <Border Classes="kpi">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Várt mennyiség" />
+              <TextBlock Classes="kpivalue" Text="{Binding Totals.Expected, Converter={x:Static local:InboundFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text="{Binding Totals.Lines, Converter={x:Static local:InboundFormat.LinesCount}, FallbackValue=''}" />
+            </StackPanel>
+          </Border>
+          <Border Grid.Column="1" Classes="kpi">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Átvett" />
+              <TextBlock Classes="kpivalue" Text="{Binding Totals.Received, Converter={x:Static local:InboundFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text="{Binding ReceivedHint}" />
+            </StackPanel>
+          </Border>
+          <Border Grid.Column="2" Classes="kpi" Classes.danger="{Binding Totals.Damaged, Converter={x:Static local:InboundFormat.NonZero}, FallbackValue={x:False}}">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Sérült" />
+              <TextBlock Classes="kpivalue" Text="{Binding Totals.Damaged, Converter={x:Static local:InboundFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text="{Binding DamagedHint}" />
+            </StackPanel>
+          </Border>
+          <Border Grid.Column="3" Classes="kpi">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Polcon" />
+              <TextBlock Classes="kpivalue" Text="{Binding Totals.Putaway, Converter={x:Static local:InboundFormat.Int}, FallbackValue=''}" />
+              <TextBlock Classes="kpihint" Text="{Binding PutawayHint}" />
+            </StackPanel>
+          </Border>
+        </Grid>
+        <!-- Phone: the figures in one line -->
+        <TextBlock IsVisible="{Binding IsCompact}" Classes="small" TextWrapping="Wrap" Text="{Binding Totals, Converter={x:Static local:InboundFormat.TotalsLine}}" />
+
+        <Border Classes="notice" Classes.ok="{Binding StatusNoticeTone, Converter={x:Static local:InboundFormat.IsOk}}" Classes.warn="{Binding StatusNoticeTone, Converter={x:Static local:InboundFormat.IsWarn}}"
+                IsVisible="{Binding StatusNotice, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding StatusNotice}" />
+        </Border>
+        <Border Classes="notice warn" IsVisible="{Binding IssuesText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding IssuesText}" />
+        </Border>
+        <Border Classes="notice warn" IsVisible="{Binding MissingTrackingText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding MissingTrackingText}" />
+        </Border>
+      </StackPanel>
+
+      <!-- Work: receiving and putaway -->
+      <StackPanel Grid.Row="2" Spacing="10" Margin="0,0,0,12" IsVisible="{Binding Working}">
+        <Grid ColumnDefinitions="*,*">
+          <ToggleButton Classes="mode" IsChecked="{Binding IsReceiving, Mode=OneWay}" Command="{Binding SetModeCommand}" CommandParameter="receive">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconBarcode}" /><TextBlock Text="1. Átvétel" /></StackPanel>
+          </ToggleButton>
+          <ToggleButton Grid.Column="1" Classes="mode" IsChecked="{Binding IsPutaway, Mode=OneWay}" Command="{Binding SetModeCommand}" CommandParameter="putaway">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <PathIcon Data="{StaticResource IconStock}" />
+              <TextBlock Text="2. Polcra helyezés" />
+              <Border Classes="badge" IsVisible="{Binding ToPutText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"><TextBlock Text="{Binding ToPutText}" /></Border>
+            </StackPanel>
+          </ToggleButton>
+        </Grid>
+
+        <ctl:ScanField x:Name="Scan" Command="{Binding ScanCommand}" Placeholder="{Binding ScanPlaceholder}" />
+        <Border Classes="feedback" Classes.ok="{Binding FeedbackTone, Converter={x:Static local:InboundFormat.IsOk}}"
+                Classes.warn="{Binding FeedbackTone, Converter={x:Static local:InboundFormat.IsWarn}}"
+                Classes.danger="{Binding FeedbackTone, Converter={x:Static local:InboundFormat.IsDanger}}">
+          <TextBlock Text="{Binding Feedback}" />
+        </Border>
+
+        <!-- Receiving: the quantity entry -->
+        <Border Classes="entry" DataContext="{Binding Entry}" x:DataType="local:ReceiveEntry">
+          <Border.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.And}">
+              <Binding Path="$parent[local:InboundView].((local:InboundViewModel)DataContext).IsReceiving" />
+              <Binding Path="$parent[local:InboundView].((local:InboundViewModel)DataContext).Entry" Converter="{x:Static ObjectConverters.IsNotNull}" />
+            </MultiBinding>
+          </Border.IsVisible>
+          <StackPanel Spacing="10">
+            <StackPanel>
+              <TextBlock Text="{Binding Line.Sku, FallbackValue=''}" Classes="sku" FontSize="18" />
+              <TextBlock Text="{Binding Line.Name, FallbackValue=''}" TextWrapping="Wrap" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding Line.Codes, FallbackValue=''}" Classes="muted small" TextWrapping="Wrap" />
+            </StackPanel>
+            <Grid ColumnDefinitions="*,*,*">
+              <StackPanel>
+                <TextBlock Classes="dt" Text="Várt" />
+                <TextBlock Classes="big" Text="{Binding Line.ExpectedQty, Converter={x:Static local:InboundFormat.Int}, FallbackValue=''}" />
+              </StackPanel>
+              <StackPanel Grid.Column="1">
+                <TextBlock Classes="dt" Text="Eddig átvéve" />
+                <TextBlock Classes="big" Text="{Binding Line.ReceivedQty, Converter={x:Static local:InboundFormat.Int}, FallbackValue=''}" />
+              </StackPanel>
+              <StackPanel Grid.Column="2">
+                <TextBlock Classes="dt" Text="Hátra" />
+                <TextBlock Classes="big" Text="{Binding Left, FallbackValue=''}" />
+              </StackPanel>
+            </Grid>
+            <StackPanel IsVisible="{Binding HasLots, FallbackValue={x:False}}">
+              <TextBlock Classes="label" Text="Sarzs" />
+              <ComboBox x:Name="LotChoice" ItemsSource="{Binding Lots}" SelectedItem="{Binding Line, Mode=OneWay}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="m:InboundLine">
+                    <TextBlock Text="{Binding Converter={x:Static local:InboundFormat.LotLabel}}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+            </StackPanel>
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel>
+                <TextBlock Classes="label" Text="{Binding Line.UnitText, StringFormat='Beérkezett mennyiség ({0})', FallbackValue=''}" />
+                <TextBox x:Name="QtyBox" Classes="qty" Text="{Binding Qty}" TextInputOptions.ContentType="Digits"
+                         Classes.invalid="{Binding QtyError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                  <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding $parent[local:InboundView].((local:InboundViewModel)DataContext).QuantityEnterCommand}" />
+                  </TextBox.KeyBindings>
+                </TextBox>
+                <TextBlock Classes="fielderror" Text="{Binding QtyError}" IsVisible="{Binding QtyError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              </StackPanel>
+              <CheckBox Grid.Column="1" Content="Sérült" IsChecked="{Binding Damaged}" VerticalAlignment="Bottom" Margin="14,0,0,10" FontWeight="Bold" />
+            </Grid>
+            <StackPanel IsVisible="{Binding Line.NeedsLot, FallbackValue={x:False}}">
+              <TextBlock Classes="label" Text="Sarzs" />
+              <TextBox Text="{Binding Lot}" Classes="mono" Classes.invalid="{Binding LotError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              <TextBlock Classes="fielderror" Text="{Binding LotError}" IsVisible="{Binding LotError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </StackPanel>
+            <StackPanel IsVisible="{Binding Line.NeedsExpiry, FallbackValue={x:False}}">
+              <TextBlock Classes="label" Text="Lejárat (ÉÉÉÉ-HH-NN)" />
+              <TextBox Text="{Binding Expiry}" Classes="mono" Watermark="2027-03-31" Classes.invalid="{Binding ExpiryError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              <TextBlock Classes="fielderror" Text="{Binding ExpiryError}" IsVisible="{Binding ExpiryError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </StackPanel>
+            <Grid ColumnDefinitions="*,2*">
+              <Button Content="Mégse" HorizontalAlignment="Stretch" Margin="0,0,8,0"
+                      Command="{Binding $parent[local:InboundView].((local:InboundViewModel)DataContext).CancelEntryCommand}" />
+              <Button Grid.Column="1" Classes="primary" HorizontalAlignment="Stretch"
+                      Command="{Binding $parent[local:InboundView].((local:InboundViewModel)DataContext).CommitEntryCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheck}" /><TextBlock Text="Rögzítés" /></StackPanel>
+              </Button>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- Receiving: lines -->
+        <StackPanel IsVisible="{Binding IsReceiving}">
+          <ItemsControl ItemsSource="{Binding Lines}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="local:InboundLineItem">
+                <Border Classes="linecard" Classes.active="{Binding IsEntry}" Classes.done="{Binding IsDone}">
+                  <StackPanel Spacing="6">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <StackPanel>
+                        <TextBlock Text="{Binding Line.Sku}" Classes="sku" />
+                        <TextBlock Text="{Binding Line.Name}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Line.Codes}" Classes="muted small" TextWrapping="Wrap" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="1" Text="{Binding ReceivedText}" Classes="mono" FontWeight="Bold" FontSize="16" Margin="10,0,0,0" />
+                    </Grid>
+                    <ProgressBar Classes="line" Classes.done="{Binding IsDone}" Value="{Binding ReceivedRatio}" />
+                    <TextBlock Text="{Binding IssuesText}" Classes="small" Foreground="{DynamicResource Warn}" TextWrapping="Wrap"
+                               IsVisible="{Binding IssuesText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    <TextBlock Text="rendben" Classes="small" Foreground="{DynamicResource Ok}" FontWeight="Bold" IsVisible="{Binding IsDone}" />
+                    <Grid ColumnDefinitions="*,*" IsVisible="{Binding ShowTracking}">
+                      <StackPanel Margin="0,0,8,0" IsVisible="{Binding Line.TrackLot}">
+                        <TextBlock Classes="label" Text="Sarzs" />
+                        <TextBox Text="{Binding LotText}" Classes="mono">
+                          <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding SaveLotCommand}" /></TextBox.KeyBindings>
+                        </TextBox>
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" IsVisible="{Binding Line.TrackExpiry}">
+                        <TextBlock Classes="label" Text="Lejárat" />
+                        <TextBox Text="{Binding ExpiryText}" Classes="mono" Watermark="ÉÉÉÉ-HH-NN">
+                          <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding SaveExpiryCommand}" /></TextBox.KeyBindings>
+                        </TextBox>
+                      </StackPanel>
+                    </Grid>
+                    <WrapPanel>
+                      <Button Command="{Binding EnterCommand}" Classes.dark="{Binding IsEntry}" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconInbound}" /><TextBlock Text="Mennyiség beírása" /></StackPanel>
+                      </Button>
+                      <Button Command="{Binding EditCommand}" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconEdit}" /><TextBlock Text="Javítás" /></StackPanel>
+                      </Button>
+                      <Button Classes="ghost" Command="{Binding DeleteCommand}" IsVisible="{Binding CanDelete}">
+                        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconTrash}" /><TextBlock Text="Törlés" /></StackPanel>
+                      </Button>
+                    </WrapPanel>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Button Command="{Binding AddLineCommand}" HorizontalAlignment="Left">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Nem várt termék vagy új sarzs" /></StackPanel>
+          </Button>
+        </StackPanel>
+
+        <!-- Putaway -->
+        <StackPanel Spacing="10" IsVisible="{Binding IsPutaway}">
+          <Border Classes="entry">
+            <StackPanel Spacing="10">
+              <TextBlock Text="{Binding PutLineText}" TextWrapping="Wrap" FontWeight="SemiBold" />
+              <Grid ColumnDefinitions="2*,*">
+                <StackPanel Margin="0,0,8,0">
+                  <TextBlock Classes="label" Text="Raktárhely" />
+                  <TextBox Text="{Binding PutLocation}" Classes="mono" Watermark="A-01-03" IsEnabled="{Binding HasPutLine}" FontSize="18" />
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                  <TextBlock Classes="label" Text="Mennyiség" />
+                  <TextBox Text="{Binding PutQty}" Classes="num" TextInputOptions.ContentType="Digits" IsEnabled="{Binding HasPutLine}" FontSize="18">
+                    <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding PutAwayCommand}" /></TextBox.KeyBindings>
+                  </TextBox>
+                </StackPanel>
+              </Grid>
+              <Button Classes="primary" HorizontalAlignment="Stretch" Command="{Binding PutAwayCommand}" IsEnabled="{Binding HasPutLine}">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconInbound}" /><TextBlock Text="Polcra helyezés" /></StackPanel>
+              </Button>
+              <StackPanel Spacing="6" IsVisible="{Binding HasPutLine}">
+                <WrapPanel IsVisible="{Binding PutSuggestion, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  <Button Command="{Binding UseSuggestedCommand}" Margin="0,0,10,4">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <PathIcon Data="{StaticResource IconLocation}" />
+                      <TextBlock Text="{Binding PutSuggestion.Code, StringFormat='Javasolt hely: {0}', FallbackValue=''}" />
+                    </StackPanel>
+                  </Button>
+                  <TextBlock Text="{Binding PutSuggestion.Reason, FallbackValue=''}" Classes="muted small" TextWrapping="Wrap" VerticalAlignment="Center" MaxWidth="520" />
+                </WrapPanel>
+                <TextBlock Text="Nincs javasolt szabad hely." Classes="muted small" IsVisible="{Binding PutSuggestion, Converter={x:Static ObjectConverters.IsNull}}" />
+                <Button Classes="danger" Command="{Binding UseQuarantineCommand}" IsVisible="{Binding CanUseQuarantine}" HorizontalAlignment="Left">
+                  <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconWarning}" /><TextBlock Text="{Binding QuarantineText}" /></StackPanel>
+                </Button>
+                <Border Classes="notice danger" IsVisible="{Binding NoQuarantineWarning}">
+                  <TextBlock Text="Nincs szabad karanténhely ennek az ügyfélnek (egy helyen csak egy ügyfél áruja lehet). Vegyél fel karanténhelyet a Beállításokban." />
+                </Border>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <Border Classes="notice ok" IsVisible="{Binding PutNotice, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <TextBlock Text="{Binding PutNotice}" />
+          </Border>
+          <ItemsControl ItemsSource="{Binding PutLines}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="local:InboundLineItem">
+                <Border Classes="linecard" Classes.active="{Binding IsPutSelected}">
+                  <StackPanel Spacing="6">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <StackPanel>
+                        <TextBlock Text="{Binding Line.Sku}" Classes="sku" />
+                        <TextBlock Text="{Binding Line.Name}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Line.Codes}" Classes="muted small" TextWrapping="Wrap" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="1" Text="{Binding PutText}" Classes="small" FontWeight="Bold" Margin="10,0,0,0" TextWrapping="Wrap" MaxWidth="140" TextAlignment="Right" />
+                    </Grid>
+                    <ProgressBar Classes="line" Value="{Binding PutRatio}" />
+                    <WrapPanel>
+                      <TextBlock Text="{Binding PutawaysText}" Classes="mono small" Margin="0,0,10,0" IsVisible="{Binding HasPutaways}" />
+                      <TextBlock Text="{Binding SuggestedText}" Classes="small" Foreground="{DynamicResource Info}" FontWeight="Bold" Margin="0,0,10,0" />
+                      <TextBlock Text="{Binding DamagedText}" Classes="small" Foreground="{DynamicResource Danger}" FontWeight="Bold" />
+                    </WrapPanel>
+                    <Button Command="{Binding SelectCommand}" Classes.dark="{Binding IsPutSelected}" IsVisible="{Binding Line.LeftToPut, Converter={x:Static local:InboundFormat.NonZero}}" HorizontalAlignment="Left">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <PathIcon Data="{StaticResource IconCaretRight}" />
+                        <TextBlock Text="{Binding IsPutSelected, Converter={x:Static local:InboundFormat.SelectText}}" />
+                      </StackPanel>
+                    </Button>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </StackPanel>
+
+      <!-- Not working (expected, completed, cancelled, or no edit right): the lines -->
+      <StackPanel Grid.Row="4" Margin="0,0,0,12" IsVisible="{Binding ShowReadOnlyLines}">
+        <TextBlock Classes="section" Text="Tételek" />
+        <ItemsControl ItemsSource="{Binding Lines}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:InboundLineItem">
+              <Border Classes="linecard">
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding Line.Sku}" Classes="sku" />
+                    <TextBlock Text="{Binding Line.Name}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Line.Codes}" Classes="muted small" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding PutawaysText}" Classes="mono small" IsVisible="{Binding HasPutaways}" />
+                    <TextBlock Text="{Binding IssuesText}" Classes="small" Foreground="{DynamicResource Warn}" TextWrapping="Wrap"
+                               IsVisible="{Binding IssuesText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                    <TextBlock Classes="small mono" Text="{Binding Line, Converter={x:Static local:InboundFormat.LineFigures}}" TextAlignment="Right" />
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <!-- Data and history -->
+      <Grid Grid.Row="5" ColumnDefinitions="*,*" IsVisible="{Binding !IsCompact}">
+        <Border Classes="card" Margin="0,0,8,0" VerticalAlignment="Top">
+          <StackPanel>
+            <TextBlock Classes="section" Text="Adatok" Margin="0,0,0,4" />
+            <ItemsControl ItemsSource="{Binding Data, Converter={x:Static local:InboundFormat.InfoRows}}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="local:InfoRow">
+                  <Grid ColumnDefinitions="160,*">
+                    <TextBlock Classes="dt" Text="{Binding Label}" />
+                    <TextBlock Grid.Column="1" Classes="dd" Text="{Binding Value}" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Classes="card" Margin="8,0,0,0" VerticalAlignment="Top">
+          <StackPanel>
+            <TextBlock Classes="section" Text="Előzmények" Margin="0,0,0,4" />
+            <ItemsControl ItemsSource="{Binding Data.History, FallbackValue={x:Null}}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="m:HistoryEntry">
+                  <StackPanel Margin="0,4">
+                    <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" />
+                    <TextBlock Classes="muted small" Text="{Binding Converter={x:Static local:InboundFormat.HistoryMeta}}" />
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+      <Expander Grid.Row="5" Header="Adatok és előzmények" IsVisible="{Binding IsCompact}" HorizontalAlignment="Stretch">
+        <StackPanel Spacing="8">
+          <ItemsControl ItemsSource="{Binding Data, Converter={x:Static local:InboundFormat.InfoRows}}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="local:InfoRow">
+                <StackPanel>
+                  <TextBlock Classes="dt" Text="{Binding Label}" />
+                  <TextBlock Classes="dd" Text="{Binding Value}" Margin="0,0,0,4" />
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <ItemsControl ItemsSource="{Binding Data.History, FallbackValue={x:Null}}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="m:HistoryEntry">
+                <StackPanel Margin="0,4">
+                  <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" />
+                  <TextBlock Classes="muted small" Text="{Binding Converter={x:Static local:InboundFormat.HistoryMeta}}" />
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Expander>
+    </Grid>
+  </ScrollViewer>
+</UserControl>

@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Transport"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Transport.PickupFormView"
+             x:DataType="local:PickupFormViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="12">
+      <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding Error}" />
+      </Border>
+      <StackPanel IsVisible="{Binding IsNew}">
+        <TextBlock Classes="label" Text="Fuvarozó" />
+        <ComboBox ItemsSource="{Binding Carriers}" SelectedItem="{Binding Carrier}" PlaceholderText="Válassz fuvarozót" HorizontalAlignment="Stretch"
+                  Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=carrier_id}">
+          <ComboBox.ItemTemplate><DataTemplate x:DataType="m:PartnerLookup"><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+        <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=carrier_id}"
+                   IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=carrier_id}" />
+      </StackPanel>
+      <TextBlock IsVisible="{Binding !IsNew}" TextWrapping="Wrap">
+        <Run Text="Fuvarozó: " /><Run Text="{Binding CarrierText}" FontWeight="Bold" />
+      </TextBlock>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Nap" />
+        <CalendarDatePicker SelectedDate="{Binding Day}" DisplayDateStart="{Binding MinDay}" HorizontalAlignment="Stretch" />
+        <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=date}"
+                   IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=date}" />
+      </StackPanel>
+      <Grid ColumnDefinitions="*,*">
+        <StackPanel Margin="0,0,8,0">
+          <TextBlock Classes="label" Text="Időablak eleje (nem kötelező)" />
+          <TextBox Text="{Binding WindowFrom}" PlaceholderText="pl. 14:00"
+                   Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=window_from}" />
+          <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=window_from}"
+                     IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=window_from}" />
+        </StackPanel>
+        <StackPanel Grid.Column="1">
+          <TextBlock Classes="label" Text="Időablak vége (nem kötelező)" />
+          <TextBox Text="{Binding WindowTo}" PlaceholderText="pl. 16:00"
+                   Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=window_to}" />
+          <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=window_to}"
+                     IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=window_to}" />
+        </StackPanel>
+      </Grid>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Megjegyzés (nem kötelező)" />
+        <TextBox Text="{Binding Note}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
+      </StackPanel>
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="{Binding SubmitText}" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

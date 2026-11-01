@@ -1,0 +1,5 @@
+# Local development secrets. Copy to .dev.vars (never committed) and run `npm run dev`.
+# In production set the same names as secrets on the Worker (app/README.md, step 3).
+SETUP_TOKEN=local-setup-token
+# 32 random bytes, base64. Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+ENCRYPTION_KEY=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=

@@ -1,0 +1,92 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Stock"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Stock.ProductFormView"
+             x:DataType="local:ProductFormViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14" MaxWidth="820" HorizontalAlignment="Stretch">
+      <StackPanel IsVisible="{Binding IsNew}">
+        <TextBlock Classes="label" Text="Ügyfél" />
+        <ComboBox ItemsSource="{Binding Partners}" SelectedItem="{Binding Partner}" PlaceholderText="Válassz ügyfelet">
+          <ComboBox.ItemTemplate><DataTemplate x:DataType="m:PartnerLookup"><TextBlock Text="{Binding Display}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+        <TextBlock Classes="fielderror" Text="{Binding Errors[partner_id], FallbackValue=''}" />
+      </StackPanel>
+      <StackPanel IsVisible="{Binding !IsNew}">
+        <TextBlock Classes="label" Text="Ügyfél" />
+        <TextBlock Text="{Binding FixedPartner}" />
+        <TextBlock Classes="muted small" Text="A cikk ügyfele nem módosítható." />
+      </StackPanel>
+      <WrapPanel>
+        <StackPanel Margin="0,0,12,8" Width="220">
+          <TextBlock Classes="label" Text="Cikkszám (ügyfelenként egyedi)" />
+          <TextBox Text="{Binding Sku}" Classes="mono" />
+          <TextBlock Classes="fielderror" Text="{Binding Errors[sku], FallbackValue=''}" />
+        </StackPanel>
+        <StackPanel Margin="0,0,12,8" Width="420">
+          <TextBlock Classes="label" Text="Megnevezés" />
+          <TextBox Text="{Binding Name}" />
+          <TextBlock Classes="fielderror" Text="{Binding Errors[name], FallbackValue=''}" />
+        </StackPanel>
+        <StackPanel Margin="0,0,12,8" Width="220">
+          <TextBlock Classes="label" Text="EAN (vonalkód)" />
+          <TextBox Text="{Binding Ean}" Classes="mono" TextInputOptions.ContentType="Digits" />
+          <TextBlock Classes="small" Foreground="{DynamicResource Warn}" TextWrapping="Wrap" Text="{Binding EanWarning}" />
+          <TextBlock Classes="fielderror" Text="{Binding Errors[ean], FallbackValue=''}" />
+        </StackPanel>
+        <StackPanel Margin="0,0,12,8" Width="110">
+          <TextBlock Classes="label" Text="Egység" />
+          <TextBox Text="{Binding Unit}" />
+        </StackPanel>
+        <StackPanel Margin="0,0,12,8" Width="150">
+          <TextBlock Classes="label" Text="Minimum készlet" />
+          <TextBox Text="{Binding MinStock}" Classes="num" TextInputOptions.ContentType="Digits" />
+          <TextBlock Classes="fielderror" Text="{Binding Errors[min_stock], FallbackValue=''}" />
+        </StackPanel>
+      </WrapPanel>
+      <WrapPanel>
+        <StackPanel Margin="0,0,12,8" Width="130">
+          <TextBlock Classes="label" Text="Súly (kg)" />
+          <TextBox Text="{Binding Weight}" Classes="num" TextInputOptions.ContentType="Number" />
+          <TextBlock Classes="fielderror" Text="{Binding Errors[weight_kg], FallbackValue=''}" />
+        </StackPanel>
+        <StackPanel Margin="0,0,12,8" Width="130">
+          <TextBlock Classes="label" Text="Szélesség (cm)" />
+          <TextBox Text="{Binding Width}" Classes="num" TextInputOptions.ContentType="Number" />
+          <TextBlock Classes="fielderror" Text="{Binding Errors[width_cm], FallbackValue=''}" />
+        </StackPanel>
+        <StackPanel Margin="0,0,12,8" Width="130">
+          <TextBlock Classes="label" Text="Mélység (cm)" />
+          <TextBox Text="{Binding Depth}" Classes="num" TextInputOptions.ContentType="Number" />
+          <TextBlock Classes="fielderror" Text="{Binding Errors[depth_cm], FallbackValue=''}" />
+        </StackPanel>
+        <StackPanel Margin="0,0,12,8" Width="130">
+          <TextBlock Classes="label" Text="Magasság (cm)" />
+          <TextBox Text="{Binding Height}" Classes="num" TextInputOptions.ContentType="Number" />
+          <TextBlock Classes="fielderror" Text="{Binding Errors[height_cm], FallbackValue=''}" />
+        </StackPanel>
+      </WrapPanel>
+      <CheckBox IsChecked="{Binding TrackLot}">
+        <StackPanel>
+          <TextBlock Text="Sarzskövetés" FontWeight="SemiBold" />
+          <TextBlock Classes="muted small" Text="Átvételkor kötelező a sarzsszám." />
+        </StackPanel>
+      </CheckBox>
+      <CheckBox IsChecked="{Binding TrackExpiry}">
+        <StackPanel>
+          <TextBlock Text="Lejáratkövetés" FontWeight="SemiBold" />
+          <TextBlock Classes="muted small" Text="Átvételkor kötelező a lejárat, kiszedés FEFO szerint." />
+        </StackPanel>
+      </CheckBox>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Megjegyzés (nem kötelező)" />
+        <TextBox Text="{Binding Notes}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
+      </StackPanel>
+      <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding Error}" />
+      </Border>
+      <Button Classes="primary" HorizontalAlignment="Left" MinWidth="220" Content="{Binding SubmitText}" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

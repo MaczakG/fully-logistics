@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Stock"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Stock.StockTransferView"
+             x:DataType="local:StockTransferViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14" MaxWidth="620" HorizontalAlignment="Stretch">
+      <StackPanel>
+        <TextBlock Text="{Binding Product.Name}" Classes="h2" TextWrapping="Wrap" />
+        <TextBlock Classes="muted small" TextWrapping="Wrap">
+          <Run Text="A cél hely csak üres lehet, vagy" /> <Run Text="{Binding Product.PartnerName}" /> <Run Text="áruját tárolhatja." />
+        </TextBlock>
+      </StackPanel>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Honnan" />
+        <ComboBox ItemsSource="{Binding Rows}" SelectedItem="{Binding From}">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="m:StockLocationRow">
+              <TextBlock Text="{Binding Converter={x:Static local:StockFormat.RowLabel}}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+      </StackPanel>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Hová: olvasd be a cél raktárhelyet" />
+        <ctl:ScanField Command="{Binding ScanTargetCommand}" Placeholder="Raktárhely, pl. A-01-04" />
+        <TextBox Text="{Binding ToCode}" Classes="mono" Margin="0,8,0,0" Watermark="Cél raktárhely" Classes.invalid="{Binding ToError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Classes="fielderror" Text="{Binding ToError}" IsVisible="{Binding ToError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      </StackPanel>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Mennyiség" />
+        <TextBox Text="{Binding Qty}" Classes="num" TextInputOptions.ContentType="Digits" Width="160" HorizontalAlignment="Left"
+                 Classes.invalid="{Binding QtyError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Classes="fielderror" Text="{Binding QtyError}" IsVisible="{Binding QtyError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      </StackPanel>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Megjegyzés (nem kötelező)" />
+        <TextBox Text="{Binding Note}" />
+      </StackPanel>
+      <Button Classes="primary" Content="Áttárolás" HorizontalAlignment="Stretch" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -1,0 +1,96 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Quotes"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Quotes.QuotesView"
+             x:DataType="local:QuotesViewModel">
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Margin="16,16,16,6" Spacing="10">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Classes="muted" TextWrapping="Wrap" VerticalAlignment="Center"
+                   Text="Fulfillment árajánlatok a cég alapértelmezett tarifáival vagy egy ügyfél egyedi díjaival. Az ajánlat kinyomtatható és PDF-be menthető." />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
+          <Button Classes="primary" Command="{Binding NewCommand}" IsVisible="{Binding CanCreate}">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Új ajánlat" /></StackPanel>
+          </Button>
+          <Button Command="{Binding NewCommand}" IsVisible="{Binding CalculatorOnly}">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconQuotes}" /><TextBlock Text="Kalkulátor" /></StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+      <Grid ColumnDefinitions="*,Auto,200">
+        <TextBox Text="{Binding Search}" PlaceholderText="Ajánlatszám vagy ügyfél">
+          <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding ApplyCommand}" /></TextBox.KeyBindings>
+        </TextBox>
+        <Button Grid.Column="1" Margin="8,0" Command="{Binding ApplyCommand}" ToolTip.Tip="Keresés">
+          <PathIcon Data="{StaticResource IconSearch}" />
+        </Button>
+        <ComboBox Grid.Column="2" ItemsSource="{Binding Statuses}" SelectedItem="{Binding Status}" HorizontalAlignment="Stretch">
+          <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+      </Grid>
+    </StackPanel>
+
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="16,6,16,12">
+      <TextBlock Text="{Binding TotalText}" Classes="muted" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Továbbiak" Command="{Binding MoreCommand}" IsVisible="{Binding HasMore}" />
+    </Grid>
+
+    <Panel Margin="16,0">
+      <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
+        <TextBlock Text="{Binding EmptyText}" />
+      </Border>
+      <DataGrid ItemsSource="{Binding Items}" ctl:RowOpen.Item="{Binding Selected}" AutoGenerateColumns="False" CanUserSortColumns="False"
+                IsVisible="{Binding !IsEmpty}">
+        <DataGrid.Columns>
+          <DataGridTemplateColumn Header="Szám" Width="140">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:QuoteRowItem">
+                <TextBlock Margin="10,6" VerticalAlignment="Center" Classes="mono" FontWeight="Bold" Text="{Binding Row.Number}" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Ügyfél" Width="*" MinWidth="220">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:QuoteRowItem">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding ClientText}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Text="{Binding PartnerText}" Classes="muted small" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Állapot" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:QuoteRowItem">
+                <ctl:StatusTag Margin="10,6" Group="quote" Status="{Binding Row.Status}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Havi nettó" Width="150">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:QuoteRowItem">
+                <TextBlock Margin="10,6" VerticalAlignment="Center" Classes="mono" Text="{Binding NetText}" TextAlignment="Right" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Készítette" Width="170">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:QuoteRowItem">
+                <TextBlock Margin="10,6" VerticalAlignment="Center" Text="{Binding Row.CreatedByName}" TextTrimming="CharacterEllipsis" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Módosítva" Width="160">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="local:QuoteRowItem">
+                <TextBlock Margin="10,6" VerticalAlignment="Center" Classes="small" Text="{Binding UpdatedText}" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+    </Panel>
+  </DockPanel>
+</UserControl>

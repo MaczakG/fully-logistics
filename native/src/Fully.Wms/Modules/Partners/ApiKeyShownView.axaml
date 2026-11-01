@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Partners"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Partners.ApiKeyShownView"
+             x:DataType="local:ApiKeyShownViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="12">
+      <Border Classes="notice warn">
+        <TextBlock Text="Ezt a kulcsot most látod utoljára. Csak a lenyomatát tároljuk, később senki nem tudja újra megnézni. Másold ki, és biztonságos csatornán add át (például jelszókezelővel), ne sima e-mailben vagy chaten." />
+      </Border>
+      <StackPanel>
+        <TextBlock Classes="label" Text="{Binding Label}" />
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBox x:Name="KeyBox" Text="{Binding Key.Key, Mode=OneWay}" IsReadOnly="True" Classes="mono" />
+          <Button Grid.Column="1" Margin="8,0,0,0" Click="Copy">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCopy}" /><TextBlock Text="Másolás" /></StackPanel>
+          </Button>
+        </Grid>
+      </StackPanel>
+      <TextBlock Classes="muted small" Text="{Binding Usage}" TextWrapping="Wrap" />
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="Kimásoltam, bezárom" Command="{Binding CloseCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

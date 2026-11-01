@@ -1,0 +1,205 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- The frame: dark side menu and top bar with the hi-vis line, home tiles (web app: .sidebar,
+       .topbar, .pda-tile). -->
+
+  <Style Selector="Border.sidebar">
+    <Setter Property="Background" Value="{StaticResource InkFixed}" />
+  </Style>
+  <Style Selector="Border.sidebar TextBlock">
+    <Setter Property="Foreground" Value="{StaticResource PaperFixed}" />
+  </Style>
+  <Style Selector="TextBlock.sidegroup">
+    <Setter Property="Foreground" Value="{StaticResource PaperFixed2}" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="LetterSpacing" Value="1" />
+    <Setter Property="Margin" Value="20,18,0,6" />
+  </Style>
+
+  <Style Selector="Button.side">
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="BorderThickness" Value="4,0,0,0" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="Padding" Value="16,0,12,0" />
+    <Setter Property="MinHeight" Value="42" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource PaperFixed}" />
+  </Style>
+  <Style Selector="Button.side PathIcon">
+    <Setter Property="Foreground" Value="{StaticResource PaperFixed2}" />
+  </Style>
+  <Style Selector="Button.side:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource InkFixed2}" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="Foreground" Value="{StaticResource PaperFixed}" />
+  </Style>
+  <Style Selector="Button.side:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource InkFixed3}" />
+  </Style>
+  <Style Selector="Button.side.active /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource InkFixed3}" />
+    <Setter Property="BorderBrush" Value="{StaticResource HiVis}" />
+  </Style>
+  <Style Selector="Button.side.active PathIcon">
+    <Setter Property="Foreground" Value="{StaticResource HiVis}" />
+  </Style>
+
+  <Style Selector="Border.badge">
+    <Setter Property="Background" Value="{StaticResource HiVis}" />
+    <Setter Property="Padding" Value="6,1" />
+    <Setter Property="MinWidth" Value="24" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.badge TextBlock">
+    <Setter Property="Foreground" Value="{StaticResource OnHiVis}" />
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Border.topbar">
+    <Setter Property="Background" Value="{StaticResource InkFixed}" />
+    <Setter Property="BorderBrush" Value="{StaticResource HiVis}" />
+    <Setter Property="BorderThickness" Value="0,0,0,3" />
+    <Setter Property="MinHeight" Value="56" />
+    <Setter Property="Padding" Value="6,0" />
+  </Style>
+  <Style Selector="Border.topbar TextBlock">
+    <Setter Property="Foreground" Value="{StaticResource PaperFixed}" />
+  </Style>
+  <Style Selector="Button.bar">
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="MinWidth" Value="48" />
+    <Setter Property="MinHeight" Value="48" />
+    <Setter Property="Padding" Value="10,0" />
+    <Setter Property="Foreground" Value="{StaticResource PaperFixed}" />
+  </Style>
+  <Style Selector="Button.bar PathIcon">
+    <Setter Property="Width" Value="24" />
+    <Setter Property="Height" Value="24" />
+    <Setter Property="Foreground" Value="{StaticResource HiVis}" />
+  </Style>
+  <Style Selector="Button.bar:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource InkFixed3}" />
+    <Setter Property="Foreground" Value="{StaticResource PaperFixed}" />
+  </Style>
+
+  <!-- Home tiles -->
+  <Style Selector="Button.tile">
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Top" />
+    <Setter Property="Background" Value="{DynamicResource Panel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="Padding" Value="14,16,14,14" />
+    <Setter Property="MinHeight" Value="148" />
+    <Setter Property="Margin" Value="0,0,10,10" />
+  </Style>
+  <Style Selector="Button.tile:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Panel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ink2}" />
+  </Style>
+  <Style Selector="Button.tile:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource PanelAlt}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ink}" />
+  </Style>
+  <Style Selector="Border.tileicon">
+    <Setter Property="Background" Value="{StaticResource InkFixed}" />
+    <Setter Property="Width" Value="52" />
+    <Setter Property="Height" Value="52" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+  </Style>
+  <Style Selector="Border.tileicon PathIcon">
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="Foreground" Value="{StaticResource HiVis}" />
+  </Style>
+  <Style Selector="TextBlock.tilelabel">
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="FontWeight" Value="ExtraBold" />
+  </Style>
+  <Style Selector=":is(Control).compact TextBlock.tilelabel">
+    <Setter Property="FontSize" Value="15" />
+  </Style>
+  <Style Selector="Border.tilebar">
+    <Setter Property="Height" Value="5" />
+    <Setter Property="Background" Value="{StaticResource InkFixed}" />
+  </Style>
+
+  <!-- Toasts -->
+  <Style Selector="Border.toast">
+    <Setter Property="Background" Value="{StaticResource InkFixed}" />
+    <Setter Property="BorderBrush" Value="{StaticResource HiVis}" />
+    <Setter Property="BorderThickness" Value="4,0,0,0" />
+    <Setter Property="Padding" Value="14,12" />
+    <Setter Property="Margin" Value="0,6,0,0" />
+    <Setter Property="MaxWidth" Value="520" />
+    <Setter Property="BoxShadow" Value="0 6 18 0 #50000000" />
+  </Style>
+  <Style Selector="Border.toast TextBlock">
+    <Setter Property="Foreground" Value="{StaticResource PaperFixed}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="Border.toast.error">
+    <Setter Property="BorderBrush" Value="#FF9C92" />
+  </Style>
+  <Style Selector="Border.toast.success">
+    <Setter Property="BorderBrush" Value="#6FD39B" />
+  </Style>
+
+  <!-- Dialog over the page -->
+  <Style Selector="Border.scrim">
+    <Setter Property="Background" Value="#99000000" />
+  </Style>
+  <Style Selector="Border.dialog">
+    <Setter Property="Background" Value="{DynamicResource Panel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ink}" />
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="Padding" Value="20" />
+    <Setter Property="MaxWidth" Value="480" />
+    <Setter Property="Margin" Value="16" />
+  </Style>
+
+  <!-- Scan field: dark strip with the barcode icon (web app: .scan) -->
+  <Style Selector="Border.scan">
+    <Setter Property="Background" Value="{StaticResource InkFixed}" />
+    <Setter Property="Padding" Value="10" />
+  </Style>
+  <Style Selector="Border.scan TextBox">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="MinHeight" Value="48" />
+    <Setter Property="Background" Value="{StaticResource PaperFixed}" />
+    <Setter Property="Foreground" Value="{StaticResource InkFixed}" />
+    <Setter Property="BorderBrush" Value="{StaticResource PaperFixed}" />
+  </Style>
+  <Style Selector="Border.scan TextBox:focus /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{StaticResource PaperFixed}" />
+    <Setter Property="BorderBrush" Value="{StaticResource HiVis}" />
+  </Style>
+  <Style Selector="Border.scan TextBox:pointerover /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{StaticResource PaperFixed}" />
+  </Style>
+  <Style Selector="Border.scan Button">
+    <Setter Property="MinWidth" Value="48" />
+    <Setter Property="MinHeight" Value="48" />
+    <Setter Property="BorderBrush" Value="{StaticResource InkFixed3}" />
+    <Setter Property="Foreground" Value="{StaticResource PaperFixed}" />
+  </Style>
+  <Style Selector="Border.scan Button PathIcon">
+    <Setter Property="Foreground" Value="{StaticResource HiVis}" />
+  </Style>
+  <Style Selector="Border.scan Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource InkFixed3}" />
+    <Setter Property="BorderBrush" Value="{StaticResource InkFixed3}" />
+  </Style>
+  <Style Selector="Border.scan Button.primary PathIcon">
+    <Setter Property="Foreground" Value="{StaticResource OnHiVis}" />
+  </Style>
+</Styles>

@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Counts"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Counts.NewCountView"
+             x:DataType="local:NewCountViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14">
+      <StackPanel>
+        <TextBlock Classes="label" Text="Típus" />
+        <ComboBox ItemsSource="{x:Static local:NewCountViewModel.TypeChoices}" SelectedItem="{Binding Type}" HorizontalAlignment="Stretch">
+          <ComboBox.ItemTemplate><DataTemplate x:DataType="local:CountChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+      </StackPanel>
+      <Grid ColumnDefinitions="*,*" IsVisible="{Binding IsCycle}">
+      <StackPanel Margin="0,0,8,0">
+        <TextBlock Classes="label" Text="Helyek száma" />
+        <TextBox Text="{Binding Limit}" Classes="num" TextInputOptions.ContentType="Digits" />
+      </StackPanel>
+      <StackPanel Grid.Column="1">
+        <TextBlock Classes="label" Text="Zóna" />
+        <ComboBox ItemsSource="{Binding CycleZones}" SelectedItem="{Binding CycleZone}" HorizontalAlignment="Stretch">
+          <ComboBox.ItemTemplate><DataTemplate x:DataType="local:CountChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+      </StackPanel>
+      </Grid>
+      <TextBlock Classes="muted small" TextWrapping="Wrap" IsVisible="{Binding IsCycle}"
+                 Text="Előbb a még soha nem számolt, aztán a legrégebben számolt helyek, bejárási sorrendben. A nyitott leltárban lévő helyek kimaradnak." />
+      <StackPanel IsVisible="{Binding IsZone}">
+        <TextBlock Classes="label" Text="Zóna" />
+        <ComboBox ItemsSource="{Binding Zones}" SelectedItem="{Binding Zone}" HorizontalAlignment="Stretch" PlaceholderText="Válassz zónát">
+          <ComboBox.ItemTemplate><DataTemplate x:DataType="local:CountChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+      </StackPanel>
+      <StackPanel IsVisible="{Binding IsProduct}">
+        <TextBlock Classes="label" Text="Termékek" />
+        <AutoCompleteBox SelectedItem="{Binding Product}" AsyncPopulator="{Binding FindProducts}" MinimumPrefixLength="1" MinimumPopulateDelay="0:0:0.25"
+                         FilterMode="None" PlaceholderText="Cikkszám, név vagy EAN" ValueMemberBinding="{Binding Display, DataType=m:ProductLookup}">
+          <AutoCompleteBox.ItemTemplate>
+            <DataTemplate x:DataType="m:ProductLookup">
+              <StackPanel>
+                <TextBlock Text="{Binding Display}" />
+                <TextBlock Classes="muted small" Text="{Binding PartnerCode}" />
+              </StackPanel>
+            </DataTemplate>
+          </AutoCompleteBox.ItemTemplate>
+        </AutoCompleteBox>
+        <TextBlock Classes="muted small" Text="Minden hely bekerül, ahol a kiválasztott termékekből készlet van. Legfeljebb 40 termék." Margin="0,4,0,0" TextWrapping="Wrap" />
+      </StackPanel>
+      <ItemsControl ItemsSource="{Binding Chosen}" IsVisible="{Binding IsProduct}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="m:ProductLookup">
+            <Grid ColumnDefinitions="*,Auto" Margin="0,2">
+              <TextBlock Text="{Binding Display}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+              <Button Grid.Column="1" Classes="ghost" ToolTip.Tip="Eltávolítás"
+                      Command="{Binding $parent[local:NewCountView].((local:NewCountViewModel)DataContext).RemoveProductCommand}" CommandParameter="{Binding}">
+                <PathIcon Data="{StaticResource IconClose}" />
+              </Button>
+            </Grid>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <Border Classes="notice" IsVisible="{Binding IsFull}"><TextBlock Text="{Binding FullText}" /></Border>
+      <StackPanel IsVisible="{Binding IsLocations}">
+        <TextBlock Classes="label" Text="Raktárhelyek" />
+        <TextBox Text="{Binding LocationCodes}" Classes="mono" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="96" PlaceholderText="A-01-01&#10;A-01-02" />
+        <TextBlock Classes="muted small" Text="Egy sorba egy kód, vagy vesszővel, szóközzel elválasztva. Legfeljebb 500 hely." Margin="0,4,0,0" TextWrapping="Wrap" />
+      </StackPanel>
+      <StackPanel>
+        <CheckBox Content="Vak leltár" IsChecked="{Binding Blind}" FontWeight="SemiBold" />
+        <TextBlock Classes="muted small" Text="A számlálók nem látják a nyilvántartott mennyiséget, csak a jóváhagyók." TextWrapping="Wrap" />
+      </StackPanel>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Megjegyzés (nem kötelező)" />
+        <TextBox Text="{Binding Note}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
+      </StackPanel>
+      <Border Classes="notice" IsVisible="{Binding BusyText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"><TextBlock Text="{Binding BusyText}" /></Border>
+      <TextBlock Classes="error" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      <Button Classes="primary" HorizontalAlignment="Stretch" Command="{Binding SaveCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCounts}" /><TextBlock Text="Leltár indítása" /></StackPanel>
+      </Button>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

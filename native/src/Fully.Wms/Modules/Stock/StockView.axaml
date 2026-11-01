@@ -1,0 +1,152 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Stock"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:core="using:Fully.Wms.Core"
+             x:Class="Fully.Wms.Modules.Stock.StockView"
+             x:DataType="local:StockViewModel">
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Margin="16,16,16,6" Spacing="10">
+      <local:StockTabsBar Active="stock" Command="{Binding TabCommand}" />
+      <ctl:ScanField Command="{Binding ScanCommand}" Placeholder="Cikkszám, EAN vagy raktárhely" />
+
+      <!-- Key figures (desktop) -->
+      <WrapPanel IsVisible="{Binding !IsCompact}">
+        <Border Classes="kpi" MinWidth="170">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Cikkek" />
+            <TextBlock Classes="kpivalue" Text="{Binding Summary.Products, Converter={x:Static local:StockFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text="{Binding Summary.OnHand, Converter={x:Static local:StockFormat.PiecesOnHand}, FallbackValue=''}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Classes.warn="{Binding Summary.Low, Converter={x:Static local:StockFormat.NonZero}, FallbackValue={x:False}}" MinWidth="170">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Alacsony készlet" />
+            <TextBlock Classes="kpivalue" Text="{Binding Summary.Low, Converter={x:Static local:StockFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text="a minimum alatt" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Classes.danger="{Binding Summary.Out, Converter={x:Static local:StockFormat.NonZero}, FallbackValue={x:False}}" MinWidth="170">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Elfogyott" />
+            <TextBlock Classes="kpivalue" Text="{Binding Summary.Out, Converter={x:Static local:StockFormat.Int}, FallbackValue=''}" />
+            <TextBlock Classes="kpihint" Text="nincs elérhető darab" />
+          </StackPanel>
+        </Border>
+      </WrapPanel>
+
+      <!-- Filters: inline on the desktop, folded on the phone -->
+      <Expander Header="Szűrők" IsExpanded="{Binding !IsCompact, Mode=OneWay}" HorizontalAlignment="Stretch">
+        <WrapPanel>
+          <StackPanel Margin="0,0,10,8" Width="260">
+            <TextBlock Classes="label" Text="Keresés" />
+            <TextBox Text="{Binding Search}" Watermark="Cikkszám, megnevezés vagy EAN">
+              <TextBox.KeyBindings>
+                <KeyBinding Gesture="Enter" Command="{Binding ApplyCommand}" />
+              </TextBox.KeyBindings>
+            </TextBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="240">
+            <TextBlock Classes="label" Text="Ügyfél" />
+            <ComboBox ItemsSource="{Binding Partners}" SelectedItem="{Binding Partner}" PlaceholderText="Minden ügyfél">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="m:PartnerLookup">
+                  <TextBlock Text="{Binding Display}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="240">
+            <TextBlock Classes="label" Text="Állapot" />
+            <ComboBox ItemsSource="{Binding StatusLabels}" SelectedIndex="{Binding StatusIndex}" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom" Margin="0,0,0,8">
+            <Button Classes="dark" Content="Szűrés" Command="{Binding ApplyCommand}" />
+            <Button Content="Törlés" Command="{Binding ClearFiltersCommand}" />
+            <Button Command="{Binding ExportCommand}" IsVisible="{Binding !IsCompact}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <PathIcon Data="{StaticResource IconDownload}" />
+                <TextBlock Text="CSV export" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </WrapPanel>
+      </Expander>
+    </StackPanel>
+
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="16,6,16,12">
+      <TextBlock Text="{Binding TotalText}" Classes="muted" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Továbbiak" Command="{Binding MoreCommand}" IsVisible="{Binding HasMore}" />
+    </Grid>
+
+    <Panel Margin="16,0">
+      <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
+        <TextBlock Text="Nincs a szűrésnek megfelelő cikk." />
+      </Border>
+
+      <!-- Desktop: table -->
+      <DataGrid ItemsSource="{Binding Items}" ctl:RowOpen.Item="{Binding Selected}" IsVisible="{Binding !IsCompact}"
+                AutoGenerateColumns="False" CanUserSortColumns="False">
+        <DataGrid.Columns>
+          <DataGridTextColumn x:DataType="m:StockRow" Header="Ügyfél" Binding="{Binding PartnerCode}" Width="140" />
+          <DataGridTemplateColumn Header="Cikk" Width="*" MinWidth="220">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:StockRow">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Sku}" Classes="mono" FontWeight="Bold" />
+                  <TextBlock Text="{Binding Name}" Classes="muted small" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn x:DataType="m:StockRow" Header="Készleten" Binding="{Binding OnHand, Converter={x:Static local:StockFormat.Int}}" Width="95" />
+          <DataGridTextColumn x:DataType="m:StockRow" Header="Foglalt" Binding="{Binding Reserved, Converter={x:Static local:StockFormat.Int}}" Width="80" />
+          <DataGridTextColumn x:DataType="m:StockRow" Header="Zárolt" Binding="{Binding Blocked, Converter={x:Static local:StockFormat.Int}}" Width="75" />
+          <DataGridTemplateColumn Header="Elérhető" Width="100">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:StockRow">
+                <TextBlock Margin="10,0" VerticalAlignment="Center" FontWeight="Bold" Classes="mono"
+                           Classes.neg="{Binding Available, Converter={x:Static local:StockFormat.NotPositive}}"
+                           Text="{Binding Available, Converter={x:Static local:StockFormat.Int}}" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn x:DataType="m:StockRow" Header="Min." Binding="{Binding MinStock, Converter={x:Static local:StockFormat.Int}}" Width="70" />
+          <DataGridTemplateColumn Header="Állapot" Width="110">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:StockRow">
+                <local:StockStatusTag Status="{Binding Status}" Margin="10,0" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn x:DataType="m:StockRow" Header="Hely" Binding="{Binding Locations}" Width="65" />
+          <DataGridTextColumn x:DataType="m:StockRow" Header="Első lejárat" Binding="{Binding NextExpiry, Converter={x:Static local:StockFormat.Date}}" Width="115" />
+        </DataGrid.Columns>
+      </DataGrid>
+
+      <!-- Phone: cards -->
+      <ListBox Classes="rows" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding IsCompact}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="m:StockRow">
+            <Grid ColumnDefinitions="*,Auto" Margin="14,10">
+              <StackPanel Spacing="2">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="{Binding Sku}" Classes="mono" FontWeight="Bold" FontSize="16" />
+                  <Border Classes="tag"><TextBlock Text="{Binding PartnerCode}" /></Border>
+                </StackPanel>
+                <TextBlock Text="{Binding Name}" Classes="muted" TextWrapping="Wrap" />
+                <TextBlock Classes="small" Text="{Binding Converter={x:Static local:StockFormat.RowSummary}}" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" HorizontalAlignment="Right" Spacing="4">
+                <TextBlock Text="{Binding Available, Converter={x:Static local:StockFormat.Int}}" Classes="big" HorizontalAlignment="Right"
+                           Classes.neg="{Binding Available, Converter={x:Static local:StockFormat.NotPositive}}" />
+                <local:StockStatusTag Status="{Binding Status}" HorizontalAlignment="Right" />
+              </StackPanel>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Panel>
+  </DockPanel>
+</UserControl>

@@ -1,0 +1,95 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Settings"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Settings.TariffsTabView"
+             x:DataType="local:TariffsTab">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <StackPanel Spacing="12">
+    <Border Classes="notice" IsVisible="{Binding ReadOnly}">
+      <TextBlock Text="Ezt a részt csak megtekintheted: a módosításhoz Beállítások módosítása jog kell." />
+    </Border>
+    <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <TextBlock Text="{Binding Error}" />
+    </Border>
+    <Grid ColumnDefinitions="*,*">
+      <Border Classes="panel" Padding="0" Margin="0,0,8,0" VerticalAlignment="Top">
+        <StackPanel>
+          <TextBlock Classes="section" Text="Díjtételek" Margin="12,10" />
+          <ItemsControl ItemsSource="{Binding TariffGroups}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="local:DefaultTariffGroup">
+                <StackPanel>
+                  <Border Classes="grouphead"><TextBlock Text="{Binding Label}" FontWeight="Bold" /></Border>
+                  <ItemsControl ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="local:DefaultPrice">
+                          <Border Classes="taskrow">
+                            <Grid ColumnDefinitions="*,140,140">
+                              <TextBlock Text="{Binding Label}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                              <StackPanel Grid.Column="1" Margin="8,0">
+                                <TextBox Classes="num" Text="{Binding Value}" IsReadOnly="{Binding $parent[local:TariffsTabView].((local:TariffsTab)DataContext).ReadOnly}"
+                               Classes.invalid="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <TextBlock Classes="fielderror" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                              </StackPanel>
+                              <TextBlock Grid.Column="2" Classes="muted small" Text="{Binding Unit}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                            </Grid>
+                          </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+      <StackPanel Grid.Column="1" Spacing="12">
+        <Border Classes="panel" Padding="0">
+          <StackPanel>
+            <StackPanel Margin="12,10">
+              <TextBlock Classes="section" Text="Tárolás" />
+              <TextBlock Classes="muted small" Text="Havi díj egy raktárhelyre, méretenként. Napi arányosan számlázzuk." TextWrapping="Wrap" />
+            </StackPanel>
+            <TextBlock Classes="muted" Margin="12,0,12,10" Text="Nincs aktív raktárhely méret. A Raktárhelyek fülön vehetsz fel." IsVisible="{Binding NoStorage}" TextWrapping="Wrap" />
+            <ItemsControl ItemsSource="{Binding Storage}">
+              <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="local:DefaultPrice">
+                <Border Classes="taskrow">
+                  <Grid ColumnDefinitions="*,140,140">
+                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                    <StackPanel Grid.Column="1" Margin="8,0">
+                      <TextBox Classes="num" Text="{Binding Value}" IsReadOnly="{Binding $parent[local:TariffsTabView].((local:TariffsTab)DataContext).ReadOnly}"
+                               Classes.invalid="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                      <TextBlock Classes="fielderror" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Classes="muted small" Text="{Binding Unit}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <Border Classes="panel">
+          <StackPanel>
+            <TextBlock Classes="section" Text="Ajánlati feltételek" Margin="0,0,0,8" />
+            <TextBox Text="{Binding Terms}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="180" IsReadOnly="{Binding ReadOnly}"
+                     Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=quote_terms}" />
+            <TextBlock Classes="muted small" Text="Soronként egy feltétel. Az új ajánlatok ezzel a listával indulnak." Margin="0,4,0,0" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=quote_terms}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=quote_terms}" />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </Grid>
+    <Button Classes="primary" HorizontalAlignment="Right" Command="{Binding SaveCommand}" IsVisible="{Binding CanEdit}">
+      <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheck}" /><TextBlock Text="Mentés" /></StackPanel>
+    </Button>
+  </StackPanel>
+</UserControl>

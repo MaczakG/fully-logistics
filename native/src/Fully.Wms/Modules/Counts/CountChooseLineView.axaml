@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Counts"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Counts.CountChooseLineView"
+             x:DataType="local:CountChooseLineViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14">
+      <TextBlock TextWrapping="Wrap" Text="{Binding Intro}" />
+      <ListBox ItemsSource="{Binding Lines}" SelectedItem="{Binding Chosen}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="local:CountLotChoice">
+            <TextBlock Classes="mono" Text="{Binding Label}" Margin="6,8" />
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="+1 hozzáadása" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
