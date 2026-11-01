@@ -7,7 +7,7 @@ namespace Fully.Wms.Core;
 // app's own Library folder, set by the iOS app).
 public sealed class AppSettings
 {
-    public const string DefaultServer = "https://18-185-119-189.sslip.io";
+    public const string DefaultServer = "https://3-71-236-97.sslip.io";
 
     public string Server { get; set; } = DefaultServer;
     public string? Email { get; set; }
@@ -26,6 +26,10 @@ public sealed class SettingsStore
 {
     static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 
+    // Earlier default addresses of the server. The server has moved since, so a device that still
+    // has one of them follows it (signed out: the old session belonged to the old server).
+    static readonly string[] OldServers = ["https://18-185-119-189.sslip.io"];
+
     public SettingsStore(string? folder = null)
     {
         Folder = folder ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "FullyWms");
@@ -38,7 +42,15 @@ public sealed class SettingsStore
     {
         try
         {
-            if (File.Exists(FilePath)) return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath), Options) ?? new AppSettings();
+            if (File.Exists(FilePath) && JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath), Options) is { } saved)
+            {
+                if (OldServers.Contains(saved.Server))
+                {
+                    saved.Server = AppSettings.DefaultServer;
+                    saved.Session = null;
+                }
+                return saved;
+            }
         }
         catch (Exception e) when (e is IOException or JsonException or UnauthorizedAccessException)
         {

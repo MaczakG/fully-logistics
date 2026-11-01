@@ -7,7 +7,7 @@ Egy C#/XAML kódbázis ([Avalonia](https://avaloniaui.net), .NET 10), két alkal
 | **Fully WMS** (asztali) | Windows, macOS, Linux | a teljes WMS, normál, átméretezhető ablakban (nem teljes képernyős; megjegyzi a méretét és a helyét) |
 | **Fully PDA** (iPhone, iPad) | iOS 15-től | a raktári modulok nagy gombokkal, vonalkódolvasás kamerával vagy Bluetooth-os olvasóval |
 
-Mindkettő a meglévő szerverhez csatlakozik (alapból `https://18-185-119-189.sslip.io`, a
+Mindkettő a meglévő szerverhez csatlakozik (alapból `https://3-71-236-97.sslip.io`, a
 bejelentkezésnél a „módosítás” linkkel átírható). Az adatbázis, a jogosultságok, a webshop- és
 futárkapcsolatok és a naplózás a szerveren vannak, az alkalmazások ugyanazt az API-t hívják, mint
 korábban a böngészős felület. Ugyanazokkal a felhasználókkal és jelszavakkal lehet belépni.
