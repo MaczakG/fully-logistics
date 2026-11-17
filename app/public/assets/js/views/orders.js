@@ -245,6 +245,7 @@
   const STATUS_TABS = [['', 'Összes nyitott'], ['new', 'Új'], ['hold', 'Felfüggesztve'], ['picking', 'Komissió alatt'], ['packed', 'Feladásra kész']];
 
   async function renderList(root, ctx) {
+    root.classList.add('list-page');
     const q = ctx.query;
     const state = {
       status: OPEN.includes(q.get('status')) ? q.get('status') : '',

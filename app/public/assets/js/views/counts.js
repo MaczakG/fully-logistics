@@ -34,6 +34,7 @@
 
   /* ------------------------------------------------------------ list */
   async function renderList(root, ctx) {
+    root.classList.add('list-page');
     const q = ctx.query;
     const filters = { status: q.get('status') || 'active', type: q.get('type') || '', q: q.get('q') || '' };
     const offset = Number(q.get('offset')) || 0;

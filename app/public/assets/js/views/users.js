@@ -10,8 +10,8 @@
   const { html, raw, ui, api, fmt } = FL;
   const BASE = '#/felhasznalok';
   const TABS = [
-    { key: 'lista', label: 'Felhasználók', icon: 'users-three' },
-    { key: 'jogosultsagok', label: 'Jogosultságok', icon: 'shield-check' },
+    { key: 'lista', label: 'Felhasználók' },
+    { key: 'jogosultsagok', label: 'Jogosultságok' },
   ];
   const can = (action) => FL.can('users', action);
   const me = () => FL.state.me.user;
@@ -74,6 +74,7 @@
 
   // ================================================================ Felhasználók
   async function listTab(root, ctx) {
+    root.classList.add('list-page');
     const state = {
       filters: { q: ctx.query.get('q') || '', role_id: ctx.query.get('role_id') || '', active: ctx.query.get('active') || '' },
       roles: (await api.get('/api/roles')).items,

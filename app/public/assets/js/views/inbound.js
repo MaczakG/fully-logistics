@@ -46,6 +46,7 @@
   /* ================================================================ list */
 
   async function renderList(root, ctx) {
+    root.classList.add('list-page');
     const q = ctx.query;
     const f = {
       status: q.get('status') || 'open',

@@ -15,13 +15,14 @@
   const { html, raw, ui, api, fmt } = FL;
   const BASE = '#/beallitasok';
   const TABS = [
-    { key: 'cegadatok', label: 'Cégadatok', icon: 'identification-card' },
-    { key: 'raktar', label: 'Raktár', icon: 'warehouse' },
-    { key: 'raktarhelyek', label: 'Raktárhelyek', icon: 'map-trifold' },
-    { key: 'alaptarifak', label: 'Alap tarifák', icon: 'coins' },
-    { key: 'futarok', label: 'Futárszolgálatok', icon: 'truck' },
-    { key: 'szamlazo', label: 'Számlázó', icon: 'invoice' },
-    { key: 'naplo', label: 'Napló', icon: 'clock-counter-clockwise' },
+    { key: 'cegadatok', label: 'Cégadatok' },
+    { key: 'raktar', label: 'Raktár' },
+    { key: 'raktarhelyek', label: 'Raktárhelyek' },
+    { key: 'meretek', label: 'Méretek' },
+    { key: 'alaptarifak', label: 'Alap tarifák' },
+    { key: 'futarok', label: 'Futárszolgálatok' },
+    { key: 'szamlazo', label: 'Számlázó' },
+    { key: 'naplo', label: 'Napló' },
   ];
   const can = (action) => FL.can('settings', action);
   const meta = () => FL.state.meta;
@@ -239,7 +240,9 @@
   const LOC_FILTERS = ['q', 'zone', 'size_id', 'kind', 'occupied', 'partner_id', 'active'];
   const PAGE = 100;
 
-  async function locationsTab(root, ctx) {
+  // Raktárhelyek and Méretek: one list each, sharing the sizes, filters and dialogs.
+  async function locationsTab(root, ctx, tab = 'raktarhelyek') {
+    root.classList.add('list-page');
     const state = {
       filters: Object.fromEntries(LOC_FILTERS.map((k) => [k, ctx.query.get(k) || ''])),
       offset: Math.max(parseInt(ctx.query.get('offset') || '0', 10) || 0, 0),
@@ -255,17 +258,17 @@
       <button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
       ${can('create') ? html`<button class="btn" type="button" data-action="bulk-new">${FL.icon('squares-four')}Tömeges létrehozás</button>` : ''}
       ${can('create') ? html`<button class="btn btn--primary" type="button" data-action="new-loc">${FL.icon('plus')}Új raktárhely</button>` : ''}`;
-    frame(root, 'raktarhelyek', {
+    frame(root, tab, {
       lead: 'Minden raktárhelynek egy mérete van; a méret havi díját ügyfelenként a partner Tarifák fülén adod meg. Egy helyen mindig csak egy partner áruja lehet.',
-      actions,
-      body: html`
+      actions: tab === 'meretek' ? '' : actions,
+      body: tab === 'meretek' ? html`
         <section class="panel panel--flush" aria-labelledby="sizes-title">
           <div class="panel__head">
             <div><h2 id="sizes-title">Méretek</h2><p class="small muted">A lista bővíthető, például XXL vagy Fél raklap. Használt méret nem törölhető, csak inaktiválható.</p></div>
             ${can('create') ? html`<button class="btn btn--sm" type="button" data-action="new-size">${FL.icon('plus')}Új méret</button>` : ''}
           </div>
           <div class="slot" data-sizes></div>
-        </section>
+        </section>` : html`
         <section class="panel panel--flush" aria-labelledby="locs-title">
           <div class="panel__head"><h2 id="locs-title">Raktárhelyek</h2><span class="small muted" data-count></span></div>
           <form class="toolbar loc-filters" data-filters novalidate></form>
@@ -274,7 +277,7 @@
         </section>`,
     });
     const $ = (s) => root.querySelector(s);
-    $('[data-filters]').addEventListener('submit', (e) => {
+    $('[data-filters]')?.addEventListener('submit', (e) => {
       e.preventDefault();
       for (const k of LOC_FILTERS) state.filters[k] = (e.target.elements[k]?.value || '').trim();
       state.offset = 0;
@@ -288,6 +291,7 @@
       return d.some((x) => x != null) ? `${d.map((x) => (x == null ? '?' : fmt.num(x, 1))).join(' × ')} cm` : '';
     };
     function paintSizes() {
+      if (!$('[data-sizes]')) return;
       $('[data-sizes]').innerHTML = String(ui.table({
         caption: 'Raktárhely méretek',
         empty: 'Még nincs méret. Vegyél fel legalább egyet a raktárhelyek előtt.',
@@ -352,6 +356,7 @@
 
     // ---------------------------------------------------------------- filters
     function paintFilters() {
+      if (!$('[data-filters]')) return;
       const f = state.filters;
       const zones = state.list.zones || [];
       $('[data-filters]').innerHTML = String(html`
@@ -384,8 +389,9 @@
     ];
 
     async function loadLocations() {
-      syncUrl();
       const box = $('[data-locs]');
+      if (!box) return undefined;
+      syncUrl();
       box.setAttribute('aria-busy', 'true');
       try {
         state.list = await api.get('/api/settings/locations', { ...state.filters, limit: PAGE, offset: state.offset });
@@ -709,6 +715,7 @@
         });
       },
       'filter-size': (el, e) => {
+        if (!$('[data-locs]')) return; // on Méretek the link opens Raktárhelyek
         e.preventDefault();
         state.filters = { ...Object.fromEntries(LOC_FILTERS.map((k) => [k, ''])), size_id: el.dataset.id };
         state.offset = 0;
@@ -1042,6 +1049,7 @@
   const LOG_PAGE = 50;
 
   async function logTab(root, ctx) {
+    root.classList.add('list-page');
     const kind = ctx.query.get('log') === 'integracio' ? 'integration' : 'audit';
     const keys = kind === 'audit' ? AUDIT_FILTERS : INTEG_FILTERS;
     const state = { filters: Object.fromEntries(keys.map((k) => [k, ctx.query.get(k) || ''])), offset: Math.max(parseInt(ctx.query.get('offset') || '0', 10) || 0, 0), data: { items: [], total: 0 } };
@@ -1150,6 +1158,7 @@
     cegadatok: companyTab,
     raktar: warehouseTab,
     raktarhelyek: locationsTab,
+    meretek: (root, ctx) => locationsTab(root, ctx, 'meretek'),
     alaptarifak: tariffsTab,
     futarok: couriersTab,
     szamlazo: invoicingTab,

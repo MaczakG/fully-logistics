@@ -22,8 +22,8 @@
   const carrierLabel = (code) => (code && FL.state.meta.carriers[code]) || '';
 
   const tabs = (active) => ui.tabs([
-    { key: 'pickups', label: 'Futárátvételek', href: ROOT, icon: 'package' },
-    { key: 'transports', label: 'Raklapos fuvarok', href: `${ROOT}/fuvarok`, icon: 'truck' },
+    { key: 'pickups', label: 'Futárátvételek', href: ROOT },
+    { key: 'transports', label: 'Raklapos fuvarok', href: `${ROOT}/fuvarok` },
   ], active, 'Fuvarszervezés nézetei');
 
   /* ------------------------------------------------------------ pickup dialog */
@@ -384,6 +384,7 @@
   }
 
   async function renderTransports(root, ctx) {
+    root.classList.add('list-page');
     const q = ctx.query;
     const filters = {
       status: q.get('status') || 'active', direction: q.get('direction') || '', partner_id: q.get('partner_id') || '',

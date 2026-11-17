@@ -223,6 +223,7 @@
 
   /* ------------------------------------------------------------ list */
   async function renderList(root, ctx) {
+    root.classList.add('list-page');
     const st = { q: (ctx.query.get('q') || '').slice(0, 100), status: ctx.query.get('status') || '', offset: 0 };
     const LIMIT = 50;
     const statuses = Object.entries(FL.state.meta.statuses.quote).map(([k, s]) => [k, s.label]);

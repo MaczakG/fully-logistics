@@ -17,22 +17,22 @@
   // hint: the second line of the tile on the phone (PDA) home screen.
   const MENU = [
     { title: 'Raktár', items: [
-      { key: 'inbound', route: 'betarolas', label: 'Betárolás', icon: 'tray-arrow-down', hint: 'Átvétel, polcra helyezés' },
-      { key: 'orders', route: 'megrendelesek', label: 'Megrendelések', icon: 'clipboard-text', hint: 'Nyitott rendelések' },
-      { key: 'picking', route: 'komissio', label: 'Komissió', icon: 'scan', hint: 'Kiszedés, csomagolás' },
-      { key: 'counts', route: 'leltar', label: 'Leltár', icon: 'list-checks', hint: 'Leltárszámlálás' },
-      { key: 'stock', route: 'keszlet', label: 'Készlet', icon: 'stack', hint: 'Cikk vagy hely keresése' },
-      { key: 'history', route: 'rendelestortenet', label: 'Rendeléstörténet', icon: 'clock-counter-clockwise', hint: 'Lezárt rendelések, visszáru' },
-      { key: 'transport', route: 'fuvarszervezes', label: 'Fuvarszervezés', icon: 'truck', hint: 'Futárátvétel, fuvarok' },
+      { key: 'inbound', route: 'betarolas', label: 'Betárolás', hint: 'Átvétel, polcra helyezés' },
+      { key: 'orders', route: 'megrendelesek', label: 'Megrendelések', hint: 'Nyitott rendelések' },
+      { key: 'picking', route: 'komissio', label: 'Komissió', hint: 'Kiszedés, csomagolás' },
+      { key: 'counts', route: 'leltar', label: 'Leltár', hint: 'Leltárszámlálás' },
+      { key: 'stock', route: 'keszlet', label: 'Készlet', hint: 'Cikk vagy hely keresése' },
+      { key: 'history', route: 'rendelestortenet', label: 'Rendeléstörténet', hint: 'Lezárt rendelések, visszáru' },
+      { key: 'transport', route: 'fuvarszervezes', label: 'Fuvarszervezés', hint: 'Futárátvétel, fuvarok' },
     ] },
     { title: 'Kereskedelem', items: [
-      { key: 'partners', route: 'partnerek', label: 'Partnerek', icon: 'handshake', hint: 'Ügyfelek, beszállítók' },
-      { key: 'quotes', route: 'ajanlatkeszito', label: 'Ajánlatkészítő', icon: 'calculator', hint: 'Árajánlatok' },
-      { key: 'billing', route: 'elszamolas', label: 'Elszámolás', icon: 'invoice', hint: 'Havi elszámolás' },
+      { key: 'partners', route: 'partnerek', label: 'Partnerek', hint: 'Ügyfelek, beszállítók' },
+      { key: 'quotes', route: 'ajanlatkeszito', label: 'Ajánlatkészítő', hint: 'Árajánlatok' },
+      { key: 'billing', route: 'elszamolas', label: 'Elszámolás', hint: 'Havi elszámolás' },
     ] },
     { title: 'Rendszer', items: [
-      { key: 'settings', route: 'beallitasok', label: 'Beállítások', icon: 'gear-six', hint: 'Raktárhelyek, beállítások' },
-      { key: 'users', route: 'felhasznalok', label: 'Felhasználók', icon: 'users-three', hint: 'Munkatársak, jogosultságok' },
+      { key: 'settings', route: 'beallitasok', label: 'Beállítások', hint: 'Raktárhelyek, beállítások' },
+      { key: 'users', route: 'felhasznalok', label: 'Felhasználók', hint: 'Munkatársak, jogosultságok' },
     ] },
   ];
   const ITEMS = MENU.flatMap((g) => g.items);

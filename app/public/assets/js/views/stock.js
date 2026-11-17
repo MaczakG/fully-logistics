@@ -65,10 +65,11 @@
   }
 
   const tabs = (active) => ui.tabs([
-    { key: 'stock', label: 'Készlet', href: ROUTE, icon: 'stack' },
-    { key: 'catalog', label: 'Cikktörzs', href: `${ROUTE}/cikktorzs`, icon: 'package' },
-    { key: 'movements', label: 'Mozgások', href: `${ROUTE}/mozgasok`, icon: 'arrows-left-right' },
-    { key: 'map', label: 'Térkép', href: `${ROUTE}/terkep`, icon: 'map-trifold' },
+    { key: 'stock', label: 'Készlet', href: ROUTE },
+    { key: 'catalog', label: 'Cikktörzs', href: `${ROUTE}/cikktorzs` },
+    { key: 'movements', label: 'Mozgások', href: `${ROUTE}/mozgasok` },
+    { key: 'occupancy', label: 'Foglaltság', href: `${ROUTE}/foglaltsag` },
+    { key: 'map', label: 'Térkép', href: `${ROUTE}/terkep` },
   ], active, 'Készlet fülei');
 
   const head = (actions) => ui.pageHead({
@@ -93,6 +94,7 @@
       if (sub === 'mozgasok') return renderMovements(root, ctx);
       if (sub === 'helyek') return renderLocations(root, ctx);
       if (sub === 'terkep') return renderMap(root, ctx);
+      if (sub === 'foglaltsag') return renderOccupancy(root);
       if (sub) { root.innerHTML = String(ui.empty('Ez az oldal nem létezik.', 'warning-circle')); return null; }
       return renderStock(root, ctx);
     },
@@ -101,15 +103,12 @@
   /* ================================================================ Készlet */
 
   async function renderStock(root, ctx) {
+    root.classList.add('list-page');
     const q = ctx.query;
     const f = { q: q.get('q') || '', partner_id: q.get('partner_id') || '', status: q.get('status') || (q.get('low') === '1' ? 'attention' : '') };
     const offset = intOf(q.get('offset'));
     const limit = 50;
-    const [data, occ, clients] = await Promise.all([
-      api.get('/api/stock', { ...f, limit, offset }),
-      api.get('/api/stock/locations', { limit: 1 }),
-      clientList(),
-    ]);
+    const [data, clients] = await Promise.all([api.get('/api/stock', { ...f, limit, offset }), clientList()]);
     const link = (p) => ROUTE + FL.qs(p);
     const filtered = Boolean(f.q || f.partner_id || f.status);
 
@@ -143,8 +142,7 @@
           { key: 'next_expiry', label: 'Első lejárat', cls: 'nowrap', render: (r) => (r.next_expiry ? expiryCell(r.next_expiry) : '') },
         ],
       })}
-      ${ui.pager({ total: data.total, limit, offset })}
-      ${occupancyPanel(occ.summary)}`);
+      ${ui.pager({ total: data.total, limit, offset })}`);
 
     ui.enableRowLinks(root);
     bindFilters(root, ROUTE);
@@ -155,49 +153,43 @@
     return null;
   }
 
-  function occupancyPanel(summary) {
+  /* ================================================================ Foglaltság */
+
+  // One list: occupied storage locations by client and size; the footer gives each size's totals.
+  async function renderOccupancy(root) {
+    root.classList.add('list-page');
+    const { summary } = await api.get('/api/stock/locations', { limit: 1 });
     const codes = sizes().map((z) => z.code);
-    return html`<section class="panel panel--flush" aria-labelledby="stk-occ-h">
-      <div class="panel__head">
-        <div><h2 id="stk-occ-h">Raktárhelyek foglaltsága</h2>
-          <p class="muted small">Aktív tárolóhelyek méret és ügyfél szerint. Egy helyen mindig csak egy ügyfél áruja lehet.</p></div>
-        <span class="actions"><a class="btn btn--sm" href="${ROUTE}/terkep">${FL.icon('map-trifold')}Térkép</a>
-          <a class="btn btn--sm" href="${ROUTE}/helyek">${FL.icon('list')}Helyek listája</a></span>
-      </div>
-      <div class="stk-occ">
-        ${ui.table({
-          caption: 'Foglaltság méret szerint',
-          empty: 'Még nincs tárolóhely. Vedd fel őket a Beállítások, Raktárhelyek oldalon.',
-          rows: summary.bySize,
-          columns: [
-            { key: 'code', label: 'Méret', cls: 'nowrap', render: (z) => html`<span class="tag">${z.code}</span> ${z.name}` },
-            { key: 'total', label: 'Összes', align: 'r', cls: 'num', render: (z) => fmt.int(z.total) },
-            { key: 'occupied', label: 'Foglalt', align: 'r', cls: 'num', render: (z) => fmt.int(z.occupied) },
-            { key: 'empty', label: 'Szabad', align: 'r', cls: 'num', render: (z) => html`<a href="${ROUTE}/helyek?state=empty&size_id=${z.size_id}">${fmt.int(z.empty)}</a>${z.empty_dedicated ? html`<span class="sub">ebből ${fmt.int(z.empty_dedicated)} fix</span>` : ''}` },
-            { key: 'usage', label: 'Kihasználtság', render: (z) => {
-              const p = z.total ? Math.round((z.occupied / z.total) * 100) : 0;
-              return html`<div class="stk-usage"><progress value="${p}" max="100" aria-label="${p}% foglalt"></progress><span class="num small">${p}%</span></div>`;
-            } },
-          ],
-        })}
-        ${ui.table({
-          caption: 'Foglalt helyek ügyfelenként',
-          empty: 'Egyik tárolóhelyen sincs áru.',
-          rows: summary.byPartner,
-          rowHref: (p) => `${ROUTE}/helyek?partner_id=${p.partner_id}&state=occupied`,
-          columns: [
-            { key: 'name', label: 'Ügyfél', render: (p) => html`${p.name}<span class="sub">${p.code}</span>` },
-            ...codes.map((c) => ({ key: c, label: c, align: 'r', cls: 'num', render: (p) => (p.sizes[c] ? fmt.int(p.sizes[c]) : html`<span class="muted">0</span>`) })),
-            { key: 'total', label: 'Összesen', align: 'r', cls: 'num', render: (p) => html`<b>${fmt.int(p.total)}</b>` },
-          ],
-        })}
-      </div>
-    </section>`;
+    const bySize = new Map(summary.bySize.map((z) => [z.code, z]));
+    const sum = (k) => summary.bySize.reduce((n, z) => n + z[k], 0);
+    const pct = (a, b) => `${b ? Math.round((a / b) * 100) : 0}%`;
+    const row = (label, cell, total) => html`<tr><td>${label}</td>${codes.map((c) => html`<td class="r num">${cell(bySize.get(c) || { total: 0, occupied: 0, empty: 0 })}</td>`)}<td class="r num">${total}</td></tr>`;
+    root.innerHTML = String(html`
+      ${head(html`<a class="btn" href="${ROUTE}/helyek">${FL.icon('list')}Helyek listája</a>`)}
+      ${tabs('occupancy')}
+      ${ui.table({
+        caption: 'Foglalt tárolóhelyek ügyfelenként és méret szerint',
+        empty: 'Egyik tárolóhelyen sincs áru.',
+        rows: summary.byPartner,
+        rowHref: (p) => `${ROUTE}/helyek?partner_id=${p.partner_id}&state=occupied`,
+        columns: [
+          { key: 'name', label: 'Ügyfél', render: (p) => html`${p.name}<span class="sub">${p.code}</span>` },
+          ...codes.map((c) => ({ key: c, label: c, align: 'r', cls: 'num', render: (p) => fmt.int(p.sizes[c] || 0) })),
+          { key: 'total', label: 'Összesen', align: 'r', cls: 'num', render: (p) => fmt.int(p.total) },
+        ],
+        footer: html`${row('Foglalt', (z) => fmt.int(z.occupied), fmt.int(sum('occupied')))}
+          ${row('Szabad', (z) => fmt.int(z.empty), fmt.int(sum('empty')))}
+          ${row('Összes tárolóhely', (z) => fmt.int(z.total), fmt.int(sum('total')))}
+          ${row('Kihasználtság', (z) => pct(z.occupied, z.total), pct(sum('occupied'), sum('total')))}`,
+      })}`);
+    ui.enableRowLinks(root);
+    return null;
   }
 
   /* ================================================================ Helyek */
 
   async function renderLocations(root, ctx) {
+    root.classList.add('list-page');
     const q = ctx.query;
     const f = { q: q.get('q') || '', state: q.get('state') || '', size_id: q.get('size_id') || '', partner_id: q.get('partner_id') || '', kind: q.get('kind') || 'storage' };
     const offset = intOf(q.get('offset'));
@@ -712,6 +704,7 @@
   }
 
   async function renderCatalog(root, ctx) {
+    root.classList.add('list-page');
     const q = ctx.query;
     const f = { q: q.get('q') || '', partner_id: q.get('partner_id') || '', active: q.get('active') || '1' };
     const offset = intOf(q.get('offset'));
@@ -814,6 +807,7 @@
   }
 
   async function renderMovements(root, ctx) {
+    root.classList.add('list-page');
     const q = ctx.query;
     const f = {
       q: q.get('q') || '', partner_id: q.get('partner_id') || '', product_id: q.get('product_id') || '', location_id: q.get('location_id') || '',

@@ -79,6 +79,7 @@
   }
 
   async function renderList(root, ctx) {
+    root.classList.add('list-page');
     const status = TABS.some(([k]) => k === ctx.query.get('status')) ? ctx.query.get('status') : 'active';
     const offset = Number(ctx.query.get('offset')) || 0;
     const data = await api.get('/api/picking/waves', { status, limit: 50, offset });

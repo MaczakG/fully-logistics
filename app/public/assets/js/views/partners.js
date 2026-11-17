@@ -73,6 +73,7 @@
 
   /* ------------------------------------------------------------ list */
   async function renderList(root, ctx) {
+    root.classList.add('list-page');
     const st = {
       type: ['client', 'carrier', 'supplier'].includes(ctx.query.get('type')) ? ctx.query.get('type') : '',
       status: ['active', 'inactive'].includes(ctx.query.get('status')) ? ctx.query.get('status') : '',

@@ -92,7 +92,7 @@
 
   // tabs([{ key, label, count, href }], activeKey): links (hash routes) styled as tabs.
   ui.tabs = (items, active, label = 'Fülek') => html`<nav class="tabs" aria-label="${label}">${items.map((t) => html`
-    <a class="tab" href="${t.href}" ${t.key === active ? raw('aria-current="page"') : ''}>${t.icon ? FL.icon(t.icon) : ''}${t.label}${t.count != null ? html` <span class="count">${t.count}</span>` : ''}</a>`)}</nav>`;
+    <a class="tab" href="${t.href}" ${t.key === active ? raw('aria-current="page"') : ''}>${t.label}${t.count != null ? html` <span class="count">${t.count}</span>` : ''}</a>`)}</nav>`;
 
   // The end of a filter form above a list: Keresés submits it; the reset is a link ({ href }) or a
   // data-action button ({ action }), or left out.

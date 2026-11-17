@@ -33,8 +33,8 @@
   };
 
   const tabs = (active, period) => ui.tabs([
-    { key: 'statements', label: 'Havi elszámolások', href: `#/elszamolas?period=${period}`, icon: 'invoice' },
-    { key: 'entries', label: 'Egyedi tételek és munkaórák', href: `#/elszamolas/tetelek?period=${period}`, icon: 'clock' },
+    { key: 'statements', label: 'Havi elszámolások', href: `#/elszamolas?period=${period}` },
+    { key: 'entries', label: 'Egyedi tételek és munkaórák', href: `#/elszamolas/tetelek?period=${period}` },
   ], active, 'Elszámolás nézetek');
 
   // Month picker: previous / select / next. onChange(period).
@@ -66,6 +66,7 @@
 
   /* ------------------------------------------------------------ overview */
   async function renderOverview(root, ctx) {
+    root.classList.add('list-page');
     const period = periodFrom(ctx.query);
     const data = await api.get('/api/billing/overview', { period });
     const canCreate = FL.can('billing', 'create');
@@ -467,6 +468,7 @@
 
   /* ------------------------------------------------------------ entries */
   async function renderEntries(root, ctx) {
+    root.classList.add('list-page');
     const period = periodFrom(ctx.query);
     const partner = ctx.query.get('partner') || '';
     const offset = Math.max(0, Number(ctx.query.get('offset')) || 0);
