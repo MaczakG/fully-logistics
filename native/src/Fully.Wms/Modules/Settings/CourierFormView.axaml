@@ -1,0 +1,80 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Settings"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Settings.CourierFormView"
+             x:DataType="local:CourierFormViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="10">
+      <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding Error}" />
+      </Border>
+      <Border Classes="notice" IsVisible="{Binding ReadOnly}">
+        <TextBlock Text="Csak megtekintheted: a módosításhoz Beállítások módosítása jog kell." />
+      </Border>
+      <CheckBox Content="Aktív: ezzel a fiókkal készülnek a címkék és a nyomkövetés" IsChecked="{Binding Active}" IsEnabled="{Binding CanSave}" />
+      <StackPanel>
+        <TextBlock Classes="label" Text="Fuvarozó partner" />
+        <ComboBox ItemsSource="{Binding Carriers}" SelectedItem="{Binding Carrier}" HorizontalAlignment="Stretch" IsEnabled="{Binding CanSave}">
+          <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+        <TextBlock Classes="muted small" Text="{Binding CarrierHint}" TextWrapping="Wrap" Margin="0,4,0,0" />
+        <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=carrier_id}"
+                   IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=carrier_id}" />
+      </StackPanel>
+      <StackPanel IsVisible="{Binding HasCredentials}" Spacing="6">
+        <TextBlock Classes="section" Text="Hozzáférési adatok" />
+        <TextBlock Classes="muted small" Text="Titkosítva tároljuk, és soha nem jelenítjük meg. Üresen hagyva a tárolt érték marad." TextWrapping="Wrap" />
+        <ItemsControl ItemsSource="{Binding Credentials}">
+          <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="p:PlatformInput">
+              <StackPanel Margin="0,0,8,10">
+                <TextBlock Classes="label" Text="{Binding LabelText}" IsVisible="{Binding !IsCheck}" />
+                <TextBox Text="{Binding Text}" PasswordChar="{Binding SecretChar}" PlaceholderText="{Binding Placeholder}" IsVisible="{Binding IsText}"
+                         IsReadOnly="{Binding $parent[UserControl].((local:CourierFormViewModel)DataContext).ReadOnly}"
+                         Classes.invalid="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding Choice}" PlaceholderText="Válassz" IsVisible="{Binding IsSelect}" HorizontalAlignment="Stretch"
+                          IsEnabled="{Binding $parent[UserControl].((local:CourierFormViewModel)DataContext).CanEditFields}">
+                  <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+                <CheckBox Content="{Binding Label}" IsChecked="{Binding Checked}" IsVisible="{Binding IsCheck}"
+                          IsEnabled="{Binding $parent[UserControl].((local:CourierFormViewModel)DataContext).CanEditFields}" />
+                <TextBlock Classes="muted small" Text="{Binding Hint}" TextWrapping="Wrap" Margin="0,4,0,0" IsVisible="{Binding Hint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <TextBlock Classes="fielderror" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+      <StackPanel IsVisible="{Binding HasSettings}" Spacing="6">
+        <TextBlock Classes="section" Text="Beállítások" />
+        <ItemsControl ItemsSource="{Binding Settings}">
+          <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="p:PlatformInput">
+              <StackPanel Margin="0,0,8,10">
+                <TextBlock Classes="label" Text="{Binding LabelText}" IsVisible="{Binding !IsCheck}" />
+                <TextBox Text="{Binding Text}" PasswordChar="{Binding SecretChar}" PlaceholderText="{Binding Placeholder}" IsVisible="{Binding IsText}"
+                         IsReadOnly="{Binding $parent[UserControl].((local:CourierFormViewModel)DataContext).ReadOnly}"
+                         Classes.invalid="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding Choice}" PlaceholderText="Válassz" IsVisible="{Binding IsSelect}" HorizontalAlignment="Stretch"
+                          IsEnabled="{Binding $parent[UserControl].((local:CourierFormViewModel)DataContext).CanEditFields}">
+                  <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+                <CheckBox Content="{Binding Label}" IsChecked="{Binding Checked}" IsVisible="{Binding IsCheck}"
+                          IsEnabled="{Binding $parent[UserControl].((local:CourierFormViewModel)DataContext).CanEditFields}" />
+                <TextBlock Classes="muted small" Text="{Binding Hint}" TextWrapping="Wrap" Margin="0,4,0,0" IsVisible="{Binding Hint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <TextBlock Classes="fielderror" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="Mentés" Command="{Binding SaveCommand}" IsVisible="{Binding CanSave}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

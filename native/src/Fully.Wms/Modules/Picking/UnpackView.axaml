@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Picking"
+             x:Class="Fully.Wms.Modules.Picking.UnpackView"
+             x:DataType="local:UnpackViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14">
+      <TextBlock TextWrapping="Wrap" Text="A rendelés visszakerül csomagolásra váró állapotba, a nyomkövetési szám törlődik. A futárnál már létrehozott küldeményt a futár felületén kell törölni." />
+      <StackPanel>
+        <TextBlock Classes="label" Text="Ok" />
+        <TextBox Text="{Binding Reason}" Classes.invalid="{Binding ReasonError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Classes="fielderror" Text="{Binding ReasonError}" IsVisible="{Binding ReasonError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      </StackPanel>
+      <Button Classes="primary danger" HorizontalAlignment="Stretch" Content="Visszavonás" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

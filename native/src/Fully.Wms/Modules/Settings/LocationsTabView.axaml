@@ -1,0 +1,225 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Settings"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Settings.LocationsTabView"
+             x:DataType="local:LocationsTab">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <StackPanel Spacing="12">
+    <Border Classes="notice" IsVisible="{Binding ReadOnly}">
+      <TextBlock Text="Ezt a részt csak megtekintheted: a módosításhoz Beállítások módosítása jog kell." />
+    </Border>
+    <Grid ColumnDefinitions="*,*,*,*">
+      <Border Classes="kpi">
+        <StackPanel>
+          <TextBlock Classes="kpilabel" Text="Összes raktárhely" />
+          <TextBlock Classes="kpivalue" Text="{Binding KpiTotal}" />
+        </StackPanel>
+      </Border>
+      <Border Grid.Column="1" Classes="kpi">
+        <StackPanel>
+          <TextBlock Classes="kpilabel" Text="Foglalt" />
+          <TextBlock Classes="kpivalue" Text="{Binding KpiOccupied}" />
+          <TextBlock Classes="kpihint" Text="{Binding KpiOccupiedHint}" />
+        </StackPanel>
+      </Border>
+      <Border Grid.Column="2" Classes="kpi" Classes.warn="{Binding KpiEmptyWarn}">
+        <StackPanel>
+          <TextBlock Classes="kpilabel" Text="Üres tárolóhely" />
+          <TextBlock Classes="kpivalue" Text="{Binding KpiEmpty}" />
+          <TextBlock Classes="kpihint" Text="betárolásra kész" />
+        </StackPanel>
+      </Border>
+      <Border Grid.Column="3" Classes="kpi">
+        <StackPanel>
+          <TextBlock Classes="kpilabel" Text="Inaktív" />
+          <TextBlock Classes="kpivalue" Text="{Binding KpiInactive}" />
+          <TextBlock Classes="kpihint" Text="nem választható" />
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <Border Classes="panel" Padding="0">
+      <StackPanel>
+        <Grid ColumnDefinitions="*,Auto" Margin="12,10">
+          <StackPanel>
+            <TextBlock Classes="section" Text="Raktárhely méretek" />
+            <TextBlock Classes="muted small" TextWrapping="Wrap" Text="Használt méret nem törölhető, csak inaktiválható: inaktív méretet nem lehet új raktárhelyhez választani." />
+          </StackPanel>
+          <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding NewSizeCommand}" IsVisible="{Binding CanCreate}"><StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Új méret" /></StackPanel></Button>
+        </Grid>
+        <Grid ColumnDefinitions="70,*,180,110,170,100,96" Margin="22,0,22,4">
+          <TextBlock Classes="dt" Text="Kód" />
+          <TextBlock Grid.Column="1" Classes="dt" Text="Név" />
+          <TextBlock Grid.Column="2" Classes="dt" Text="Méret (sz × m × mag)" />
+          <TextBlock Grid.Column="3" Classes="dt" Text="Teherbírás" />
+          <TextBlock Grid.Column="4" Classes="dt" Text="Raktárhely" />
+          <TextBlock Grid.Column="5" Classes="dt" Text="Állapot" />
+        </Grid>
+        <ItemsControl ItemsSource="{Binding Sizes}" Margin="10,0,10,10">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:SizeRow">
+              <Border Classes="taskrow">
+                <Grid ColumnDefinitions="70,*,180,110,170,100,96">
+                  <TextBlock Classes="mono" FontWeight="Bold" Text="{Binding Size.Code}" VerticalAlignment="Center" />
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Size.Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Classes="small neg" Text="{Binding Size.Warning}" TextWrapping="Wrap" IsVisible="{Binding Size.Warning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" Classes="small" Text="{Binding Dims}" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="3" Classes="small" Text="{Binding MaxKg}" VerticalAlignment="Center" />
+                  <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                    <Button Classes="link" Command="{Binding FilterCommand}" ToolTip.Tip="A méret raktárhelyei"><TextBlock Text="{Binding LocationsText, StringFormat='{}{0} raktárhely'}" /></Button>
+                    <TextBlock Classes="muted small" Text="{Binding OccupiedText}" />
+                  </StackPanel>
+                  <Panel Grid.Column="5" VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <Border Classes="tag ok" IsVisible="{Binding Size.Active}"><TextBlock Text="Aktív" /></Border>
+                    <Border Classes="tag" IsVisible="{Binding !Size.Active}"><TextBlock Text="Inaktív" /></Border>
+                  </Panel>
+                  <StackPanel Grid.Column="6" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
+                    <Button Classes="ghost" Command="{Binding EditCommand}" IsVisible="{Binding CanEdit}" ToolTip.Tip="Szerkesztés"><PathIcon Data="{StaticResource IconEdit}" /></Button>
+                    <Button Classes="ghost" Command="{Binding DeleteCommand}" IsVisible="{Binding CanDelete}" ToolTip.Tip="{Binding DeleteTip}"><PathIcon Data="{StaticResource IconTrash}" /></Button>
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
+
+    <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+      <TextBlock Classes="section" Text="Raktárhelyek" VerticalAlignment="Center" />
+      <WrapPanel Grid.Column="1">
+        <Button Command="{Binding ImportCommand}" IsVisible="{Binding CanCreate}" Margin="0,0,8,0"><StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconUpload}" /><TextBlock Text="Import" /></StackPanel></Button>
+        <Button Command="{Binding ExportCommand}" Margin="0,0,8,0"><StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconDownload}" /><TextBlock Text="Export" /></StackPanel></Button>
+        <Button Command="{Binding BulkCreateCommand}" IsVisible="{Binding CanCreate}" Margin="0,0,8,0"><StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconAdd}" /><TextBlock Text="Tömeges létrehozás" /></StackPanel></Button>
+        <Button Classes="primary" Command="{Binding NewLocationCommand}" IsVisible="{Binding CanCreate}"><StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Új raktárhely" /></StackPanel></Button>
+      </WrapPanel>
+    </Grid>
+    <Grid ColumnDefinitions="*,Auto">
+      <TextBox Text="{Binding Search}" PlaceholderText="Kód, megjegyzés vagy a rajta lévő partner">
+        <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding ApplyCommand}" /></TextBox.KeyBindings>
+      </TextBox>
+      <Button Grid.Column="1" Margin="8,0,0,0" Command="{Binding ApplyCommand}" ToolTip.Tip="Keresés"><PathIcon Data="{StaticResource IconSearch}" /></Button>
+    </Grid>
+    <UniformGrid Columns="6">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Zóna" />
+            <ComboBox ItemsSource="{Binding Zones}" SelectedItem="{Binding Zone}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Méret" />
+            <ComboBox ItemsSource="{Binding SizeFilters}" SelectedItem="{Binding SizeFilter}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Típus" />
+            <ComboBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding KindFilter}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Foglaltság" />
+            <ComboBox ItemsSource="{x:Static local:LocationsTab.OccupiedChoices}" SelectedItem="{Binding Occupied}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Fix partner" />
+            <ComboBox ItemsSource="{Binding Partners}" SelectedItem="{Binding Partner}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,0,8">
+            <TextBlock Classes="label" Text="Állapot" />
+            <ComboBox ItemsSource="{x:Static local:LocationsTab.ActiveChoices}" SelectedItem="{Binding Active}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+    </UniformGrid>
+
+    <Border Classes="selbar" IsVisible="{Binding HasSelection}">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+          <TextBlock Text="{Binding SelectionText}" FontWeight="SemiBold" />
+          <Button Classes="link" Command="{Binding SelectMatchingCommand}" IsVisible="{Binding CanSelectMatching}"><TextBlock Text="{Binding SelectMatchingText}" /></Button>
+        </StackPanel>
+        <WrapPanel Grid.Column="2" HorizontalAlignment="Right">
+          <Button Command="{Binding BulkSizeCommand}" IsVisible="{Binding CanEdit}" Margin="0,0,8,4"><TextBlock Text="Méret módosítása" /></Button>
+          <Button Command="{Binding BulkEditCommand}" IsVisible="{Binding CanEdit}" Margin="0,0,8,4"><TextBlock Text="Egyéb módosítás" /></Button>
+          <Button Command="{Binding BulkActivateCommand}" IsVisible="{Binding CanEdit}" Margin="0,0,8,4"><TextBlock Text="Aktiválás" /></Button>
+          <Button Command="{Binding BulkDeactivateCommand}" IsVisible="{Binding CanDelete}" Margin="0,0,8,4"><TextBlock Text="Inaktiválás" /></Button>
+          <Button Classes="danger" Command="{Binding BulkDeleteCommand}" IsVisible="{Binding CanDelete}" Margin="0,0,8,4"><TextBlock Text="Törlés" /></Button>
+          <Button Command="{Binding ClearSelectionCommand}" Margin="0,0,0,4"><TextBlock Text="Kijelölés törlése" /></Button>
+        </WrapPanel>
+      </Grid>
+    </Border>
+
+    <Border Classes="notice" IsVisible="{Binding IsEmpty}"><TextBlock Text="{Binding EmptyText}" /></Border>
+    <Border Classes="panel" Padding="0" IsVisible="{Binding !IsEmpty}">
+      <StackPanel>
+        <Grid ColumnDefinitions="40,*,90,120,130,*,*,80,90" Margin="20,8,20,4">
+          <Button Classes="ghost" Padding="2" Command="{Binding SelectPageCommand}" IsVisible="{Binding CanSelect}" ToolTip.Tip="Az oldal kijelölése"><PathIcon Data="{StaticResource IconCheck}" /></Button>
+          <TextBlock Grid.Column="1" Classes="dt" Text="Kód" />
+          <TextBlock Grid.Column="2" Classes="dt" Text="Zóna" />
+          <TextBlock Grid.Column="3" Classes="dt" Text="Méret" />
+          <TextBlock Grid.Column="4" Classes="dt" Text="Típus" />
+          <TextBlock Grid.Column="5" Classes="dt" Text="Fix partner" />
+          <TextBlock Grid.Column="6" Classes="dt" Text="Foglaltság" />
+          <TextBlock Grid.Column="7" Classes="dt" Text="Sorrend" />
+          <TextBlock Grid.Column="8" Classes="dt" Text="Állapot" />
+        </Grid>
+        <ItemsControl ItemsSource="{Binding Items}" Margin="10,0,10,10">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:LocationItem">
+              <Border Classes="taskrow">
+                <Grid ColumnDefinitions="40,*,90,120,130,*,*,80,90">
+                  <CheckBox IsChecked="{Binding IsSelected}" IsVisible="{Binding CanSelect}" VerticalAlignment="Center" ToolTip.Tip="Kijelölés" />
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <Button Classes="link" Command="{Binding OpenCommand}" HorizontalAlignment="Left" ToolTip.Tip="Megnyitás">
+                      <TextBlock Classes="mono" FontWeight="Bold" Text="{Binding Location.Code}" />
+                    </Button>
+                    <TextBlock Classes="muted small" Text="{Binding Location.Note}" TextTrimming="CharacterEllipsis" IsVisible="{Binding Location.Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" Text="{Binding Location.Zone}" VerticalAlignment="Center" />
+                  <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                    <TextBlock Classes="mono" FontWeight="SemiBold" Text="{Binding Location.SizeCode}" />
+                    <TextBlock Classes="muted small" Text="{Binding Location.SizeName}" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="4" Classes="small" Text="{Binding KindText}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                  <TextBlock Grid.Column="5" Classes="small" Text="{Binding Location.PartnerName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                  <StackPanel Grid.Column="6" VerticalAlignment="Center" Margin="0,0,8,0">
+                    <TextBlock Text="{Binding OccupantText}" Classes.muted="{Binding IsFree}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Classes="muted small" Text="{Binding OccupantSub}" />
+                    <TextBlock Classes="small neg" Text="{Binding Location.Warning}" TextWrapping="Wrap" IsVisible="{Binding Location.Warning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="7" Classes="mono" Text="{Binding SequenceText}" VerticalAlignment="Center" />
+                  <Panel Grid.Column="8" VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <Border Classes="tag ok" IsVisible="{Binding Location.Active}"><TextBlock Text="Aktív" /></Border>
+                    <Border Classes="tag" IsVisible="{Binding !Location.Active}"><TextBlock Text="Inaktív" /></Border>
+                  </Panel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
+    <Grid ColumnDefinitions="*,Auto">
+      <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+        <TextBlock Classes="muted" Text="{Binding TotalText}" VerticalAlignment="Center" />
+        <Button Classes="link" Content="Szűrők törlése" Command="{Binding ClearFiltersCommand}" IsVisible="{Binding HasFilters}" />
+      </StackPanel>
+      <Button Grid.Column="1" Content="Továbbiak" Command="{Binding MoreCommand}" IsVisible="{Binding HasMore}" />
+    </Grid>
+  </StackPanel>
+</UserControl>

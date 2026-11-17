@@ -1,0 +1,145 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Transport"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Transport.TransportBoardView"
+             x:DataType="local:TransportBoardViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="12">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Classes="muted" TextWrapping="Wrap" VerticalAlignment="Center" IsVisible="{Binding !IsCompact}"
+                   Text="Napi futárátvételek fuvarozónként: a feladásra kész csomagok manifesztre kerülnek, a lezárással feladjuk őket." />
+        <Button Grid.Column="1" Classes="primary" Margin="10,0,0,0" Command="{Binding NewCommand}" IsVisible="{Binding CanCreate}">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Új futárátvétel" /></StackPanel>
+        </Button>
+      </Grid>
+
+      <!-- The module's two views -->
+      <WrapPanel>
+        <ToggleButton Classes="chip" IsChecked="True" IsHitTestVisible="False">
+          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconPackage}" /><TextBlock Text="Futárátvételek" /></StackPanel>
+        </ToggleButton>
+        <ToggleButton Classes="chip" IsChecked="False" Command="{Binding TransportsCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconTransport}" /><TextBlock Text="Raklapos fuvarok" /></StackPanel>
+        </ToggleButton>
+      </WrapPanel>
+
+      <!-- The day -->
+      <WrapPanel>
+        <Button Command="{Binding DayCommand}" CommandParameter="-1" ToolTip.Tip="Előző nap" Margin="0,0,6,6">
+          <PathIcon Data="{StaticResource IconBack}" />
+        </Button>
+        <CalendarDatePicker SelectedDate="{Binding DateValue}" Width="160" Margin="0,0,6,6" />
+        <Button Command="{Binding DayCommand}" CommandParameter="1" ToolTip.Tip="Következő nap" Margin="0,0,6,6">
+          <PathIcon Data="{StaticResource IconCaretRight}" />
+        </Button>
+        <Button Content="Ma" Command="{Binding TodayCommand}" IsEnabled="{Binding !IsToday}" Margin="0,0,10,6" />
+        <TextBlock Text="{Binding DayLabel}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Margin="0,0,0,6" />
+      </WrapPanel>
+
+      <UniformGrid Columns="{Binding IsCompact, Converter={x:Static local:TransportFormat.KpiColumns}}">
+        <Border Classes="kpi" Classes.warn="{Binding WaitingOrders, Converter={x:Static local:TransportFormat.NonZero}}" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Feladásra vár" />
+            <TextBlock Classes="kpivalue" Text="{Binding WaitingOrders, Converter={x:Static local:TransportFormat.Int}}" />
+            <TextBlock Classes="kpihint" Text="{Binding WaitingHint}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Hozzárendelve" />
+            <TextBlock Classes="kpivalue" Text="{Binding AssignedOrders, Converter={x:Static local:TransportFormat.Int}}" />
+            <TextBlock Classes="kpihint" Text="{Binding AssignedHint}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Átvételek" />
+            <TextBlock Classes="kpivalue" Text="{Binding PickupCount, Converter={x:Static local:TransportFormat.Int}}" />
+            <TextBlock Classes="kpihint" Text="erre a napra" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Utánvét" />
+            <TextBlock Classes="kpivalue" Text="{Binding CodText}" />
+            <TextBlock Classes="kpihint" Text="{Binding CodHint}" />
+          </StackPanel>
+        </Border>
+      </UniformGrid>
+
+      <Border Classes="notice warn" IsVisible="{Binding NoCarrierText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding NoCarrierText}" />
+      </Border>
+      <Border Classes="notice" IsVisible="{Binding !HasCards}">
+        <TextBlock Text="Még nincs fuvarozó partner. Vedd fel a Partnerek között (típus: fuvarozó)." />
+      </Border>
+
+      <!-- One card per carrier -->
+      <ItemsControl ItemsSource="{Binding Cards}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <UniformGrid Columns="{Binding $parent[local:TransportBoardView].((local:TransportBoardViewModel)DataContext).IsCompact, Converter={x:Static local:TransportFormat.CardColumns}}" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="local:CarrierCard">
+            <Border Classes="panel" Classes.active="{Binding IsActive}" Margin="0,0,8,8" VerticalAlignment="Top">
+              <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Classes="h3" Text="{Binding Carrier.Name}" TextWrapping="Wrap" FontWeight="Bold" />
+                  <Border Grid.Column="1" Classes="tag" IsVisible="{Binding HasLabel}" VerticalAlignment="Top" Margin="8,0,0,0"><TextBlock Text="{Binding Label}" /></Border>
+                </Grid>
+                <Grid ColumnDefinitions="*,*,*">
+                  <StackPanel>
+                    <TextBlock Classes="dt" Text="Feladásra vár" />
+                    <TextBlock Classes="mono" FontWeight="Bold" FontSize="20" Text="{Binding WaitingText}" />
+                    <TextBlock Classes="muted small" Text="{Binding WaitingSub}" TextWrapping="Wrap" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="1">
+                    <TextBlock Classes="dt" Text="Hozzárendelve" />
+                    <TextBlock Classes="mono" FontWeight="Bold" FontSize="20" Text="{Binding AssignedText}" />
+                    <TextBlock Classes="muted small" Text="{Binding AssignedSub}" TextWrapping="Wrap" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="2">
+                    <TextBlock Classes="dt" Text="Utánvét" />
+                    <TextBlock Classes="mono" FontWeight="Bold" FontSize="15" Text="{Binding CodText}" TextWrapping="Wrap" />
+                    <TextBlock Classes="muted small" Text="{Binding CodSub}" />
+                  </StackPanel>
+                </Grid>
+                <TextBlock Classes="muted small" Text="Erre a napra nincs futárátvétel." IsVisible="{Binding !HasPickups}" />
+                <ItemsControl ItemsSource="{Binding Pickups}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="local:BoardPickupItem">
+                      <Border Classes="taskrow" Padding="0,8">
+                        <StackPanel Spacing="6">
+                          <WrapPanel>
+                            <TextBlock Classes="mono" FontWeight="Bold" Text="{Binding Pickup.Number}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <ctl:StatusTag Group="pickup" Status="{Binding Pickup.Status}" />
+                          </WrapPanel>
+                          <TextBlock Classes="muted small" Text="{Binding Sub}" TextWrapping="Wrap" />
+                          <WrapPanel>
+                            <Button Command="{Binding AssignAllCommand}" IsVisible="{Binding CanAssignAll}" Margin="0,0,6,0">
+                              <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="{Binding AssignText}" /></StackPanel>
+                            </Button>
+                            <Button Content="{Binding OpenText}" Command="{Binding OpenCommand}" />
+                          </WrapPanel>
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button Command="{Binding NewCommand}" IsVisible="{Binding CanNew}" HorizontalAlignment="Left">
+                  <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconAdd}" /><TextBlock Text="Átvétel felvétele" /></StackPanel>
+                </Button>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

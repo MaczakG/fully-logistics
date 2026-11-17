@@ -1,0 +1,108 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.History"
+             x:Class="Fully.Wms.Modules.History.ReturnFormView"
+             x:DataType="local:ReturnFormViewModel">
+  <UserControl.Styles>
+    <Style Selector="Border.rtline">
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="0,8" />
+    </Style>
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="12">
+      <Border Classes="notice warn" IsVisible="{Binding Blocked, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding Blocked}" />
+      </Border>
+      <StackPanel Spacing="12" IsVisible="{Binding CanSave}">
+        <TextBlock TextWrapping="Wrap"
+                   Text="Add meg, mi érkezett vissza. Az értékesíthető áru a visszáru zónába vagy a választott polcra kerül, a sérült a karanténba (készleten van, de nem adható ki)." />
+        <Border Classes="notice warn" IsVisible="{Binding NoZone}">
+          <TextBlock Text="Nincs beállítva visszáru zóna vagy karantén raktárhely. Vedd fel őket a Beállítások > Raktárhelyek alatt, vagy válassz konkrét raktárhelyet." />
+        </Border>
+
+        <ItemsControl ItemsSource="{Binding Rows}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:ReturnRowItem">
+              <Border Classes="rtline">
+                <StackPanel Spacing="6">
+                  <WrapPanel>
+                    <TextBlock Classes="mono" FontWeight="Bold" Text="{Binding Line.Sku}" Margin="0,0,8,0" />
+                    <TextBlock Text="{Binding Line.Name}" Margin="0,0,8,0" />
+                    <TextBlock Classes="muted small" Text="{Binding Info}" VerticalAlignment="Center" />
+                  </WrapPanel>
+                  <WrapPanel>
+                    <StackPanel Width="90" Margin="0,0,8,4">
+                      <TextBlock Classes="label" Text="Darab" />
+                      <TextBox Text="{Binding Qty}" Classes="num" TextInputOptions.ContentType="Digits" />
+                    </StackPanel>
+                    <StackPanel Width="260" Margin="0,0,8,4" IsVisible="{Binding HasLots}">
+                      <TextBlock Classes="label" Text="Tétel" />
+                      <ComboBox ItemsSource="{Binding Lots}" SelectedItem="{Binding Lot}" HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate><DataTemplate x:DataType="local:ReturnLotChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+                      </ComboBox>
+                    </StackPanel>
+                    <StackPanel Width="150" Margin="0,0,8,4">
+                      <TextBlock Classes="label" Text="Állapot" />
+                      <ComboBox ItemsSource="{x:Static local:ReturnRowItem.Conditions}" SelectedItem="{Binding Condition}" HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate><DataTemplate x:DataType="local:ReturnChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+                      </ComboBox>
+                    </StackPanel>
+                    <StackPanel Width="250" Margin="0,0,8,4">
+                      <TextBlock Classes="label" Text="Hová kerül" />
+                      <ComboBox ItemsSource="{Binding Locations}" SelectedItem="{Binding Location}" HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate><DataTemplate x:DataType="local:ReturnChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+                      </ComboBox>
+                      <AutoCompleteBox Text="{Binding OtherCode}" AsyncPopulator="{Binding FindLocations}" MinimumPrefixLength="1" FilterMode="None"
+                                       PlaceholderText="Raktárhely kódja" IsVisible="{Binding IsOther}" Margin="0,6,0,0" />
+                    </StackPanel>
+                    <Button Classes="ghost" Command="{Binding SplitCommand}" VerticalAlignment="Bottom" Margin="0,0,0,4"
+                            ToolTip.Tip="Ha egy része sérült, egy része értékesíthető">
+                      <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Másik állapot" /></StackPanel>
+                    </Button>
+                  </WrapPanel>
+                  <TextBlock Classes="fielderror" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button Command="{Binding AllCommand}" HorizontalAlignment="Left">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheck}" /><TextBlock Text="Minden visszaküldhető tétel visszajött" /></StackPanel>
+        </Button>
+
+        <Grid ColumnDefinitions="*,2*">
+          <StackPanel Margin="0,0,8,0">
+            <TextBlock Classes="label" Text="Ok (nem kötelező)" />
+            <AutoCompleteBox Text="{Binding Reason}" ItemsSource="{x:Static local:ReturnFormViewModel.Reasons}" FilterMode="Contains" MinimumPrefixLength="0" MaxLength="300" />
+          </StackPanel>
+          <StackPanel Grid.Column="1">
+            <TextBlock Classes="label" Text="Megjegyzés (nem kötelező)" />
+            <TextBox Text="{Binding Note}" PlaceholderText="Pl. a doboz szakadt, a termék hiánytalan." />
+          </StackPanel>
+        </Grid>
+        <StackPanel Spacing="6">
+          <TextBlock Classes="label" Text="Fotók (nem kötelező)" />
+          <ItemsControl ItemsSource="{Binding Photos}" IsVisible="{Binding HasPhotos}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="local:ReturnPhoto">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="{Binding FileName}" VerticalAlignment="Center" />
+                  <TextBlock Classes="muted small" Text="{Binding SizeText}" VerticalAlignment="Center" />
+                  <Button Classes="ghost" Command="{Binding RemoveCommand}" ToolTip.Tip="Eltávolítás"><PathIcon Data="{StaticResource IconClose}" /></Button>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Button HorizontalAlignment="Left" Click="PickPhotos">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCamera}" /><TextBlock Text="Fotók hozzáadása" /></StackPanel>
+          </Button>
+          <TextBlock Classes="muted small" Text="A csomagról vagy a sérült áruról. Képenként legfeljebb 20 MB." />
+        </StackPanel>
+        <TextBlock Classes="error" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <Button Classes="primary" HorizontalAlignment="Stretch" Content="Visszáru rögzítése" Command="{Binding SaveCommand}" />
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

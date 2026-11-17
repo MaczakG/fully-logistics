@@ -1,0 +1,62 @@
+/* billing view (Elszámolás): month picker, statement lines grouped with subtotals, drill-down,
+   history. Layout only. */
+
+/* ---------- Month picker ---------- */
+.bl-period { min-width: 0; }
+.bl-period__row { display: flex; }
+.bl-period__row .select { flex: 1 1 12rem; min-width: 10rem; }
+.bl-period__row .btn { flex: none; }
+.bl-snapinfo { align-self: center; }
+
+/* ---------- Statement header ---------- */
+.bl-summary { display: grid; gap: 1rem; }
+.bl-section { display: grid; gap: 0.75rem; min-width: 0; }
+
+/* ---------- Lines table ---------- */
+.bl-lines td { vertical-align: top; }
+
+.bl-lines tr.bl-group th { text-align: left; }
+
+.bl-lines .bl-line-actions { white-space: nowrap; text-align: right; width: 1%; }
+.bl-warn { display: inline-flex; align-items: center; gap: 0.25rem; }
+.table td .sub.bl-warn { display: flex; }
+/* Phones: every line becomes two rows (name and net amount, then quantity x unit price and the
+   actions); VAT and gross per line are left out, the totals above show them. */
+@media (max-width: 640px) {
+  .bl-lines, .bl-lines tbody, .bl-lines tfoot { display: block; }
+  .bl-lines thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .bl-lines tr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid var(--line); }
+  .bl-lines th, .bl-lines td { border: 0; }
+  .bl-lines tr.bl-group { padding: 0; }
+  .bl-lines tr.bl-group th { display: block; flex: 1 1 100%; }
+  .bl-lines td { display: block; padding: 0; text-align: left; }
+
+  .bl-lines .bl-c-name, .bl-lines .bl-c-label { flex: 1 0 calc(100% - 8.75rem); min-width: 0; }
+  .bl-lines .bl-c-net { flex: 0 0 8rem; text-align: right; }
+  .bl-lines .bl-c-qty { order: 3; flex: none; }
+  .bl-lines .bl-c-price { order: 4; flex: 1 1 auto; }
+  .bl-lines .bl-c-price::before { content: "x "; }
+  .bl-lines .bl-c-vat, .bl-lines .bl-c-gross { display: none; }
+  .bl-lines .bl-c-act { order: 5; flex: none; width: auto; }
+  .bl-lines .bl-c-act:empty { display: none; }
+
+}
+
+/* A table and its pager kept together; min-width 0 lets the table scroll inside its wrapper. */
+.bl-tablebox { min-width: 0; }
+.bl-row-actions { flex-wrap: nowrap; gap: 0.25rem; }
+
+/* ---------- Drill-down ---------- */
+.bl-drill #bl-drill-body { display: grid; gap: 0.5rem; min-width: 0; }
+
+/* ---------- History ---------- */
+.bl-history { display: grid; gap: 0; }
+.bl-history li { display: grid; grid-template-columns: 9.5rem minmax(6rem, 10rem) minmax(0, 1fr); gap: 0.25rem 1rem; padding: 0.5rem 0; }
+
+@media (max-width: 640px) {
+  .bl-history li { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media print {
+  .bl-line-actions, .bl-drill__tabs { display: none !important; }
+}

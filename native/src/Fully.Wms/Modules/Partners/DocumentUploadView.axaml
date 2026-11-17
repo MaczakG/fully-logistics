@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Partners"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Partners.DocumentUploadView"
+             x:DataType="local:DocumentUploadViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="10">
+      <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding Error}" />
+      </Border>
+        <StackPanel Spacing="6">
+          <TextBlock Classes="label" Text="Fájl" />
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="{Binding FileText}" VerticalAlignment="Center" TextWrapping="Wrap" Classes.muted="{Binding !HasFile}" />
+            <Button Grid.Column="1" Margin="8,0,0,0" Click="PickFile">
+              <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconUpload}" /><TextBlock Text="Fájl kiválasztása" /></StackPanel>
+            </Button>
+          </Grid>
+          <TextBlock Classes="muted small" Text="Legfeljebb 20 MB: PDF, kép, Word, Excel, szöveg vagy ZIP." />
+          <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=file}"
+                     IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=file}" />
+        </StackPanel>
+        <UniformGrid Columns="2">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Típus" />
+            <ComboBox ItemsSource="{x:Static local:DocumentUploadViewModel.Kinds}" SelectedItem="{Binding DocKind}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=kind}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=kind}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Szerződéshez kapcsolás" />
+            <ComboBox ItemsSource="{Binding Contracts}" SelectedItem="{Binding Contract}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=contract_id}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=contract_id}" />
+          </StackPanel>
+        </UniformGrid>
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="Feltöltés" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

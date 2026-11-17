@@ -1,0 +1,108 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Stock"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Stock.MovementsView"
+             x:DataType="local:MovementsViewModel">
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Margin="16,16,16,6" Spacing="10">
+      <local:StockTabsBar Active="movements" Command="{Binding TabCommand}" />
+      <Expander Header="Szűrők" IsExpanded="{Binding !IsCompact, Mode=OneWay}" HorizontalAlignment="Stretch">
+        <WrapPanel>
+          <StackPanel Margin="0,0,10,8" Width="220">
+            <TextBlock Classes="label" Text="Keresés" />
+            <TextBox Text="{Binding Search}" Watermark="Cikkszám, név, hely vagy sarzs">
+              <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding ApplyCommand}" /></TextBox.KeyBindings>
+            </TextBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="210">
+            <TextBlock Classes="label" Text="Ügyfél" />
+            <ComboBox ItemsSource="{Binding Partners}" SelectedItem="{Binding Partner}" PlaceholderText="Minden ügyfél">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="m:PartnerLookup"><TextBlock Text="{Binding Display}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="190">
+            <TextBlock Classes="label" Text="Típus" />
+            <ComboBox ItemsSource="{Binding Types}" SelectedItem="{Binding Type}" PlaceholderText="Minden típus">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="local:KindChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="160">
+            <TextBlock Classes="label" Text="Ettől" />
+            <CalendarDatePicker SelectedDate="{Binding From}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="160">
+            <TextBlock Classes="label" Text="Eddig" />
+            <CalendarDatePicker SelectedDate="{Binding To}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="170">
+            <TextBlock Classes="label" Text="Hivatkozás" />
+            <TextBox Text="{Binding Ref}" Watermark="pl. BT-2026-00012">
+              <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding ApplyCommand}" /></TextBox.KeyBindings>
+            </TextBox>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom" Margin="0,0,0,8">
+            <Button Classes="dark" Content="Szűrés" Command="{Binding ApplyCommand}" />
+            <Button Content="Törlés" Command="{Binding ClearFiltersCommand}" />
+            <Button Command="{Binding ExportCommand}" IsVisible="{Binding !IsCompact}">
+              <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconDownload}" /><TextBlock Text="CSV export" /></StackPanel>
+            </Button>
+          </StackPanel>
+        </WrapPanel>
+      </Expander>
+      <WrapPanel>
+        <Button Classes="dark" Margin="0,0,8,0" IsVisible="{Binding HasProduct}" Command="{Binding ClearProductCommand}" ToolTip.Tip="Termékszűrő törlése">
+          <StackPanel Orientation="Horizontal" Spacing="8"><TextBlock Text="{Binding ProductText, StringFormat='Termék: {0}', FallbackValue='Termék'}" /><PathIcon Data="{StaticResource IconClose}" Width="14" Height="14" /></StackPanel>
+        </Button>
+        <Button Classes="dark" IsVisible="{Binding HasLocation}" Command="{Binding ClearLocationCommand}" ToolTip.Tip="Helyszűrő törlése">
+          <StackPanel Orientation="Horizontal" Spacing="8"><TextBlock Text="{Binding LocationText, StringFormat='Hely: {0}', FallbackValue='Hely'}" /><PathIcon Data="{StaticResource IconClose}" Width="14" Height="14" /></StackPanel>
+        </Button>
+      </WrapPanel>
+      <TextBlock Text="{Binding SumsText}" Classes="muted small" />
+    </StackPanel>
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="16,6,16,12">
+      <TextBlock Text="{Binding TotalText}" Classes="muted" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Továbbiak" Command="{Binding MoreCommand}" IsVisible="{Binding HasMore}" />
+    </Grid>
+    <Panel Margin="16,0">
+      <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
+        <TextBlock Text="Nincs a szűrésnek megfelelő mozgás." />
+      </Border>
+      <DataGrid ItemsSource="{Binding Items}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False">
+        <DataGrid.Columns>
+          <DataGridTextColumn x:DataType="m:Movement" Header="Időpont" Binding="{Binding At, Converter={x:Static local:StockFormat.DateTime}}" Width="150" />
+          <DataGridTextColumn x:DataType="m:Movement" Header="Típus" Binding="{Binding TypeLabel}" Width="130" />
+          <DataGridTextColumn x:DataType="m:Movement" Header="Ügyfél" Binding="{Binding PartnerCode}" Width="120" />
+          <DataGridTemplateColumn Header="Cikk" Width="*" MinWidth="180">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:Movement">
+                <Button Classes="link" Margin="10,4" Command="{Binding $parent[local:MovementsView].((local:MovementsViewModel)DataContext).OpenProductCommand}" CommandParameter="{Binding}">
+                  <StackPanel>
+                    <TextBlock Text="{Binding Sku}" Classes="mono" FontWeight="Bold" />
+                    <TextBlock Text="{Binding Name}" Classes="muted small" TextTrimming="CharacterEllipsis" TextDecorations="{x:Null}" />
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn x:DataType="m:Movement" Header="Hely" Binding="{Binding LocationCode}" Width="100" />
+          <DataGridTextColumn x:DataType="m:Movement" Header="Sarzs" Binding="{Binding Lot}" Width="100" />
+          <DataGridTemplateColumn Header="Mennyiség" Width="95">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:Movement">
+                <TextBlock Margin="10,0" VerticalAlignment="Center" Classes="mono" FontWeight="Bold"
+                           Classes.pos="{Binding Qty, Converter={x:Static local:StockFormat.Positive}}" Classes.neg="{Binding Qty, Converter={x:Static local:StockFormat.Negative}}"
+                           Text="{Binding Qty, Converter={x:Static local:StockFormat.Signed}}" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn x:DataType="m:Movement" Header="Hivatkozás" Binding="{Binding RefNumber}" Width="140" />
+          <DataGridTextColumn x:DataType="m:Movement" Header="Felhasználó" Binding="{Binding UserName}" Width="130" />
+        </DataGrid.Columns>
+      </DataGrid>
+      <ScrollViewer IsVisible="{Binding IsCompact}">
+        <local:MovementList Items="{Binding Items}" />
+      </ScrollViewer>
+    </Panel>
+  </DockPanel>
+</UserControl>

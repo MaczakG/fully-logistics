@@ -1,0 +1,12 @@
+# HTTPS for the WMS (compose profile "caddy"); the address comes from WMS_DOMAIN in .env.
+{$WMS_DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 25MB
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	reverse_proxy wms:8787
+}

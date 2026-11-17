@@ -1,0 +1,111 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Partners"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Partners.PartnerIntegrationsView"
+             x:DataType="local:PartnerIntegrationsTab">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <StackPanel Spacing="12">
+    <Border Classes="notice" IsVisible="{Binding ReadOnly}">
+      <TextBlock Text="Itt csak megtekintheted az integrációkat. A módosításhoz „Partnerek: tarifák és integrációk módosítása” jog kell." />
+    </Border>
+    <Grid ColumnDefinitions="*,Auto">
+      <StackPanel>
+        <TextBlock Classes="section" Text="Webshop kapcsolatok" />
+        <TextBlock Classes="muted small" TextWrapping="Wrap" Text="Az aktív kapcsolatokból a rendszer automatikusan importálja az új rendeléseket, és feladás után visszaküldi a csomagszámot." />
+      </StackPanel>
+      <Button Grid.Column="1" Classes="primary" Command="{Binding NewConnectionCommand}" IsVisible="{Binding CanEdit}" IsEnabled="{Binding HasPlatforms}" VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Új webshop kapcsolat" /></StackPanel>
+      </Button>
+    </Grid>
+    <Border Classes="feedback" Classes.ok="{Binding ResultTone, Converter={x:Static local:PartnerFormat.IsOk}}"
+            Classes.warn="{Binding ResultTone, Converter={x:Static local:PartnerFormat.IsWarn}}"
+            Classes.danger="{Binding ResultTone, Converter={x:Static local:PartnerFormat.IsDanger}}"
+            IsVisible="{Binding Result, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <TextBlock Text="{Binding Result}" />
+    </Border>
+    <Border Classes="notice" IsVisible="{Binding NoConnections}"><TextBlock Text="Nincs webshop kapcsolat." /></Border>
+    <ItemsControl ItemsSource="{Binding Connections}" IsVisible="{Binding !NoConnections}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="local:ConnectionRow">
+          <Border Classes="panel" Margin="0,0,0,8">
+            <StackPanel Spacing="8">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <TextBlock Text="{Binding Connection.PlatformName}" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
+                <TextBlock Grid.Column="1" Text="{Binding Url}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <Panel Grid.Column="2">
+                  <Border Classes="tag ok" IsVisible="{Binding Connection.Active}"><TextBlock Text="Aktív" /></Border>
+                  <Border Classes="tag" IsVisible="{Binding !Connection.Active}"><TextBlock Text="Kikapcsolva" /></Border>
+                </Panel>
+              </Grid>
+              <TextBlock Classes="small neg" Text="nem elérhető" IsVisible="{Binding !Connection.Available}" />
+              <TextBlock Classes="muted small" Text="{Binding SyncText, StringFormat='Utolsó szinkron: {0}'}" />
+              <TextBlock Classes="small neg" Text="{Binding ErrorText}" TextWrapping="Wrap" IsVisible="{Binding ErrorText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              <WrapPanel IsVisible="{Binding CanEdit}">
+                <Button Command="{Binding TestCommand}" Margin="0,0,8,0">
+                  <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlug}" /><TextBlock Text="Kapcsolat tesztelése" /></StackPanel>
+                </Button>
+                <Button Command="{Binding SyncCommand}" IsEnabled="{Binding CanSync}" Margin="0,0,8,0">
+                  <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconRefresh}" /><TextBlock Text="Szinkronizálás most" /></StackPanel>
+                </Button>
+                <Button Classes="ghost" Command="{Binding EditCommand}" ToolTip.Tip="Szerkesztés"><PathIcon Data="{StaticResource IconEdit}" /></Button>
+                <Button Classes="ghost" Command="{Binding RemoveCommand}" ToolTip.Tip="Törlés"><PathIcon Data="{StaticResource IconTrash}" /></Button>
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+      <StackPanel>
+        <TextBlock Classes="section" Text="Partner API kulcsok" />
+        <TextBlock Classes="muted small" TextWrapping="Wrap" Text="Az ügyfél saját rendszere ezzel a kulccsal küldhet rendelést és betárolást, és lekérdezheti a készletét. A kulcsot csak létrehozáskor mutatjuk meg." />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <Button Click="OpenDocs">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconFile}" /><TextBlock Text="API dokumentáció" /></StackPanel>
+        </Button>
+        <Button Command="{Binding NewKeyCommand}" IsVisible="{Binding CanEdit}" IsEnabled="{Binding CanNewKey}">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconKey}" /><TextBlock Text="Új API kulcs" /></StackPanel>
+        </Button>
+      </StackPanel>
+    </Grid>
+    <Border Classes="notice" IsVisible="{Binding NoKeys}"><TextBlock Text="Még nincs API kulcs." /></Border>
+    <Border Classes="panel" Padding="0" IsVisible="{Binding !NoKeys}">
+      <StackPanel>
+        <Grid ColumnDefinitions="130,*,190,150,150,120" Margin="10,0,10,6">
+          <TextBlock Classes="dt" Text="Kulcs" />
+          <TextBlock Grid.Column="1" Classes="dt" Text="Név" />
+          <TextBlock Grid.Column="2" Classes="dt" Text="Létrehozva" />
+          <TextBlock Grid.Column="3" Classes="dt" Text="Utoljára használva" />
+          <TextBlock Grid.Column="4" Classes="dt" Text="Állapot" />
+          <TextBlock Grid.Column="5" Classes="dt" Text="" />
+        </Grid>
+        <ItemsControl ItemsSource="{Binding Keys}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:ApiKeyItem">
+              <Border Classes="taskrow">
+                <Grid ColumnDefinitions="130,*,190,150,150,120">
+                  <TextBlock Classes="mono" Text="{Binding PrefixText}" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="1" Text="{Binding Key.Name}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Grid.Column="2" Classes="small" Text="{Binding CreatedText}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                  <TextBlock Grid.Column="3" Classes="small" Text="{Binding UsedText}" VerticalAlignment="Center" />
+                  <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                    <Border Classes="tag ok" IsVisible="{Binding !Revoked}" HorizontalAlignment="Left"><TextBlock Text="Aktív" /></Border>
+                    <Border Classes="tag" IsVisible="{Binding Revoked}" HorizontalAlignment="Left"><TextBlock Text="Visszavonva" /></Border>
+                    <TextBlock Classes="muted small" Text="{Binding RevokedText}" />
+                  </StackPanel>
+                  <Button Grid.Column="5" Classes="danger" Content="Visszavonás" Command="{Binding RevokeCommand}" IsVisible="{Binding CanRevoke}" VerticalAlignment="Center" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

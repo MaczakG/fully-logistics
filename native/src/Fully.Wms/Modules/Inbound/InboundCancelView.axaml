@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Inbound"
+             x:Class="Fully.Wms.Modules.Inbound.InboundCancelView"
+             x:DataType="local:InboundCancelViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14" MaxWidth="520" HorizontalAlignment="Stretch">
+      <TextBlock TextWrapping="Wrap" Text="A betárolás sztornózott állapotba kerül, és nem lehet rá több árut átvenni. Készletmozgás nem keletkezik." />
+      <StackPanel>
+        <TextBlock Classes="label" Text="Indoklás (nem kötelező)" />
+        <TextBox Text="{Binding Reason}" />
+      </StackPanel>
+      <Button Classes="danger" HorizontalAlignment="Stretch" Content="Sztornózás" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

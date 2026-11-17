@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Settings"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Settings.LogEntryView"
+             x:DataType="local:LogEntryViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="10">
+      <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto">
+        <TextBlock Classes="dt" Text="Időpont" />
+        <TextBlock Grid.Column="1" Classes="dd" Text="{Binding AtText}" />
+        <TextBlock Grid.Row="1" Classes="dt" Text="Felhasználó" />
+        <TextBlock Grid.Row="1" Grid.Column="1" Classes="dd" Text="{Binding Row.Actor, TargetNullValue='rendszer'}" />
+        <TextBlock Grid.Row="2" Classes="dt" Text="Művelet" />
+        <TextBlock Grid.Row="2" Grid.Column="1" Classes="dd" Text="{Binding What}" />
+        <TextBlock Grid.Row="3" Classes="dt" Text="Összefoglaló" />
+        <TextBlock Grid.Row="3" Grid.Column="1" Classes="dd" Text="{Binding Row.Summary}" TextWrapping="Wrap" />
+      </Grid>
+      <StackPanel IsVisible="{Binding HasChanges}" Spacing="4">
+        <TextBlock Classes="section" Text="Változások" />
+        <Grid ColumnDefinitions="180,*,*" Margin="10,0">
+          <TextBlock Classes="dt" Text="Mező" />
+          <TextBlock Grid.Column="1" Classes="dt" Text="Régi érték" />
+          <TextBlock Grid.Column="2" Classes="dt" Text="Új érték" />
+        </Grid>
+        <ItemsControl ItemsSource="{Binding Changes}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:LogChange">
+              <Border Classes="taskrow">
+                <Grid ColumnDefinitions="180,*,*">
+                  <TextBlock Classes="mono small" Text="{Binding Field}" TextWrapping="Wrap" />
+                  <TextBlock Grid.Column="1" Classes="neg" Text="{Binding Old}" TextWrapping="Wrap" Margin="0,0,8,0" />
+                  <TextBlock Grid.Column="2" Classes="pos" Text="{Binding New}" TextWrapping="Wrap" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+      <StackPanel IsVisible="{Binding HasRest}" Spacing="4">
+        <TextBlock Classes="section" Text="Részletek" />
+        <Border Classes="panel">
+          <SelectableTextBlock Classes="mono small" Text="{Binding Rest}" TextWrapping="Wrap" />
+        </Border>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

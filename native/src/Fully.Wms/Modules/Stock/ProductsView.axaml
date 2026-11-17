@@ -1,0 +1,104 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Stock"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Stock.ProductsView"
+             x:DataType="local:ProductsViewModel">
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Margin="16,16,16,6" Spacing="10">
+      <local:StockTabsBar Active="catalog" Command="{Binding TabCommand}" />
+      <Grid ColumnDefinitions="*,Auto">
+        <ctl:ScanField Command="{Binding ScanCommand}" Placeholder="Cikkszám, megnevezés vagy EAN" AutoFocus="False" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,0,0">
+          <Button Command="{Binding ImportCommand}" IsVisible="{Binding CanImport}">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconUpload}" /><TextBlock Text="CSV import" /></StackPanel>
+          </Button>
+          <Button Command="{Binding ExportCommand}" IsVisible="{Binding !IsCompact}">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconDownload}" /><TextBlock Text="CSV export" /></StackPanel>
+          </Button>
+          <Button Classes="primary" Command="{Binding NewCommand}" IsVisible="{Binding CanCreate}">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Új cikk" IsVisible="{Binding !IsCompact}" /></StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+      <Expander Header="Szűrők" IsExpanded="{Binding !IsCompact, Mode=OneWay}" HorizontalAlignment="Stretch">
+        <WrapPanel>
+          <StackPanel Margin="0,0,10,8" Width="240">
+            <TextBlock Classes="label" Text="Ügyfél" />
+            <ComboBox ItemsSource="{Binding Partners}" SelectedItem="{Binding Partner}" PlaceholderText="Minden ügyfél">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="m:PartnerLookup"><TextBlock Text="{Binding Display}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Margin="0,0,10,8" Width="150">
+            <TextBlock Classes="label" Text="Állapot" />
+            <ComboBox ItemsSource="{Binding StateLabels}" SelectedIndex="{Binding StateIndex}" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom" Margin="0,0,0,8">
+            <Button Classes="dark" Content="Szűrés" Command="{Binding ApplyCommand}" />
+            <Button Content="Törlés" Command="{Binding ClearFiltersCommand}" />
+          </StackPanel>
+        </WrapPanel>
+      </Expander>
+    </StackPanel>
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="16,6,16,12">
+      <TextBlock Text="{Binding TotalText}" Classes="muted" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Továbbiak" Command="{Binding MoreCommand}" IsVisible="{Binding HasMore}" />
+    </Grid>
+    <Panel Margin="16,0">
+      <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
+        <TextBlock Text="Nincs a szűrésnek megfelelő cikk. Vegyél fel egyet, vagy importáld CSV-ből." />
+      </Border>
+      <DataGrid ItemsSource="{Binding Items}" ctl:RowOpen.Item="{Binding Selected}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False">
+        <DataGrid.Columns>
+          <DataGridTextColumn x:DataType="m:ProductRow" Header="Ügyfél" Binding="{Binding PartnerCode}" Width="140" />
+          <DataGridTextColumn x:DataType="m:ProductRow" Header="Cikkszám" Binding="{Binding Sku}" Width="125" FontFamily="{StaticResource MonoFont}" FontWeight="Bold" />
+          <DataGridTextColumn x:DataType="m:ProductRow" Header="Megnevezés" Binding="{Binding Name}" Width="*" MinWidth="180" />
+          <DataGridTemplateColumn Header="EAN" Width="150">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:ProductRow">
+                <StackPanel Orientation="Horizontal" Spacing="4" Margin="10,0" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Ean}" Classes="mono" />
+                  <PathIcon Data="{StaticResource IconWarning}" Width="14" Height="14" Foreground="{DynamicResource Warn}" ToolTip.Tip="{Binding EanWarning}"
+                            IsVisible="{Binding EanWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn x:DataType="m:ProductRow" Header="Min." Binding="{Binding MinStock}" Width="62" />
+          <DataGridTextColumn x:DataType="m:ProductRow" Header="Követés" Binding="{Binding Converter={x:Static local:StockTabsFormat.Tracking}}" Width="110" />
+          <DataGridTextColumn x:DataType="m:ProductRow" Header="Állapot" Binding="{Binding Active, Converter={x:Static local:StockTabsFormat.ActiveText}}" Width="88" />
+          <DataGridTextColumn x:DataType="m:ProductRow" Header="Készlet" Binding="{Binding OnHand}" Width="80" />
+          <DataGridTemplateColumn Header="" Width="60">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:ProductRow">
+                <Button Classes="ghost" Padding="6,0" MinHeight="30" ToolTip.Tip="Szerkesztés"
+                        IsVisible="{Binding $parent[local:ProductsView].((local:ProductsViewModel)DataContext).CanEdit}"
+                        Command="{Binding $parent[local:ProductsView].((local:ProductsViewModel)DataContext).EditCommand}" CommandParameter="{Binding}">
+                  <PathIcon Data="{StaticResource IconEdit}" Width="16" Height="16" />
+                </Button>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+      <ListBox Classes="rows" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding IsCompact}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="m:ProductRow">
+            <Grid ColumnDefinitions="*,Auto" Margin="14,10">
+              <StackPanel Spacing="2">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="{Binding Sku}" Classes="mono" FontWeight="Bold" FontSize="16" />
+                  <Border Classes="tag"><TextBlock Text="{Binding PartnerCode}" /></Border>
+                </StackPanel>
+                <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding Ean}" Classes="muted small mono" />
+              </StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding OnHand}" Classes="big" VerticalAlignment="Center" />
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Panel>
+  </DockPanel>
+</UserControl>

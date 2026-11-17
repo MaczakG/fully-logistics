@@ -1,0 +1,120 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Settings"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Settings.LocationFormView"
+             x:DataType="local:LocationFormViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="10">
+      <Border Classes="notice danger" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding Error}" />
+      </Border>
+      <Border Classes="notice" IsVisible="{Binding Occupied}"><TextBlock Text="{Binding OccupiedText}" /></Border>
+      <Border Classes="notice ok" IsVisible="{Binding IsFree}"><TextBlock Text="A raktárhely most üres." /></Border>
+      <Border Classes="notice warn" IsVisible="{Binding NoActiveSize}"><TextBlock Text="Nincs aktív méret. Előbb vegyél fel egyet a Méretek résznél." /></Border>
+      <Border Classes="notice" IsVisible="{Binding ReadOnly}"><TextBlock Text="Csak megtekintheted: a módosításhoz Beállítások módosítása jog kell." /></Border>
+      <UniformGrid Columns="2">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Kód" />
+            <TextBox Text="{Binding Code}" PlaceholderText="A-01-03" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=code}" />
+            <TextBlock Classes="muted small" Text="Ez kerül a polccímkére és a vonalkódra." Margin="0,4,0,0" TextWrapping="Wrap" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=code}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=code}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Zóna (nem kötelező)" />
+            <TextBox Text="{Binding Zone}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=zone}" />
+            <TextBlock Classes="muted small" Text="Üresen hagyva a kód elejéből." Margin="0,4,0,0" TextWrapping="Wrap" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=zone}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=zone}" />
+          </StackPanel>
+      </UniformGrid>
+      <UniformGrid Columns="2">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Méret" />
+            <ComboBox ItemsSource="{Binding SizeChoices}" SelectedItem="{Binding Size}" HorizontalAlignment="Stretch" IsEnabled="{Binding CanSave}">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=size_id}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=size_id}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Típus" />
+            <ComboBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding KindChoice}" HorizontalAlignment="Stretch" IsEnabled="{Binding CanSave}">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=kind}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=kind}" />
+          </StackPanel>
+      </UniformGrid>
+      <UniformGrid Columns="2">
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Fix partner (nem kötelező)" />
+            <ComboBox ItemsSource="{Binding Partners}" SelectedItem="{Binding Partner}" HorizontalAlignment="Stretch" IsEnabled="{Binding CanSave}">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=partner_id}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=partner_id}" />
+          </StackPanel>
+          <StackPanel Margin="0,0,8,8">
+            <TextBlock Classes="label" Text="Komissiós sorrend" />
+            <TextBox Text="{Binding PickSequence}" Classes="num" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=pick_sequence}" />
+            <TextBlock Classes="muted small" Text="A kiszedési útvonal sorrendje; 0 esetén kód szerint." Margin="0,4,0,0" TextWrapping="Wrap" />
+            <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=pick_sequence}"
+                       IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=pick_sequence}" />
+          </StackPanel>
+      </UniformGrid>
+      <StackPanel Margin="0,0,0,8">
+        <TextBlock Classes="label" Text="Megjegyzés (nem kötelező)" />
+        <TextBox Text="{Binding Note}" IsReadOnly="{Binding ReadOnly}" Classes.invalid="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=note}" />
+        <TextBlock Classes="fielderror" Text="{Binding Errors, Converter={x:Static o:OrderFormat.FieldError}, ConverterParameter=note}"
+                   IsVisible="{Binding Errors, Converter={x:Static o:OrderFormat.HasFieldError}, ConverterParameter=note}" />
+      </StackPanel>
+      <StackPanel IsVisible="{Binding !IsNew}">
+        <CheckBox Content="Aktív" IsChecked="{Binding Active}" IsEnabled="{Binding CanToggleActive}" />
+        <TextBlock Classes="muted small" Text="{Binding ActiveHint}" IsVisible="{Binding ActiveHint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Margin="0,4,0,0" />
+      </StackPanel>
+      <Border Classes="notice warn" IsVisible="{Binding HasSizeWarning}"><TextBlock Text="{Binding SizeWarning}" /></Border>
+      <Expander IsVisible="{Binding HasStock}" HorizontalAlignment="Stretch">
+        <Expander.Header>
+          <TextBlock Text="{Binding Stock.Count, StringFormat='Készlet a helyen ({0} sor)'}" FontWeight="SemiBold" />
+        </Expander.Header>
+        <StackPanel>
+          <Grid ColumnDefinitions="120,*,90,100,90" Margin="10,0,10,4">
+            <TextBlock Classes="dt" Text="Cikkszám" />
+            <TextBlock Grid.Column="1" Classes="dt" Text="Megnevezés" />
+            <TextBlock Grid.Column="2" Classes="dt" Text="Tétel" />
+            <TextBlock Grid.Column="3" Classes="dt" Text="Lejárat" />
+            <TextBlock Grid.Column="4" Classes="dt" Text="Mennyiség" TextAlignment="Right" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Stock}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="m:LocationStockLine">
+                <Border Classes="taskrow">
+                  <Grid ColumnDefinitions="120,*,90,100,90">
+                    <TextBlock Classes="mono" Text="{Binding Sku}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="2" Classes="small" Text="{Binding Lot}" />
+                    <TextBlock Grid.Column="3" Classes="small" Text="{Binding Expiry, Converter={x:Static p:PartnerFormat.DateText}}" />
+                    <TextBlock Grid.Column="4" Classes="mono" Text="{Binding Qty, Converter={x:Static p:PartnerFormat.Int}}" TextAlignment="Right" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Expander>
+      <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding CanDelete}">
+        <TextBlock Classes="muted small" Text="Még nem volt rajta forgalom, ezért törölhető." VerticalAlignment="Center" />
+        <Button Grid.Column="1" Classes="danger" Command="{Binding DeleteCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconTrash}" /><TextBlock Text="Raktárhely törlése" /></StackPanel>
+        </Button>
+      </Grid>
+      <TextBlock Classes="muted small" IsVisible="{Binding NotDeletable}" TextWrapping="Wrap" Text="Ezen a helyen már volt forgalom vagy áru van rajta, ezért nem törölhető, csak inaktiválható." />
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="{Binding SubmitText}" Command="{Binding SaveCommand}" IsVisible="{Binding CanSave}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

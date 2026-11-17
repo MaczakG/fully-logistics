@@ -1,0 +1,277 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Users"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             xmlns:sys="using:System"
+             x:Class="Fully.Wms.Modules.Users.UsersView"
+             x:DataType="local:UsersViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Margin="16,16,16,6" Spacing="10">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Classes="muted" TextWrapping="Wrap" VerticalAlignment="Center" IsVisible="{Binding IsUsers}"
+                   Text="A raktár és az iroda munkatársai. Mindenki egy szerepkört kap; a szerepkörök jogait a Jogosultságok fülön állítod be." />
+        <TextBlock Classes="muted" TextWrapping="Wrap" VerticalAlignment="Center" IsVisible="{Binding IsRoles}"
+                   Text="Szerepkörönként, modulonként és műveletenként pipálod be, ki mit tehet. A változás a felhasználók következő kattintásától érvényes." />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0" IsVisible="{Binding CanCreate}">
+          <Button Classes="primary" Command="{Binding NewCommand}" IsVisible="{Binding IsUsers}">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Új felhasználó" /></StackPanel>
+          </Button>
+          <Button Command="{Binding NewRoleCommand}" IsVisible="{Binding IsRoles}">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Új szerepkör" /></StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+      <WrapPanel>
+        <ToggleButton Classes="chip" IsChecked="{Binding IsUsers, Mode=OneWay}" Command="{Binding ShowTabCommand}" CommandParameter="users">
+          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconUsers}" /><TextBlock Text="Felhasználók" /></StackPanel>
+        </ToggleButton>
+        <ToggleButton Classes="chip" IsChecked="{Binding IsRoles, Mode=OneWay}" Command="{Binding ShowTabCommand}" CommandParameter="roles">
+          <StackPanel Orientation="Horizontal" Spacing="6"><PathIcon Data="{StaticResource IconLock}" /><TextBlock Text="Jogosultságok" /></StackPanel>
+        </ToggleButton>
+      </WrapPanel>
+      <Grid ColumnDefinitions="*,Auto,200,160" IsVisible="{Binding IsUsers}">
+        <TextBox Text="{Binding Search}" PlaceholderText="Név, e-mail vagy telefon">
+          <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding ApplyCommand}" /></TextBox.KeyBindings>
+        </TextBox>
+        <Button Grid.Column="1" Margin="8,0" Command="{Binding ApplyCommand}" ToolTip.Tip="Keresés"><PathIcon Data="{StaticResource IconSearch}" /></Button>
+        <ComboBox Grid.Column="2" ItemsSource="{Binding RoleFilters}" SelectedItem="{Binding RoleFilter}" Margin="0,0,8,0">
+          <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+        <ComboBox Grid.Column="3" ItemsSource="{x:Static local:UsersViewModel.States}" SelectedItem="{Binding State}">
+          <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+      </Grid>
+    </StackPanel>
+
+    <!-- Users -->
+    <Grid DockPanel.Dock="Bottom" Margin="16,6,16,12" IsVisible="{Binding IsUsers}">
+      <TextBlock Text="{Binding TotalText}" Classes="muted" />
+    </Grid>
+    <Panel>
+      <Panel Margin="16,0" IsVisible="{Binding IsUsers}">
+        <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding NoUsers}"><TextBlock Text="{Binding EmptyText}" /></Border>
+        <DataGrid ItemsSource="{Binding Users}" ctl:RowOpen.Item="{Binding Selected}" AutoGenerateColumns="False" CanUserSortColumns="False" IsVisible="{Binding !NoUsers}">
+          <DataGrid.Columns>
+            <DataGridTemplateColumn Header="Név" Width="*" MinWidth="200">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="local:UserItem">
+                  <StackPanel Margin="10,6" VerticalAlignment="Center">
+                    <WrapPanel>
+                      <TextBlock Text="{Binding User.Name}" FontWeight="SemiBold" Margin="0,0,6,0" />
+                      <Border Classes="tag" IsVisible="{Binding IsMe}"><TextBlock Text="te" /></Border>
+                    </WrapPanel>
+                    <TextBlock Text="{Binding User.Email}" Classes="muted small" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Header="Szerepkör" Width="145">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="local:UserItem">
+                  <StackPanel Margin="10,6" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <PathIcon Data="{StaticResource IconLock}" Width="14" Height="14" IsVisible="{Binding User.IsAdmin}" />
+                    <TextBlock Text="{Binding User.RoleName}" />
+                  </StackPanel>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTextColumn x:DataType="local:UserItem" Header="Telefon" Binding="{Binding User.Phone}" Width="95" />
+            <DataGridTemplateColumn Header="Állapot" Width="130">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="local:UserItem">
+                  <WrapPanel Margin="10,6" VerticalAlignment="Center">
+                    <Border Classes="tag ok" IsVisible="{Binding User.Active}" Margin="0,0,4,2"><TextBlock Text="Aktív" /></Border>
+                    <Border Classes="tag" IsVisible="{Binding !User.Active}" Margin="0,0,4,2"><TextBlock Text="Letiltva" /></Border>
+                    <Border Classes="tag warn" IsVisible="{Binding User.Locked}" Margin="0,0,4,2"><TextBlock Text="Zárolva" /></Border>
+                    <Border Classes="tag info" IsVisible="{Binding WaitsForPassword}" Margin="0,0,4,2"><TextBlock Text="Jelszócsere vár" /></Border>
+                  </WrapPanel>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Header="Utolsó belépés" Width="140">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="local:UserItem">
+                  <TextBlock Margin="10,6" VerticalAlignment="Center" Text="{Binding LastText}" Classes.muted="{Binding NeverLoggedIn}" TextWrapping="Wrap" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTextColumn x:DataType="local:UserItem" Header="Eszköz" Binding="{Binding SessionsText}" Width="90" />
+            <DataGridTemplateColumn Header="" Width="150">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="local:UserItem">
+                  <StackPanel Orientation="Horizontal" Spacing="2" Margin="4,0" VerticalAlignment="Center">
+                    <Button Classes="ghost" Command="{Binding ResetCommand}" IsEnabled="{Binding CanReset}" ToolTip.Tip="Új ideiglenes jelszó"><PathIcon Data="{StaticResource IconKey}" /></Button>
+                    <Button Classes="ghost" Command="{Binding LogoutCommand}" IsEnabled="{Binding CanLogout}" ToolTip.Tip="Kijelentkeztetés mindenhonnan"><PathIcon Data="{StaticResource IconSignOut}" /></Button>
+                    <Button Classes="ghost" Command="{Binding DeleteCommand}" IsEnabled="{Binding CanDelete}" ToolTip.Tip="Törlés"><PathIcon Data="{StaticResource IconTrash}" /></Button>
+                  </StackPanel>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+          </DataGrid.Columns>
+        </DataGrid>
+      </Panel>
+
+      <!-- Roles and the matrix -->
+      <ScrollViewer IsVisible="{Binding IsRoles}">
+        <StackPanel Margin="16,0,16,16" Spacing="12">
+          <ItemsControl ItemsSource="{Binding RoleChips}">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="local:RoleChip">
+                <ToggleButton Classes="chip" IsChecked="{Binding IsSelected, Mode=OneWay}"
+                              Command="{Binding $parent[local:UsersView].((local:UsersViewModel)DataContext).PickRoleCommand}" CommandParameter="{Binding}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="{StaticResource IconLock}" Width="12" Height="12" IsVisible="{Binding Role.IsAdmin}" />
+                    <TextBlock Text="{Binding Text}" />
+                    <Ellipse Width="8" Height="8" Fill="{DynamicResource Warn}" IsVisible="{Binding HasDraft}" ToolTip.Tip="Mentetlen változás" />
+                  </StackPanel>
+                </ToggleButton>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <Border Classes="panel">
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Classes="h2" Text="{Binding Role.Name, FallbackValue=''}" />
+                  <TextBlock Classes="muted small" Text="{Binding RoleDescription}" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                  <Button Content="{Binding RoleUsersText}" Command="{Binding ShowRoleUsersCommand}" />
+                  <Button Command="{Binding RenameRoleCommand}" IsVisible="{Binding CanRenameRole}">
+                    <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconEdit}" /><TextBlock Text="Átnevezés" /></StackPanel>
+                  </Button>
+                  <Button Classes="danger" Command="{Binding DeleteRoleCommand}" IsVisible="{Binding CanRenameRole}" IsEnabled="{Binding CanDeleteRole}"
+                          ToolTip.Tip="Amíg felhasználó használja, nem törölhető">
+                    <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconTrash}" /><TextBlock Text="Törlés" /></StackPanel>
+                  </Button>
+                </StackPanel>
+              </Grid>
+              <Border Classes="notice" IsVisible="{Binding RoleLocked}">
+                <TextBlock Text="Az Adminisztrátor szerepkör mindenhez hozzáfér, és nem szerkeszthető. Legalább egy aktív adminisztrátornak mindig lennie kell." />
+              </Border>
+              <Border Classes="notice" IsVisible="{Binding ReadOnlyNote}">
+                <TextBlock Text="A jogosultságokat csak megtekintheted: a módosításhoz Felhasználók módosítása jog kell." />
+              </Border>
+
+              <!-- Header: the actions, then the column toggles -->
+              <Grid ColumnDefinitions="220,*,70" Margin="10,0">
+                <TextBlock Classes="dt" Text="Modul" />
+                <ItemsControl Grid.Column="1" ItemsSource="{Binding ActionLabels}">
+                  <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="sys:String"><TextBlock Classes="dt" Text="{Binding}" /></DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Grid.Column="2" Classes="dt" Text="Mind" />
+              </Grid>
+              <Grid ColumnDefinitions="220,*,70" Margin="10,0">
+                <TextBlock Classes="muted small" Text="Egész oszlop" VerticalAlignment="Center" />
+                <ItemsControl Grid.Column="1" ItemsSource="{Binding Columns}">
+                  <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="local:ColumnToggle">
+                      <CheckBox IsChecked="{Binding All}" IsEnabled="{Binding Editable}" ToolTip.Tip="{Binding Label, StringFormat='{}{0} minden modulban'}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Grid>
+              <ItemsControl ItemsSource="{Binding Matrix}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="local:MatrixGroup">
+                    <StackPanel>
+                      <Border Classes="grouphead"><TextBlock Text="{Binding Label}" FontWeight="Bold" /></Border>
+                      <ItemsControl ItemsSource="{Binding Rows}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="local:MatrixRow">
+                            <Border Classes="taskrow">
+                              <Grid ColumnDefinitions="220,*,70">
+                                <TextBlock Text="{Binding Module.Name}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <ItemsControl Grid.Column="1" ItemsSource="{Binding Cells}">
+                                  <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                  <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:MatrixCell">
+                                      <CheckBox IsChecked="{Binding IsChecked}" IsEnabled="{Binding Editable}" Margin="0,0,8,0" VerticalAlignment="Center">
+                                        <TextBlock Classes="small" Text="{Binding Label}" TextWrapping="Wrap" />
+                                      </CheckBox>
+                                    </DataTemplate>
+                                  </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <CheckBox Grid.Column="2" IsChecked="{Binding All}" IsEnabled="{Binding Editable}" VerticalAlignment="Center" ToolTip.Tip="Minden művelet" />
+                              </Grid>
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <Grid ColumnDefinitions="*,Auto,Auto" IsVisible="{Binding RoleEditable}">
+                <Border Classes="tag warn" IsVisible="{Binding IsDirty}" HorizontalAlignment="Left" VerticalAlignment="Center"><TextBlock Text="{Binding DirtyText}" /></Border>
+                <TextBlock Classes="muted small" Text="{Binding DirtyText}" IsVisible="{Binding !IsDirty}" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="Elvetés" Command="{Binding DiscardCommand}" Margin="8,0,0,0" />
+                <Button Grid.Column="2" Classes="primary" Content="Mentés" Command="{Binding SaveCommand}" Margin="8,0,0,0" />
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <!-- Every role at a glance -->
+          <StackPanel Spacing="4">
+            <TextBlock Classes="section" Text="Áttekintés" />
+            <TextBlock Classes="muted small" Text="{Binding OverviewLegend, StringFormat='A mentett jogok szerepkörönként. {0}'}" TextWrapping="Wrap" />
+          </StackPanel>
+          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+            <Border Classes="panel" Padding="0">
+              <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="10,6">
+                  <TextBlock Classes="dt" Text="Modul" Width="200" />
+                  <ItemsControl ItemsSource="{Binding Roles}">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="m:RoleRow">
+                        <TextBlock Classes="dt" Text="{Binding Name}" Width="150" TextTrimming="CharacterEllipsis" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding Overview}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="local:OverviewGroup">
+                      <StackPanel>
+                        <Border Classes="grouphead"><TextBlock Text="{Binding Label}" FontWeight="Bold" /></Border>
+                        <ItemsControl ItemsSource="{Binding Rows}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="local:OverviewRow">
+                              <Border Classes="taskrow">
+                                <StackPanel Orientation="Horizontal">
+                                  <TextBlock Text="{Binding Module}" Width="200" />
+                                  <ItemsControl ItemsSource="{Binding Roles}">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                      <DataTemplate x:DataType="sys:String"><TextBlock Classes="mono" Text="{Binding}" Width="150" /></DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                  </ItemsControl>
+                                </StackPanel>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </ScrollViewer>
+        </StackPanel>
+      </ScrollViewer>
+    </Panel>
+  </DockPanel>
+</UserControl>

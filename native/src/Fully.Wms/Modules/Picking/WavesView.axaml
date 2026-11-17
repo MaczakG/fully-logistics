@@ -1,0 +1,150 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Picking"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Picking.WavesView"
+             x:DataType="local:WavesViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Picking/PickingStyles.axaml" />
+  </UserControl.Styles>
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Margin="16,16,16,6" Spacing="10">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Classes="muted" TextWrapping="Wrap" VerticalAlignment="Center" IsVisible="{Binding !IsCompact}"
+                   Text="Hullámok kiszedése és csomagolása. Hullámot itt vagy a Megrendelések listából indíthatsz." />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,0,0">
+          <Button Command="{Binding PackingCommand}" Classes.primary="{Binding HasReady}">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPackage}" /><TextBlock Text="{Binding PackingText}" /></StackPanel>
+          </Button>
+          <Button Classes="primary" Command="{Binding NewCommand}" IsVisible="{Binding CanCreate}">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Új hullám" /></StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+
+      <!-- Key figures -->
+      <Grid ColumnDefinitions="*,*,*,*" IsVisible="{Binding !IsCompact}">
+        <Border Classes="kpi">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Nyitott" />
+            <TextBlock Classes="kpivalue" Text="{Binding OpenCount, Converter={x:Static local:PickingFormat.Int}}" />
+            <TextBlock Classes="kpihint" Text="még nem kezdték el" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Classes="kpi">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Kiszedés alatt" />
+            <TextBlock Classes="kpivalue" Text="{Binding PickingCount, Converter={x:Static local:PickingFormat.Int}}" />
+            <TextBlock Classes="kpihint" Text=" " />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="2" Classes="kpi">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Kiszedve" />
+            <TextBlock Classes="kpivalue" Text="{Binding PickedCount, Converter={x:Static local:PickingFormat.Int}}" />
+            <TextBlock Classes="kpihint" Text="csomagolásra vár" />
+          </StackPanel>
+        </Border>
+        <Button Grid.Column="3" Classes="kpibutton" Command="{Binding PackingCommand}">
+          <Border Classes="kpi" Classes.ok="{Binding HasReady}">
+            <StackPanel>
+              <TextBlock Classes="kpilabel" Text="Csomagolható rendelés" />
+              <TextBlock Classes="kpivalue" Text="{Binding ReadyToPack, Converter={x:Static local:PickingFormat.Int}}" />
+              <TextBlock Classes="kpihint" Text="csomagolóállomás" />
+            </StackPanel>
+          </Border>
+        </Button>
+      </Grid>
+
+      <!-- Status tabs -->
+      <ItemsControl ItemsSource="{Binding StatusTabs}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="local:WaveTab">
+            <ToggleButton Classes="chip" Content="{Binding Text}" IsChecked="{Binding IsSelected, Mode=OneWay}"
+                          Command="{Binding $parent[local:WavesView].((local:WavesViewModel)DataContext).SelectTabCommand}" CommandParameter="{Binding}" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="16,6,16,12">
+      <TextBlock Text="{Binding TotalText}" Classes="muted" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Továbbiak" Command="{Binding MoreCommand}" IsVisible="{Binding HasMore}" />
+    </Grid>
+
+    <Panel Margin="16,0">
+      <Border Classes="notice" VerticalAlignment="Top" IsVisible="{Binding IsEmpty}">
+        <TextBlock Text="{Binding EmptyText}" />
+      </Border>
+      <DataGrid ItemsSource="{Binding Items}" ctl:RowOpen.Item="{Binding Selected}" IsVisible="{Binding !IsCompact}" AutoGenerateColumns="False" CanUserSortColumns="False">
+        <DataGrid.Columns>
+          <DataGridTemplateColumn Header="Hullám" Width="*" MinWidth="170">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:WaveRow">
+                <StackPanel Margin="10,6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Number}" Classes="mono" FontWeight="Bold" />
+                  <TextBlock Text="{Binding Note}" Classes="muted small" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Állapot" Width="190">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:WaveRow">
+                <ctl:StatusTag Group="wave" Status="{Binding Status}" Margin="10,0" VerticalAlignment="Center" HorizontalAlignment="Left" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn x:DataType="m:WaveRow" Header="Komissiós" Binding="{Binding PickerName, Converter={x:Static local:PickingFormat.Picker}}" Width="140" />
+          <DataGridTextColumn x:DataType="m:WaveRow" Header="Rendelés" Binding="{Binding OrderCount}" Width="100" />
+          <DataGridTemplateColumn Header="Haladás" Width="170">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:WaveRow">
+                <StackPanel Margin="10,6" Spacing="4" VerticalAlignment="Center">
+                  <ProgressBar Classes="line" Classes.done="{Binding Converter={x:Static local:PickingFormat.WaveDone}}" Value="{Binding Converter={x:Static local:PickingFormat.WaveRatio}}" />
+                  <TextBlock Classes="small" Text="{Binding Converter={x:Static local:PickingFormat.WavePicked}}" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Hiány" Width="80">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:WaveRow">
+                <TextBlock Margin="10,0" VerticalAlignment="Center" Classes="neg" FontWeight="Bold" Text="{Binding Short, Converter={x:Static local:PickingFormat.ShortQty}}" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Indítva" Width="160">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="m:WaveRow">
+                <TextBlock Margin="10,0" VerticalAlignment="Center" Classes="small" Text="{Binding Converter={x:Static local:PickingFormat.WaveStarted}}" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+      <ListBox Classes="rows" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" IsVisible="{Binding IsCompact}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="m:WaveRow">
+            <StackPanel Margin="14,10" Spacing="6">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding Number}" Classes="mono" FontWeight="Bold" FontSize="16" />
+                <ctl:StatusTag Grid.Column="1" Group="wave" Status="{Binding Status}" />
+              </Grid>
+              <TextBlock Text="{Binding Note}" FontWeight="SemiBold" TextWrapping="Wrap" IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              <Grid ColumnDefinitions="*,Auto">
+                <ProgressBar Classes="line" VerticalAlignment="Center" Classes.done="{Binding Converter={x:Static local:PickingFormat.WaveDone}}" Value="{Binding Converter={x:Static local:PickingFormat.WaveRatio}}" />
+                <TextBlock Grid.Column="1" Margin="10,0,0,0" Classes="mono" FontWeight="Bold" Text="{Binding Converter={x:Static local:PickingFormat.WavePicked}}" />
+              </Grid>
+              <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding Converter={x:Static local:PickingFormat.WaveCardLine}}" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Panel>
+  </DockPanel>
+</UserControl>

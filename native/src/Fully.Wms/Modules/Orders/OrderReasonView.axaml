@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Orders"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Orders.OrderReasonView"
+             x:DataType="local:OrderReasonViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14">
+      <TextBlock TextWrapping="Wrap" Text="{Binding Text}" />
+      <Border Classes="notice warn" IsVisible="{Binding Warning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding Warning}" />
+      </Border>
+      <StackPanel>
+        <TextBlock Classes="label" Text="{Binding Label}" />
+        <TextBox Text="{Binding Reason}" Classes.invalid="{Binding ReasonError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Classes="fielderror" Text="{Binding ReasonError}" IsVisible="{Binding ReasonError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      </StackPanel>
+      <Button Classes="primary" Classes.danger="{Binding Danger}" HorizontalAlignment="Stretch" Content="{Binding SubmitText}" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

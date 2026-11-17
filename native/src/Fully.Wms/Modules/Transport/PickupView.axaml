@@ -1,0 +1,272 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Transport"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Transport.PickupView"
+             x:DataType="local:PickupViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="12" IsVisible="{Binding Data, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+      <!-- Head -->
+      <StackPanel Spacing="4">
+        <WrapPanel>
+          <TextBlock Text="{Binding Data.Number, FallbackValue=''}" Classes="h1 mono" Margin="0,0,10,4" VerticalAlignment="Center" />
+          <ctl:StatusTag Group="pickup" Status="{Binding Status}" Margin="0,0,6,4" VerticalAlignment="Center" />
+        </WrapPanel>
+        <TextBlock Text="{Binding Lead}" Classes="muted" TextWrapping="Wrap" />
+      </StackPanel>
+
+      <WrapPanel>
+        <Button Command="{Binding ArrivedCommand}" IsVisible="{Binding CanArrive}" Margin="0,0,8,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconTransport}" /><TextBlock Text="Futár megérkezett" /></StackPanel>
+        </Button>
+        <Button Command="{Binding EditCommand}" IsVisible="{Binding Editable}" Margin="0,0,8,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconEdit}" /><TextBlock Text="Módosítás" /></StackPanel>
+        </Button>
+        <Button Command="{Binding PrintCommand}" Margin="0,0,8,8" IsVisible="{Binding !IsCompact}">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPrinter}" /><TextBlock Text="Nyomtatás" /></StackPanel>
+        </Button>
+        <Button Command="{Binding CsvCommand}" Margin="0,0,8,8" IsVisible="{Binding !IsCompact}">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconDownload}" /><TextBlock Text="CSV" /></StackPanel>
+        </Button>
+        <Button Classes="danger" Command="{Binding DeleteCommand}" IsVisible="{Binding CanDelete}" Margin="0,0,8,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconTrash}" /><TextBlock Text="Törlés" /></StackPanel>
+        </Button>
+        <Button Classes="primary" Command="{Binding CloseManifestCommand}" IsVisible="{Binding CanClose}" Margin="0,0,8,8">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheckCircle}" /><TextBlock Text="Manifeszt lezárása" /></StackPanel>
+        </Button>
+      </WrapPanel>
+
+      <UniformGrid Columns="{Binding IsCompact, Converter={x:Static local:TransportFormat.KpiColumns}}">
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Rendelés" />
+            <TextBlock Classes="kpivalue" Text="{Binding OrdersText}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Csomag" />
+            <TextBlock Classes="kpivalue" Text="{Binding PackagesText}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Súly" />
+            <TextBlock Classes="kpivalue" Text="{Binding WeightText}" />
+          </StackPanel>
+        </Border>
+        <Border Classes="kpi" Margin="0,0,8,8">
+          <StackPanel>
+            <TextBlock Classes="kpilabel" Text="Utánvét" />
+            <TextBlock Classes="kpivalue" Text="{Binding CodText}" />
+            <TextBlock Classes="kpihint" Text="{Binding CodHint}" />
+          </StackPanel>
+        </Border>
+      </UniformGrid>
+
+      <Border Classes="notice danger" IsVisible="{Binding NotPackedText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding NotPackedText}" />
+      </Border>
+      <Border Classes="notice warn" IsVisible="{Binding NoTrackingText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding NoTrackingText}" />
+      </Border>
+      <Border Classes="notice ok" IsVisible="{Binding ClosedText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding ClosedText}" />
+      </Border>
+      <Border Classes="notice" IsVisible="{Binding ArrivedText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding ArrivedText}" />
+      </Border>
+      <Border Classes="notice" IsVisible="{Binding Data.Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue={x:False}}">
+        <TextBlock Text="{Binding Data.Note, FallbackValue=''}" />
+      </Border>
+
+      <!-- Scanning the parcels handed over -->
+      <StackPanel Spacing="8" IsVisible="{Binding Editable}">
+        <ctl:ScanField x:Name="Scan" Command="{Binding ScanCommand}" Placeholder="Csomagcímke vagy rendelésszám" />
+        <Border Classes="feedback" Classes.ok="{Binding FeedbackTone, Converter={x:Static local:TransportFormat.IsOk}}"
+                Classes.danger="{Binding FeedbackTone, Converter={x:Static local:TransportFormat.IsDanger}}"
+                IsVisible="{Binding Feedback, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding Feedback}" />
+        </Border>
+      </StackPanel>
+
+      <!-- The manifest -->
+      <WrapPanel>
+        <TextBlock Classes="section" Text="Manifeszt" Margin="0,0,10,0" VerticalAlignment="Center" />
+        <TextBlock Classes="muted small" Text="{Binding ManifestCount}" VerticalAlignment="Center" />
+      </WrapPanel>
+      <Border Classes="notice" IsVisible="{Binding !HasManifest}">
+        <TextBlock Text="{Binding ManifestEmpty}" />
+      </Border>
+      <Border Classes="panel" Padding="0">
+        <Border.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.And}">
+            <Binding Path="HasManifest" />
+            <Binding Path="!IsCompact" />
+          </MultiBinding>
+        </Border.IsVisible>
+        <StackPanel>
+          <Grid ColumnDefinitions="36,150,130,*,170,70,80,110,44" Margin="10,0,10,6">
+            <TextBlock Classes="dt" Text="#" TextAlignment="Right" Margin="0,6,0,0" />
+            <TextBlock Grid.Column="1" Classes="dt" Text="Rendelés" Margin="12,6,0,0" />
+            <TextBlock Grid.Column="2" Classes="dt" Text="Ügyfél" />
+            <TextBlock Grid.Column="3" Classes="dt" Text="Címzett" />
+            <TextBlock Grid.Column="4" Classes="dt" Text="Nyomkövetési szám" />
+            <TextBlock Grid.Column="5" Classes="dt" Text="Csomag" TextAlignment="Right" Margin="0,6,0,0" />
+            <TextBlock Grid.Column="6" Classes="dt" Text="Súly" TextAlignment="Right" Margin="0,6,0,0" />
+            <TextBlock Grid.Column="7" Classes="dt" Text="Utánvét" TextAlignment="Right" Margin="0,6,0,0" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Manifest}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="local:ManifestRow">
+                <Border Classes="taskrow">
+                  <Grid ColumnDefinitions="36,150,130,*,170,70,80,110,44">
+                    <TextBlock Classes="mono muted" Text="{Binding Index}" TextAlignment="Right" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">
+                      <Button Classes="link" Command="{Binding $parent[local:PickupView].((local:PickupViewModel)DataContext).OpenOrderCommand}"
+                              CommandParameter="{Binding Order.Id}" ToolTip.Tip="Rendelés megnyitása">
+                        <TextBlock Classes="mono" FontWeight="Bold" Text="{Binding Order.Number}" />
+                      </Button>
+                      <TextBlock Classes="muted small" Text="{Binding Order.ExternalNumber}" TextTrimming="CharacterEllipsis" />
+                      <ctl:StatusTag Group="order" Status="{Binding Order.Status}" IsVisible="{Binding NotReady}" HorizontalAlignment="Left" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,8,0">
+                      <TextBlock Text="{Binding Order.PartnerCode}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Order.PartnerName}" />
+                      <TextBlock Classes="muted small" Text="{Binding Order.PartnerName}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="0,0,8,0">
+                      <TextBlock Text="{Binding Recipient}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Classes="muted small" Text="{Binding Place}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <Panel Grid.Column="4" VerticalAlignment="Center">
+                      <TextBlock Classes="mono" Text="{Binding Order.TrackingNumber}" IsVisible="{Binding HasTracking}" TextTrimming="CharacterEllipsis" />
+                      <Border Classes="tag warn" IsVisible="{Binding !HasTracking}" HorizontalAlignment="Left"><TextBlock Text="nincs" /></Border>
+                    </Panel>
+                    <TextBlock Grid.Column="5" Classes="mono" Text="{Binding Packages}" TextAlignment="Right" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="6" Classes="mono" Text="{Binding Weight}" TextAlignment="Right" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="7" Classes="mono" Text="{Binding Cod}" TextAlignment="Right" VerticalAlignment="Center" />
+                    <Button Grid.Column="8" Classes="ghost" Command="{Binding RemoveCommand}" IsVisible="{Binding CanRemove}" HorizontalAlignment="Right"
+                            ToolTip.Tip="Levétel a manifesztről" VerticalAlignment="Center">
+                      <PathIcon Data="{StaticResource IconClose}" />
+                    </Button>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock Text="{Binding TotalsText}" FontWeight="Bold" Margin="10,8,10,10" HorizontalAlignment="Right" />
+        </StackPanel>
+      </Border>
+      <ItemsControl ItemsSource="{Binding Manifest}">
+        <ItemsControl.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.And}">
+            <Binding Path="HasManifest" />
+            <Binding Path="IsCompact" />
+          </MultiBinding>
+        </ItemsControl.IsVisible>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="local:ManifestRow">
+            <Border Classes="linecard">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="2">
+                  <WrapPanel>
+                    <TextBlock Classes="sku" Text="{Binding Order.Number}" Margin="0,0,8,0" />
+                    <ctl:StatusTag Group="order" Status="{Binding Order.Status}" IsVisible="{Binding NotReady}" />
+                  </WrapPanel>
+                  <TextBlock Text="{Binding Recipient}" TextWrapping="Wrap" />
+                  <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding Place}" />
+                  <TextBlock Classes="mono small" Text="{Binding Order.TrackingNumber}" IsVisible="{Binding HasTracking}" />
+                  <Border Classes="tag warn" IsVisible="{Binding !HasTracking}" HorizontalAlignment="Left"><TextBlock Text="nincs nyomkövetési szám" /></Border>
+                  <TextBlock Classes="muted small" Text="{Binding Cod}" IsVisible="{Binding Cod, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+                <Button Grid.Column="1" Classes="ghost" Command="{Binding RemoveCommand}" IsVisible="{Binding CanRemove}" VerticalAlignment="Top"
+                        ToolTip.Tip="Levétel a manifesztről">
+                  <PathIcon Data="{StaticResource IconClose}" />
+                </Button>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- Packed orders of the carrier not yet on a pickup -->
+      <StackPanel Spacing="8" IsVisible="{Binding ShowWaiting}">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Classes="section" Text="Feladásra vár" />
+            <TextBlock Classes="muted small" Text="{Binding WaitingLead}" TextWrapping="Wrap" />
+          </StackPanel>
+        </Grid>
+        <WrapPanel>
+          <Button Command="{Binding SelectAllCommand}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheck}" /><TextBlock Text="Mind kijelölése" /></StackPanel>
+          </Button>
+          <Button Command="{Binding AddSelectedCommand}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="{Binding AddSelectedText}" /></StackPanel>
+          </Button>
+          <Button Command="{Binding AddAllCommand}" Margin="0,0,8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconAdd}" /><TextBlock Text="{Binding AddAllText}" /></StackPanel>
+          </Button>
+        </WrapPanel>
+        <Border Classes="panel" Padding="0" IsVisible="{Binding !IsCompact}">
+          <StackPanel>
+            <Grid ColumnDefinitions="44,150,130,*,170,70,110,150" Margin="10,0,10,6">
+              <TextBlock Grid.Column="1" Classes="dt" Text="Rendelés" />
+              <TextBlock Grid.Column="2" Classes="dt" Text="Ügyfél" />
+              <TextBlock Grid.Column="3" Classes="dt" Text="Címzett" />
+              <TextBlock Grid.Column="4" Classes="dt" Text="Nyomkövetési szám" />
+              <TextBlock Grid.Column="5" Classes="dt" Text="Csomag" TextAlignment="Right" Margin="0,6,0,0" />
+              <TextBlock Grid.Column="6" Classes="dt" Text="Utánvét" TextAlignment="Right" Margin="0,6,0,0" />
+              <TextBlock Grid.Column="7" Classes="dt" Text="Csomagolva" Margin="12,6,0,0" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding Waiting}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="local:WaitingRow">
+                  <Border Classes="taskrow">
+                    <Grid ColumnDefinitions="44,150,130,*,170,70,110,150">
+                      <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" />
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Classes="mono" FontWeight="Bold" Text="{Binding Order.Number}" />
+                        <TextBlock Classes="muted small" Text="{Binding Order.ExternalNumber}" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="2" Text="{Binding Order.PartnerCode}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" ToolTip.Tip="{Binding Order.PartnerName}" />
+                      <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="0,0,8,0">
+                        <TextBlock Text="{Binding Order.CustomerName}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Classes="muted small" Text="{Binding Place}" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="4" Classes="mono" Text="{Binding Tracking}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Grid.Column="5" Classes="mono" Text="{Binding Packages}" TextAlignment="Right" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="6" Classes="mono" Text="{Binding Cod}" TextAlignment="Right" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="7" Classes="small" Text="{Binding PackedAt}" Margin="12,0,0,0" VerticalAlignment="Center" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <ItemsControl ItemsSource="{Binding Waiting}" IsVisible="{Binding IsCompact}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:WaitingRow">
+              <Border Classes="linecard">
+                <Grid ColumnDefinitions="Auto,*">
+                  <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Top" />
+                  <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock Classes="sku" Text="{Binding Order.Number}" />
+                    <TextBlock Text="{Binding Order.CustomerName}" TextWrapping="Wrap" />
+                    <TextBlock Classes="muted small" Text="{Binding Place}" />
+                    <TextBlock Classes="mono small" Text="{Binding Tracking}" />
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

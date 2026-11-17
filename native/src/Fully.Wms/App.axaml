@@ -1,0 +1,32 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms"
+             x:Class="Fully.Wms.App"
+             Name="Fully WMS"
+             RequestedThemeVariant="Default">
+  <Application.DataTemplates>
+    <local:PageLocator />
+  </Application.DataTemplates>
+
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Fully.Wms/Styles/Theme.axaml" />
+        <ResourceInclude Source="avares://Fully.Wms/Styles/Icons.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme>
+      <FluentTheme.Palettes>
+        <!-- Accent: dark ink in light mode, hi-vis yellow in dark mode (readable checkmarks, focus) -->
+        <ColorPaletteResources x:Key="Light" Accent="#FF121518" RegionColor="#FFE7E9EB" BaseHigh="#FF121518" ErrorText="#FFB42318" />
+        <ColorPaletteResources x:Key="Dark" Accent="#FFE8BE3C" RegionColor="#FF0E1012" BaseHigh="#FFECEEF0" ErrorText="#FFFF9C92" />
+      </FluentTheme.Palettes>
+    </FluentTheme>
+    <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+    <StyleInclude Source="avares://Fully.Wms/Styles/Controls.axaml" />
+    <StyleInclude Source="avares://Fully.Wms/Styles/Shell.axaml" />
+  </Application.Styles>
+</Application>

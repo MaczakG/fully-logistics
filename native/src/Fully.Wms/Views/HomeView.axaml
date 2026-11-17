@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Fully.Wms.ViewModels"
+             xmlns:views="using:Fully.Wms.Views"
+             xmlns:c="using:Fully.Wms.Converters"
+             x:Class="Fully.Wms.Views.HomeView"
+             x:DataType="vm:HomeViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16,16,6,16">
+      <Grid ColumnDefinitions="Auto,*" Margin="0,0,10,4">
+        <Border Width="44" Height="44" Background="{StaticResource InkFixed}" Margin="0,0,12,0">
+          <PathIcon Data="{StaticResource IconUser}" Foreground="{StaticResource HiVis}" Width="26" Height="26" />
+        </Border>
+        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Greeting}" FontWeight="ExtraBold" FontSize="17" />
+          <TextBlock Text="{Binding Role}" Classes="muted small" />
+        </StackPanel>
+      </Grid>
+      <TextBlock Text="{Binding Cutoff}" Classes="muted small" Margin="0,4,10,0" />
+
+      <ItemsControl ItemsSource="{Binding Shell.Menu}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:MenuGroupViewModel">
+            <StackPanel>
+              <TextBlock Classes="h3" Text="{Binding Title, Converter={x:Static c:Is.Upper}}" LetterSpacing="1" Margin="0,20,0,10" />
+              <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <UniformGrid Columns="{Binding $parent[views:HomeView].TileColumns}" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:MenuItemViewModel">
+                    <Button Classes="tile" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Label}">
+                      <Grid RowDefinitions="Auto,Auto,Auto,*">
+                        <Grid Margin="-14,-16,-14,14" Height="5" ColumnDefinitions="40,*">
+                          <Border Background="{StaticResource HiVis}" />
+                          <Border Grid.Column="1" Background="{DynamicResource Ink}" />
+                        </Grid>
+                        <Border Grid.Row="1" Classes="tileicon">
+                          <PathIcon Data="{Binding Icon}" />
+                        </Border>
+                        <Border Grid.Row="1" Classes="badge" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="8,4" IsVisible="{Binding HasBadge}">
+                          <TextBlock Text="{Binding BadgeText}" FontSize="16" />
+                        </Border>
+                        <TextBlock Grid.Row="2" Classes="tilelabel" Text="{Binding Label}" Margin="0,12,0,2" TextWrapping="WrapWithOverflow" />
+                        <TextBlock Grid.Row="3" Text="{Binding Meta}" Classes="muted small" TextWrapping="Wrap" />
+                      </Grid>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

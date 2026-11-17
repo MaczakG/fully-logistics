@@ -1,0 +1,149 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Settings"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Settings.LogTabView"
+             x:DataType="local:LogTab">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+  </UserControl.Styles>
+  <StackPanel Spacing="12">
+    <Grid ColumnDefinitions="*,Auto">
+      <StackPanel Orientation="Horizontal">
+        <ToggleButton Classes="chip" Content="Felhasználói napló" IsChecked="{Binding IsAudit, Mode=OneWay}" Command="{Binding ShowKindCommand}" CommandParameter="audit" />
+        <ToggleButton Classes="chip" Content="Integrációs napló" IsChecked="{Binding IsIntegration, Mode=OneWay}" Command="{Binding ShowKindCommand}" CommandParameter="integration" />
+      </StackPanel>
+      <Button Grid.Column="1" Command="{Binding ExportCommand}" IsVisible="{Binding IsAudit}" VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconDownload}" /><TextBlock Text="Export" /></StackPanel>
+      </Button>
+    </Grid>
+    <Grid ColumnDefinitions="*,Auto">
+      <TextBox Text="{Binding Search}" PlaceholderText="Keresés az összefoglalóban, az üzenetben vagy a partnerben">
+        <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding ApplyCommand}" /></TextBox.KeyBindings>
+      </TextBox>
+      <Button Grid.Column="1" Margin="8,0,0,0" Command="{Binding ApplyCommand}" ToolTip.Tip="Keresés"><PathIcon Data="{StaticResource IconSearch}" /></Button>
+    </Grid>
+    <UniformGrid Columns="5" IsVisible="{Binding IsAudit}">
+        <StackPanel Margin="0,0,8,8">
+          <TextBlock Classes="label" Text="Modul" />
+          <ComboBox ItemsSource="{Binding Modules}" SelectedItem="{Binding ModuleFilter}" HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Margin="0,0,8,8">
+          <TextBlock Classes="label" Text="Felhasználó" />
+          <ComboBox ItemsSource="{Binding Users}" SelectedItem="{Binding UserFilter}" HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Margin="0,0,8,8">
+          <TextBlock Classes="label" Text="Tárgy" />
+          <ComboBox ItemsSource="{Binding Entities}" SelectedItem="{Binding EntityFilter}" HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Margin="0,0,8,8">
+          <TextBlock Classes="label" Text="Ettől" />
+          <CalendarDatePicker SelectedDate="{Binding From}" HorizontalAlignment="Stretch" />
+        </StackPanel>
+        <StackPanel Margin="0,0,0,8">
+          <TextBlock Classes="label" Text="Eddig" />
+          <CalendarDatePicker SelectedDate="{Binding To}" HorizontalAlignment="Stretch" />
+        </StackPanel>
+    </UniformGrid>
+    <UniformGrid Columns="5" IsVisible="{Binding IsIntegration}">
+        <StackPanel Margin="0,0,8,8">
+          <TextBlock Classes="label" Text="Rendszer" />
+          <ComboBox ItemsSource="{Binding Systems}" SelectedItem="{Binding SystemFilter}" HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Margin="0,0,8,8">
+          <TextBlock Classes="label" Text="Eredmény" />
+          <ComboBox ItemsSource="{x:Static local:LogTab.Results}" SelectedItem="{Binding Result}" HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Margin="0,0,8,8">
+          <TextBlock Classes="label" Text="Irány" />
+          <ComboBox ItemsSource="{x:Static local:LogTab.Directions}" SelectedItem="{Binding Direction}" HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Margin="0,0,8,8">
+          <TextBlock Classes="label" Text="Ettől" />
+          <CalendarDatePicker SelectedDate="{Binding From}" HorizontalAlignment="Stretch" />
+        </StackPanel>
+        <StackPanel Margin="0,0,0,8">
+          <TextBlock Classes="label" Text="Eddig" />
+          <CalendarDatePicker SelectedDate="{Binding To}" HorizontalAlignment="Stretch" />
+        </StackPanel>
+    </UniformGrid>
+
+    <Border Classes="notice" IsVisible="{Binding IsEmpty}"><TextBlock Text="{Binding EmptyText}" /></Border>
+    <StackPanel IsVisible="{Binding IsAudit}">
+      <Grid ColumnDefinitions="150,170,150,120,*" Margin="14,0,14,4" IsVisible="{Binding !IsEmpty}">
+        <TextBlock Classes="dt" Text="Időpont" />
+        <TextBlock Grid.Column="1" Classes="dt" Text="Felhasználó" />
+        <TextBlock Grid.Column="2" Classes="dt" Text="Modul" />
+        <TextBlock Grid.Column="3" Classes="dt" Text="Művelet" />
+        <TextBlock Grid.Column="4" Classes="dt" Text="Összefoglaló" />
+      </Grid>
+      <ListBox Classes="rows" ItemsSource="{Binding Audit}" SelectedItem="{Binding Selected}">
+        <ListBox.Styles><Style Selector="ListBoxItem"><Setter Property="Margin" Value="0,0,0,3" /></Style></ListBox.Styles>
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="local:AuditItem">
+            <Grid ColumnDefinitions="150,170,150,120,*" Margin="14,7">
+              <TextBlock Classes="small" Text="{Binding AtText}" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="1" Text="{Binding Row.Actor, TargetNullValue='rendszer'}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+              <TextBlock Grid.Column="2" Classes="small" Text="{Binding Row.ModuleName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+              <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                <TextBlock Classes="small" Text="{Binding ActionText}" FontWeight="SemiBold" />
+                <TextBlock Classes="muted small" Text="{Binding EntityText}" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+              <TextBlock Grid.Column="4" Text="{Binding Row.Summary}" VerticalAlignment="Center" TextWrapping="Wrap" />
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </StackPanel>
+    <StackPanel IsVisible="{Binding IsIntegration}">
+      <Grid ColumnDefinitions="150,110,90,160,150,110,*" Margin="20,0,20,4" IsVisible="{Binding !IsEmpty}">
+        <TextBlock Classes="dt" Text="Időpont" />
+        <TextBlock Grid.Column="1" Classes="dt" Text="Rendszer" />
+        <TextBlock Grid.Column="2" Classes="dt" Text="Irány" />
+        <TextBlock Grid.Column="3" Classes="dt" Text="Partner" />
+        <TextBlock Grid.Column="4" Classes="dt" Text="Művelet" />
+        <TextBlock Grid.Column="5" Classes="dt" Text="Eredmény" />
+        <TextBlock Grid.Column="6" Classes="dt" Text="Üzenet" />
+      </Grid>
+      <ItemsControl ItemsSource="{Binding Calls}" Margin="10,0">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="local:IntegrationItem">
+            <Border Classes="taskrow">
+              <Grid ColumnDefinitions="150,110,90,160,150,110,*">
+                <TextBlock Classes="small" Text="{Binding AtText}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Classes="mono small" Text="{Binding Row.System}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Classes="small" Text="{Binding DirectionText}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="3" Classes="small" Text="{Binding Row.PartnerName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                <TextBlock Grid.Column="4" Classes="mono small" Text="{Binding Row.Action}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                <Panel Grid.Column="5" VerticalAlignment="Center" HorizontalAlignment="Left">
+                  <Border Classes="tag ok" IsVisible="{Binding Row.Ok}"><TextBlock Text="{Binding ResultText}" /></Border>
+                  <Border Classes="tag danger" IsVisible="{Binding !Row.Ok}"><TextBlock Text="{Binding ResultText}" /></Border>
+                </Panel>
+                <TextBlock Grid.Column="6" Classes="small" Text="{Binding Row.Message}" VerticalAlignment="Center" TextWrapping="Wrap" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+    <Grid ColumnDefinitions="*,Auto">
+      <TextBlock Classes="muted" Text="{Binding TotalText}" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="Továbbiak" Command="{Binding MoreCommand}" IsVisible="{Binding HasMore}" />
+    </Grid>
+  </StackPanel>
+</UserControl>

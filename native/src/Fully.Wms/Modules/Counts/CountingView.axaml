@@ -1,0 +1,139 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Counts"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Counts.CountingView"
+             x:DataType="local:CountingViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Counts/CountsStyles.axaml" />
+  </UserControl.Styles>
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="10">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Classes="muted" Text="{Binding Lead}" TextWrapping="Wrap" VerticalAlignment="Center" />
+        <Button Grid.Column="1" Margin="10,0,0,0" Command="{Binding FinishCommand}" IsVisible="{Binding CanWork}">
+          <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheckCircle}" /><TextBlock Text="Befejezés" /></StackPanel>
+        </Button>
+      </Grid>
+      <Border Classes="notice" IsVisible="{Binding Blocked, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding Blocked}" />
+      </Border>
+
+      <StackPanel Spacing="10" IsVisible="{Binding CanWork}">
+        <Grid ColumnDefinitions="*,Auto">
+          <ProgressBar Classes="line big" VerticalAlignment="Center" Classes.done="{Binding ProgressDone}" Value="{Binding ProgressRatio}" />
+          <TextBlock Grid.Column="1" Classes="small" Margin="10,0,0,0" Text="{Binding ProgressText}" VerticalAlignment="Center" />
+        </Grid>
+        <ctl:ScanField x:Name="Scan" Command="{Binding ScanCommand}" Placeholder="{Binding ScanPlaceholder}" />
+        <Border Classes="feedback" Classes.ok="{Binding FeedbackTone, Converter={x:Static local:CountsFormat.IsOk}}"
+                Classes.warn="{Binding FeedbackTone, Converter={x:Static local:CountsFormat.IsWarn}}"
+                Classes.danger="{Binding FeedbackTone, Converter={x:Static local:CountsFormat.IsDanger}}"
+                IsVisible="{Binding Feedback, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding Feedback}" />
+        </Border>
+
+        <!-- The location being counted -->
+        <Border Classes="entry" IsVisible="{Binding HasCurrent}">
+          <StackPanel Spacing="10">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel>
+                <TextBlock Classes="muted small" Text="{Binding CurrentZone}" />
+                <TextBlock Classes="loccode" Text="{Binding Current.Location.Code, FallbackValue=''}" />
+              </StackPanel>
+              <Border Grid.Column="1" Classes="tag" Classes.ok="{Binding CurrentDone}" Classes.warn="{Binding !CurrentDone}" VerticalAlignment="Top"
+                      IsVisible="{Binding StateText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding StateText}" />
+              </Border>
+            </Grid>
+            <Border Classes="notice" IsVisible="{Binding EmptyNotice, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <TextBlock Text="{Binding EmptyNotice}" />
+            </Border>
+            <ItemsControl ItemsSource="{Binding Lines}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="local:CountEntryItem">
+                  <Border Classes="linecard" Classes.done="{Binding IsCounted}" Classes.active="{Binding IsFlash}">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                      <StackPanel Spacing="2" Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                          <TextBlock Classes="sku" Text="{Binding Line.Sku}" />
+                          <Border Classes="tag warn" IsVisible="{Binding Line.Added}" VerticalAlignment="Center"><TextBlock Text="talált" /></Border>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Line.Name}" TextWrapping="Wrap" />
+                        <TextBlock Classes="muted small" Text="{Binding InfoLine}" TextWrapping="Wrap" IsVisible="{Binding HasInfo}" />
+                        <TextBlock Classes="small" Text="{Binding ExpectedText}" IsVisible="{Binding Visible}" />
+                        <TextBlock Classes="muted small" Text="{Binding WhoText}" IsVisible="{Binding HasWho}" />
+                      </StackPanel>
+                      <!-- The quantity: beside the product on the desktop, under it on the phone -->
+                      <StackPanel Grid.Column="{Binding $parent[local:CountingView].((local:CountingViewModel)DataContext).IsCompact, Converter={x:Static local:CountsFormat.QtyColumn}}"
+                                  Grid.Row="{Binding $parent[local:CountingView].((local:CountingViewModel)DataContext).IsCompact, Converter={x:Static local:CountsFormat.QtyRow}}"
+                                  Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="{Binding $parent[local:CountingView].((local:CountingViewModel)DataContext).IsCompact, Converter={x:Static local:CountsFormat.QtyMargin}}">
+                        <Button Classes="square" Command="{Binding DecCommand}" ToolTip.Tip="Eggyel kevesebb"><PathIcon Data="{StaticResource IconMinus}" /></Button>
+                        <TextBox Classes="cqty" Text="{Binding Qty}" PlaceholderText="?" TextInputOptions.ContentType="Digits">
+                          <TextBox.KeyBindings><KeyBinding Gesture="Enter" Command="{Binding SaveCommand}" /></TextBox.KeyBindings>
+                        </TextBox>
+                        <Button Classes="square" Command="{Binding IncCommand}" ToolTip.Tip="Eggyel több"><PathIcon Data="{StaticResource IconPlus}" /></Button>
+                        <Button Classes="ghost square" Command="{Binding RemoveCommand}" IsVisible="{Binding Line.Added}" ToolTip.Tip="Talált tétel törlése">
+                          <PathIcon Data="{StaticResource IconTrash}" />
+                        </Button>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <WrapPanel>
+              <Button Classes="primary" Command="{Binding CompleteCommand}" MinHeight="48" Margin="0,0,8,8">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheck}" /><TextBlock Text="Hely kész" /></StackPanel>
+              </Button>
+              <Button Command="{Binding AddProductCommand}" MinHeight="48" Margin="0,0,8,8">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Talált termék" /></StackPanel>
+              </Button>
+              <Button Command="{Binding RecountCommand}" MinHeight="48" Margin="0,0,8,8">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconRefresh}" /><TextBlock Text="Újraszámolás" /></StackPanel>
+              </Button>
+              <Button Classes="ghost" Command="{Binding LeaveCommand}" MinHeight="48" Margin="0,0,8,8">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconBack}" /><TextBlock Text="Helyek" /></StackPanel>
+              </Button>
+            </WrapPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Choosing: the next location, or everything done -->
+        <Border Classes="panel" IsVisible="{Binding Choosing}">
+          <StackPanel Spacing="8">
+            <StackPanel Spacing="8" IsVisible="{Binding HasNext}">
+              <TextBlock Classes="muted small" Text="Következő hely bejárási sorrendben" />
+              <TextBlock Classes="loccode" Text="{Binding NextLocation.Location.Code, FallbackValue=''}" />
+              <TextBlock Text="Menj a helyhez, és olvasd be a hely címkéjét." TextWrapping="Wrap" />
+              <Button Classes="primary" Command="{Binding OpenNextCommand}" MinHeight="48" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconLocation}" /><TextBlock Text="{Binding NextText}" /></StackPanel>
+              </Button>
+            </StackPanel>
+            <StackPanel Spacing="8" IsVisible="{Binding AllDone}">
+              <Border Classes="notice ok">
+                <TextBlock Text="Minden hely kész. Fejezd be a számlálást, hogy a jóváhagyó könyvelhesse az eltéréseket." />
+              </Border>
+              <Button Classes="primary" Command="{Binding FinishCommand}" MinHeight="48" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheckCircle}" /><TextBlock Text="Számlálás befejezése" /></StackPanel>
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- The locations -->
+        <TextBlock Classes="muted small" Text="{Binding Locations.Count, StringFormat='Helyek ({0})'}" Margin="0,6,0,0" />
+        <ItemsControl ItemsSource="{Binding Locations}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:CountLocItem">
+              <Button Classes="loc" Classes.done="{Binding Done}" Classes.partial="{Binding Partial}" Classes.current="{Binding IsCurrent}"
+                      Content="{Binding Location.Code}" Command="{Binding OpenCommand}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

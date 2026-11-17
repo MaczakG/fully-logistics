@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Picking"
+             x:Class="Fully.Wms.Modules.Picking.WaveShortView"
+             x:DataType="local:WaveShortViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14">
+      <TextBlock TextWrapping="Wrap" Text="{Binding Text}" />
+      <StackPanel IsVisible="{Binding Scanned}">
+        <TextBlock Classes="label" Text="Ennyit találtál a helyen" />
+        <TextBox Text="{Binding Found}" Classes="num" TextInputOptions.ContentType="Digits"
+                 Classes.invalid="{Binding FoundError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Classes="muted small" Text="{Binding FoundHint}" Margin="0,4,0,0" />
+        <TextBlock Classes="fielderror" Text="{Binding FoundError}" IsVisible="{Binding FoundError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      </StackPanel>
+      <TextBlock Classes="muted small" TextWrapping="Wrap" IsVisible="{Binding !Scanned}"
+                 Text="Ha találtál belőle valamennyit, előbb olvasd be a helyet és a terméket, és a mennyiségnél add meg, amennyit találtál." />
+      <Button Classes="primary danger" HorizontalAlignment="Stretch" Content="Hiány rögzítése" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

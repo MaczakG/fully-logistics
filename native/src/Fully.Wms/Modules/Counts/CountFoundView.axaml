@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Counts"
+             xmlns:m="using:Fully.Wms.Core.Models"
+             x:Class="Fully.Wms.Modules.Counts.CountFoundView"
+             x:DataType="local:CountFoundViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14">
+      <TextBlock TextWrapping="Wrap" Text="{Binding Intro}" />
+      <TextBlock TextWrapping="Wrap" FontWeight="SemiBold" Text="{Binding SingleText}" IsVisible="{Binding Single}" />
+      <StackPanel IsVisible="{Binding Several}">
+        <TextBlock Classes="label" Text="Termék" />
+        <ComboBox ItemsSource="{Binding Products}" SelectedItem="{Binding Chosen}" HorizontalAlignment="Stretch">
+          <ComboBox.ItemTemplate><DataTemplate x:DataType="m:ResolvedProduct"><TextBlock Text="{Binding Sku}" /></DataTemplate></ComboBox.ItemTemplate>
+        </ComboBox>
+      </StackPanel>
+      <StackPanel IsVisible="{Binding Searching}">
+        <TextBlock Classes="label" Text="Termék" />
+        <AutoCompleteBox SelectedItem="{Binding Product}" AsyncPopulator="{Binding FindProducts}" MinimumPrefixLength="1" MinimumPopulateDelay="0:0:0.25"
+                         FilterMode="None" PlaceholderText="Cikkszám, név vagy EAN" ValueMemberBinding="{Binding Display, DataType=m:ProductLookup}">
+          <AutoCompleteBox.ItemTemplate>
+            <DataTemplate x:DataType="m:ProductLookup">
+              <StackPanel>
+                <TextBlock Text="{Binding Display}" />
+                <TextBlock Classes="muted small" Text="{Binding PartnerCode}" />
+              </StackPanel>
+            </DataTemplate>
+          </AutoCompleteBox.ItemTemplate>
+        </AutoCompleteBox>
+        <TextBlock Classes="fielderror" Text="{Binding ProductError}" IsVisible="{Binding ProductError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      </StackPanel>
+      <Border Classes="notice warn" IsVisible="{Binding OtherPartner, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding OtherPartner}" />
+      </Border>
+      <Grid ColumnDefinitions="*,*,*">
+      <StackPanel Margin="0,0,8,0">
+        <TextBlock Classes="label" Text="Mennyiség" />
+        <TextBox Text="{Binding Qty}" Classes="num" TextInputOptions.ContentType="Digits" />
+        <TextBlock Classes="fielderror" Text="{Binding QtyError}" IsVisible="{Binding QtyError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Margin="0,0,8,0">
+        <TextBlock Classes="label" Text="Lot" />
+        <TextBox Text="{Binding Lot}" Classes="mono" />
+      </StackPanel>
+      <StackPanel Grid.Column="2">
+        <TextBlock Classes="label" Text="Lejárat" />
+        <TextBox Text="{Binding Expiry}" Classes="mono" PlaceholderText="ÉÉÉÉ-HH-NN" />
+        <TextBlock Classes="fielderror" Text="{Binding ExpiryError}" IsVisible="{Binding ExpiryError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      </StackPanel>
+      </Grid>
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="Felvétel" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -1,0 +1,147 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Fully.Wms.ViewModels"
+             xmlns:c="using:Fully.Wms.Converters"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="Fully.Wms.Views.MainView"
+             x:DataType="vm:ShellViewModel"
+             Background="{DynamicResource Paper}">
+  <Grid>
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,*">
+
+      <!-- Side menu (desktop width) -->
+      <Border Grid.RowSpan="3" Classes="sidebar" Width="252" IsVisible="{Binding ShowSidebar}">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="12" Margin="20,18,16,6">
+            <Border Width="34" Height="34" Background="{StaticResource HiVis}">
+              <Path Data="M8 7h17v5.5H14v3.5h9v5.5h-9V26H8z" Fill="{StaticResource InkFixed}" Stretch="Uniform" Margin="7,6" />
+            </Border>
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Fully Logistics" FontWeight="ExtraBold" FontSize="15" />
+              <TextBlock Text="WMS" FontSize="11" Foreground="{StaticResource PaperFixed2}" LetterSpacing="2" />
+            </StackPanel>
+          </StackPanel>
+
+          <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource InkFixed3}" BorderThickness="0,1,0,0" Padding="0,8">
+            <StackPanel>
+              <Button Classes="side" Classes.active="{Binding Current, Converter={x:Static c:Is.Profile}}" Command="{Binding OpenProfileCommand}">
+                <Grid ColumnDefinitions="Auto,*" >
+                  <PathIcon Data="{StaticResource IconUser}" Margin="0,0,12,0" />
+                  <StackPanel Grid.Column="1">
+                    <TextBlock Text="{Binding UserName}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding UserRole}" FontSize="11" FontWeight="Normal" Foreground="{StaticResource PaperFixed2}" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                </Grid>
+              </Button>
+              <Button Classes="side" Command="{Binding LogoutCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <PathIcon Data="{StaticResource IconSignOut}" />
+                  <TextBlock Text="Kijelentkezés" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </Border>
+
+          <ScrollViewer>
+            <StackPanel Margin="0,8,0,8">
+              <Button Classes="side" Classes.active="{Binding IsHome}" Command="{Binding HomeCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <PathIcon Data="{StaticResource IconHome}" />
+                  <TextBlock Text="Kezdőlap" />
+                </StackPanel>
+              </Button>
+              <ItemsControl ItemsSource="{Binding Menu}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:MenuGroupViewModel">
+                    <StackPanel>
+                      <TextBlock Classes="sidegroup" Text="{Binding Title, Converter={x:Static c:Is.Upper}}" />
+                      <ItemsControl ItemsSource="{Binding Items}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="vm:MenuItemViewModel">
+                            <Button Classes="side" Classes.active="{Binding IsActive}" Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Meta}">
+                              <Grid ColumnDefinitions="Auto,*,Auto">
+                                <PathIcon Data="{Binding Icon}" Margin="0,0,12,0" />
+                                <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" />
+                                <Border Grid.Column="2" Classes="badge" IsVisible="{Binding HasBadge}">
+                                  <TextBlock Text="{Binding BadgeText}" />
+                                </Border>
+                              </Grid>
+                            </Button>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+
+      <!-- Top bar -->
+      <Border Grid.Column="1" Classes="topbar" IsVisible="{Binding IsSignedIn}">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+          <Button Classes="bar" Command="{Binding BackCommand}" IsVisible="{Binding CanGoBack}" ToolTip.Tip="Vissza" AutomationProperties.Name="Vissza">
+            <PathIcon Data="{StaticResource IconBack}" />
+          </Button>
+          <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="18" FontWeight="ExtraBold" VerticalAlignment="Center" Margin="10,0" TextTrimming="CharacterEllipsis" />
+          <Button Grid.Column="2" Classes="bar" Command="{Binding HomeCommand}" IsVisible="{Binding ShowHomeButton}" ToolTip.Tip="Kezdőképernyő" AutomationProperties.Name="Kezdőképernyő">
+            <PathIcon Data="{StaticResource IconHome}" />
+          </Button>
+          <Button Grid.Column="3" Classes="bar" Command="{Binding OpenProfileCommand}" IsVisible="{Binding IsCompact}" ToolTip.Tip="Saját fiók" AutomationProperties.Name="Saját fiók">
+            <PathIcon Data="{StaticResource IconUser}" />
+          </Button>
+        </Grid>
+      </Border>
+
+      <!-- Busy line -->
+      <ProgressBar Grid.Row="1" Grid.Column="1" IsIndeterminate="True" Height="3" MinHeight="3" Foreground="{StaticResource HiVis}" Background="Transparent">
+        <ProgressBar.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.Or}">
+            <Binding Path="IsBusy" />
+            <Binding Path="Current.IsLoading" FallbackValue="{x:False}" />
+          </MultiBinding>
+        </ProgressBar.IsVisible>
+      </ProgressBar>
+
+      <!-- The page -->
+      <Panel Grid.Row="2" Grid.Column="1">
+        <ContentControl Content="{Binding Current}" IsVisible="{Binding Current.LoadError, Converter={x:Static StringConverters.IsNullOrEmpty}, FallbackValue={x:True}}" />
+        <Border Classes="notice danger" VerticalAlignment="Top" Margin="16" IsVisible="{Binding Current.LoadError, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue={x:False}}">
+          <StackPanel Spacing="12">
+            <TextBlock Text="{Binding Current.LoadError}" FontWeight="SemiBold" />
+            <Button Classes="dark" Content="Újra" HorizontalAlignment="Left" Command="{Binding RetryCommand}" />
+          </StackPanel>
+        </Border>
+      </Panel>
+    </Grid>
+
+    <!-- Toasts -->
+    <ItemsControl ItemsSource="{Binding Toasts}" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="16,16,16,24">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:ToastViewModel">
+          <Border Classes="toast" Classes.error="{Binding IsError}" Classes.success="{Binding IsSuccess}">
+            <TextBlock Text="{Binding Message}" />
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <!-- Confirmation dialog -->
+    <Border Classes="scrim" IsVisible="{Binding Dialog, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <Border Classes="dialog" VerticalAlignment="Center" HorizontalAlignment="Center" DataContext="{Binding Dialog}" x:DataType="vm:DialogViewModel">
+        <StackPanel Spacing="14">
+          <TextBlock Classes="h2" Text="{Binding Title}" TextWrapping="Wrap" />
+          <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+            <Button Content="{Binding CancelText}" Command="{Binding CancelCommand}" IsCancel="True" />
+            <Button Classes="primary" Classes.danger="{Binding IsDanger}" Content="{Binding OkText}" Command="{Binding OkCommand}" IsDefault="True" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Border>
+  </Grid>
+</UserControl>

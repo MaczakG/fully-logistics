@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Picking"
+             x:Class="Fully.Wms.Modules.Picking.NewWaveView"
+             x:DataType="local:NewWaveViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14">
+      <TextBlock TextWrapping="Wrap" Text="A rendszer a teljes készlettel rendelkező új rendelésekből állítja össze a hullámot: előbb az expressz, aztán a legrégebbi rendelések kerülnek bele." />
+      <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
+        <StackPanel Margin="0,0,8,10">
+          <TextBlock Classes="label" Text="Ügyfél" />
+          <ComboBox ItemsSource="{Binding Clients}" SelectedItem="{Binding Client}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="local:Choice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Margin="0,0,0,10">
+          <TextBlock Classes="label" Text="Fuvarozó" />
+          <ComboBox ItemsSource="{Binding Carriers}" SelectedItem="{Binding Carrier}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="local:Choice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Margin="0,0,8,10">
+          <TextBlock Classes="label" Text="Prioritás" />
+          <ComboBox ItemsSource="{x:Static local:NewWaveViewModel.Priorities}" SelectedItem="{Binding Priority}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="local:Choice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,10">
+          <TextBlock Classes="label" Text="Legfeljebb" />
+          <TextBox Text="{Binding Max}" Classes="num" TextInputOptions.ContentType="Digits" />
+          <TextBlock Classes="muted small" Text="rendelés egy hullámban" Margin="0,4,0,0" />
+        </StackPanel>
+        <StackPanel Grid.Row="2" Margin="0,0,8,0">
+          <TextBlock Classes="label" Text="Komissiós (nem kötelező)" />
+          <ComboBox ItemsSource="{Binding Users}" SelectedItem="{Binding Picker}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate><DataTemplate x:DataType="local:Choice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+      </Grid>
+      <Border Classes="notice" Classes.warn="{Binding PreviewTone, Converter={x:Static local:PickingFormat.IsWarn}}"
+              Classes.danger="{Binding PreviewTone, Converter={x:Static local:PickingFormat.IsDanger}}">
+        <StackPanel Spacing="4">
+          <TextBlock Text="{Binding Preview}" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <TextBlock Classes="small mono" Text="{Binding PreviewNumbers}" TextWrapping="Wrap" IsVisible="{Binding PreviewNumbers, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </StackPanel>
+      </Border>
+      <TextBlock Classes="error" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      <Button Classes="primary" HorizontalAlignment="Stretch" Command="{Binding SaveCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPicking}" /><TextBlock Text="Hullám indítása" /></StackPanel>
+      </Button>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

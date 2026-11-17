@@ -1,0 +1,56 @@
+/* Komissió: wave list, the hand-scanner wave screen, packing station, printed pick list. */
+.pk-root > *, .pk-screen > *, .pk-root .panel > * { min-width: 0; }
+.pk-listprogress { display: grid; gap: 0.25rem; min-width: 8rem; }
+
+/* ---------- Wave screen ---------- */
+.pk-screen { display: grid; gap: 1.25rem; }
+.pk-summary { gap: 0.75rem; }
+.pk-summary__bar { display: grid; gap: 0.5rem; }
+.pk-summary__bar progress { width: 100%; }
+.pk-summary__picker { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.pk-work { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
+.pk-work[hidden] { display: none; }
+.pk-feedback { min-height: 1.5rem; }
+.pk-feedback:empty { display: none; }
+.pk-task { display: grid; gap: 0.75rem; padding: 0.75rem; border: 1px solid var(--line); }
+.pk-task__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.pk-task__grid { display: grid; gap: 0.75rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr); }
+@media (max-width: 759.98px) { .pk-task__grid { grid-template-columns: minmax(0, 1fr); } }
+.pk-cell { display: grid; gap: 0.375rem; align-content: start; padding: 0.5rem; min-width: 0; border: 1px solid var(--line); }
+.pk-cell[data-state="current"] { outline: 2px solid; }
+.pk-cell[data-state="current"] .pk-label { font-weight: bold; }
+.pk-label { display: inline-flex; align-items: center; gap: 0.375rem; }
+.pk-stepno::after { content: "."; }
+.pk-big { overflow-wrap: anywhere; }
+.pk-mid { overflow-wrap: anywhere; }
+.pk-qty { display: grid; gap: 0.375rem; }
+.pk-qty__row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: stretch; }
+.pk-qty__row .btn--icon { min-width: 2.75rem; }
+.pk-qty__input { width: 7rem; min-height: 2.75rem; text-align: center; }
+.pk-qty__row .btn--primary { flex: 1 1 12rem; }
+.pk-task__actions { justify-content: flex-start; }
+
+/* ---------- Packing station ---------- */
+.pk-pack { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
+@media (max-width: 1099.98px) { .pk-pack { grid-template-columns: minmax(0, 1fr); } }
+.pk-pack__side { display: grid; gap: 1.25rem; min-width: 0; }
+.pk-cod { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border: 1px solid; }
+
+/* ---------- Printed pick list ---------- */
+.pk-print { display: none; }
+@media print {
+  .pk-screen { display: none !important; }
+  .pk-print { display: block; color: #000; }
+  .pk-print__head { margin-bottom: 4mm; }
+  .pk-print__head h1 { font-size: 16pt; }
+  .pk-print__head p { font-size: 9pt; }
+  .pk-print__table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+  .pk-print__table th, .pk-print__table td { padding: 1.5mm 2mm; border: 0.3mm solid #999; text-align: left; vertical-align: top; }
+  .pk-print__table th { background: #eee; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.04em; }
+  .pk-print__table tr { break-inside: avoid; }
+  .pk-print__table tr.pk-group td { border-top: 0.6mm solid #000; }
+  .pk-print__table .num { text-align: right; font-size: 11pt; }
+  .pk-box { width: 9mm; }
+  .pk-box::before { content: ""; display: block; width: 4.5mm; height: 4.5mm; border: 0.4mm solid #000; }
+  .pk-print__sign { margin-top: 10mm; font-size: 10pt; }
+}

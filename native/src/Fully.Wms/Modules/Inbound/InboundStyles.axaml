@@ -1,0 +1,91 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- The receiving screen (web app: .inb-*) -->
+  <Style Selector="Border.feedback">
+    <Setter Property="Padding" Value="12,10" />
+    <Setter Property="Background" Value="{DynamicResource InfoBg}" />
+    <Setter Property="BorderThickness" Value="4,0,0,0" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Info}" />
+  </Style>
+  <Style Selector="Border.feedback TextBlock">
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="Border.feedback.ok">
+    <Setter Property="Background" Value="{DynamicResource OkBg}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ok}" />
+  </Style>
+  <Style Selector="Border.feedback.warn">
+    <Setter Property="Background" Value="{DynamicResource WarnBg}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Warn}" />
+  </Style>
+  <Style Selector="Border.feedback.danger">
+    <Setter Property="Background" Value="{DynamicResource DangerBg}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Danger}" />
+  </Style>
+
+  <Style Selector="ToggleButton.mode">
+    <Setter Property="MinHeight" Value="48" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="BorderThickness" Value="0,0,0,4" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+    <Setter Property="Background" Value="{DynamicResource Panel}" />
+  </Style>
+  <Style Selector="ToggleButton.mode:checked /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Panel}" />
+    <Setter Property="BorderBrush" Value="{StaticResource HiVis}" />
+    <Setter Property="Foreground" Value="{DynamicResource Ink}" />
+  </Style>
+  <Style Selector="ToggleButton.mode:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource PanelAlt}" />
+    <Setter Property="Foreground" Value="{DynamicResource Ink}" />
+  </Style>
+
+  <Style Selector="Border.entry">
+    <Setter Property="Background" Value="{DynamicResource Panel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ink}" />
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="Padding" Value="14" />
+  </Style>
+  <Style Selector="Border.linecard">
+    <Setter Property="Background" Value="{DynamicResource Panel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+    <Setter Property="BorderThickness" Value="1,1,1,1" />
+    <Setter Property="Padding" Value="12" />
+    <Setter Property="Margin" Value="0,0,0,8" />
+  </Style>
+  <Style Selector="Border.linecard.active">
+    <Setter Property="BorderBrush" Value="{StaticResource HiVis}" />
+    <Setter Property="BorderThickness" Value="3" />
+  </Style>
+  <Style Selector="Border.linecard.done">
+    <Setter Property="BorderBrush" Value="{DynamicResource Ok}" />
+  </Style>
+  <Style Selector="TextBlock.sku">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="FontSize" Value="16" />
+  </Style>
+  <Style Selector="ProgressBar.line">
+    <Setter Property="Height" Value="6" />
+    <Setter Property="MinHeight" Value="6" />
+    <Setter Property="Minimum" Value="0" />
+    <Setter Property="Maximum" Value="1" />
+    <Setter Property="Foreground" Value="{StaticResource HiVis}" />
+    <Setter Property="Background" Value="{DynamicResource PanelAlt}" />
+    <Setter Property="CornerRadius" Value="0" />
+  </Style>
+  <Style Selector="ProgressBar.line.done">
+    <Setter Property="Foreground" Value="{DynamicResource Ok}" />
+  </Style>
+  <Style Selector="TextBox.qty">
+    <Setter Property="FontSize" Value="26" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="MinHeight" Value="56" />
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="TextAlignment" Value="Right" />
+  </Style>
+</Styles>

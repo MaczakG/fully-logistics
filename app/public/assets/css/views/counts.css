@@ -1,0 +1,66 @@
+/* counts view styles (Leltár). Layout only; prefix cnt-. */
+
+/* Create dialog: type specific groups are toggled with [hidden] (form-grid sets display). */
+fieldset[data-for][hidden] { display: none; }
+.cnt-chosen { display: grid; gap: 0.25rem; }
+.cnt-chosen li { display: flex; align-items: center; gap: 0.5rem; }
+.cnt-chosen li .btn { margin-left: auto; }
+
+/* List */
+.cnt-scope { max-width: 22rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cnt-col-progress { min-width: 9rem; }
+.cnt-progress { display: grid; gap: 0.25rem; min-width: 0; }
+
+/* Lines grouped by location */
+.cnt-lines .cnt-group th { text-align: left; }
+.cnt-lines .cnt-group .chip { margin-left: 0.375rem; }
+.cnt-group__in { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+
+/* Counting screen (hand scanner) */
+.cnt-count { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; max-width: 52rem; }
+.cnt-loc, .cnt-next { grid-template-columns: minmax(0, 1fr); }
+.cnt-feedback { min-height: 1.5rem; }
+.cnt-feedback:empty { min-height: 0; }
+.cnt-loc__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+
+.cnt-loc__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.cnt-loc__actions .btn--primary { flex: 1 1 12rem; }
+.cnt-next { justify-items: start; }
+.cnt-lines-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+.cnt-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.5rem; border: 1px solid var(--line); }
+
+.cnt-line__info { display: grid; gap: 0.125rem; min-width: 0; flex: 1 1 14rem; }
+.cnt-line__name { overflow-wrap: anywhere; }
+.cnt-line__qty { display: flex; align-items: center; gap: 0.375rem; min-width: 0; }
+.cnt-line__qty .btn--icon { min-width: 2.75rem; min-height: 2.75rem; }
+.cnt-qty { width: 6rem; min-width: 0; min-height: 2.75rem; }
+.cnt-locs { display: grid; gap: 0.5rem; }
+.cnt-locs ul { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.cnt-locbtn { min-height: 2.5rem; }
+.cnt-locbtn[aria-current="true"] { font-weight: bold; }
+
+.cnt-choose { display: grid; gap: 0.5rem; }
+
+/* Count sheet (print) */
+.cnt-sheet { display: grid; gap: 1rem; }
+.cnt-sheet__head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; }
+
+.cnt-sheet__box { width: 6.5rem; }
+.cnt-sheet__blank td { height: 2rem; }
+.cnt-sheet__loc { break-inside: avoid; }
+.cnt-sheet__sign { display: flex; flex-wrap: wrap; gap: 1rem 2rem; padding-top: 1.5rem; }
+.cnt-sheet__sign p { display: flex; align-items: flex-end; gap: 0.5rem; flex: 1 1 12rem; }
+.cnt-sheet__sign span { flex: 1; min-height: 1.25rem; border-bottom: 1px solid; }
+
+@media (max-width: 479.98px) {
+  .cnt-line__qty { width: 100%; }
+  .cnt-qty { flex: 1 1 0; width: 0; }
+  .cnt-loc__actions .btn { flex: 1 1 100%; }
+}
+
+@media print {
+  .cnt-sheet { padding: 0; border: 0; background: #fff; }
+  .cnt-sheet__table { font-size: 10pt; }
+  .cnt-sheet__table td, .cnt-sheet__table th { border-color: #777; padding: 0.3rem 0.4rem; }
+  .cnt-row--surplus td, .cnt-row--shortage td { background: #fff; }
+}

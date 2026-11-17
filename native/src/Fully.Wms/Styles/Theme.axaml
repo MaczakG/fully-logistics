@@ -1,0 +1,64 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- The colours of the web app (app/public/assets/css/app.css :root): hi-vis yellow on dark ink,
+       grey paper, square corners. Light and dark follow the system unless chosen in Beállítások. -->
+  <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Light">
+      <SolidColorBrush x:Key="Paper" Color="#E7E9EB" />
+      <SolidColorBrush x:Key="Panel" Color="#F4F5F6" />
+      <SolidColorBrush x:Key="PanelAlt" Color="#DADDE0" />
+      <SolidColorBrush x:Key="Ink" Color="#121518" />
+      <SolidColorBrush x:Key="Ink2" Color="#3A4046" />
+      <SolidColorBrush x:Key="Ink3" Color="#59616A" />
+      <SolidColorBrush x:Key="Line" Color="#BEC3C8" />
+      <SolidColorBrush x:Key="LineStrong" Color="#8E959C" />
+      <SolidColorBrush x:Key="RowHover" Color="#ECEEF0" />
+      <SolidColorBrush x:Key="Ok" Color="#1D6B3F" />
+      <SolidColorBrush x:Key="OkBg" Color="#DCEFE3" />
+      <SolidColorBrush x:Key="Warn" Color="#8A4A0B" />
+      <SolidColorBrush x:Key="WarnBg" Color="#F6E6CF" />
+      <SolidColorBrush x:Key="Danger" Color="#B42318" />
+      <SolidColorBrush x:Key="DangerBg" Color="#F8DEDA" />
+      <SolidColorBrush x:Key="Info" Color="#1F4F86" />
+      <SolidColorBrush x:Key="InfoBg" Color="#DDE7F3" />
+      <SolidColorBrush x:Key="Focus" Color="#121518" />
+    </ResourceDictionary>
+    <ResourceDictionary x:Key="Dark">
+      <SolidColorBrush x:Key="Paper" Color="#0E1012" />
+      <SolidColorBrush x:Key="Panel" Color="#14171A" />
+      <SolidColorBrush x:Key="PanelAlt" Color="#191D21" />
+      <SolidColorBrush x:Key="Ink" Color="#ECEEF0" />
+      <SolidColorBrush x:Key="Ink2" Color="#B7BDC4" />
+      <SolidColorBrush x:Key="Ink3" Color="#8C949C" />
+      <SolidColorBrush x:Key="Line" Color="#2A3036" />
+      <SolidColorBrush x:Key="LineStrong" Color="#4A535C" />
+      <SolidColorBrush x:Key="RowHover" Color="#1A1E22" />
+      <SolidColorBrush x:Key="Ok" Color="#6FD39B" />
+      <SolidColorBrush x:Key="OkBg" Color="#12291C" />
+      <SolidColorBrush x:Key="Warn" Color="#F2B26B" />
+      <SolidColorBrush x:Key="WarnBg" Color="#2C1F10" />
+      <SolidColorBrush x:Key="Danger" Color="#FF9C92" />
+      <SolidColorBrush x:Key="DangerBg" Color="#331613" />
+      <SolidColorBrush x:Key="Info" Color="#8DB8EC" />
+      <SolidColorBrush x:Key="InfoBg" Color="#13202F" />
+      <SolidColorBrush x:Key="Focus" Color="#F1CC58" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+
+  <!-- The same in both themes -->
+  <SolidColorBrush x:Key="HiVis" Color="#E8BE3C" />
+  <SolidColorBrush x:Key="HiVisHover" Color="#F1CC58" />
+  <SolidColorBrush x:Key="HiVisPress" Color="#D2A929" />
+  <SolidColorBrush x:Key="OnHiVis" Color="#121518" />
+  <SolidColorBrush x:Key="InkFixed" Color="#121518" />
+  <SolidColorBrush x:Key="InkFixed2" Color="#1C2126" />
+  <SolidColorBrush x:Key="InkFixed3" Color="#2A3037" />
+  <SolidColorBrush x:Key="PaperFixed" Color="#F4F5F6" />
+  <SolidColorBrush x:Key="PaperFixed2" Color="#B7BDC4" />
+
+  <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas, Menlo, SF Mono, DejaVu Sans Mono, monospace</FontFamily>
+
+  <!-- Fluent theme: square corners everywhere -->
+  <CornerRadius x:Key="ControlCornerRadius">0</CornerRadius>
+  <CornerRadius x:Key="OverlayCornerRadius">0</CornerRadius>
+</ResourceDictionary>

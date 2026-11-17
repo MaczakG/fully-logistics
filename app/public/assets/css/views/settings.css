@@ -1,0 +1,61 @@
+/* Beállítások view: forms, location list with bulk actions, tariff tables, integration cards, logs.
+   Layout only. */
+
+/* ---------- shared ---------- */
+/* Wrappers that receive a table: as grid items they must not take the table's width, the
+   .table-wrap inside scrolls instead. */
+.slot { min-width: 0; }
+.panel .form h2:not(:first-of-type) { margin-top: 0.75rem; }
+.panel h3 { margin-top: 0.5rem; }
+.stack { display: grid; gap: 1.25rem; align-content: start; min-width: 0; }
+.check-row { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; padding: 0.25rem 0; }
+.set-sub { margin-top: 0.5rem; }
+.cost-sizes .input { max-width: 7.5rem; }
+.field > legend.field__label { margin-bottom: 0.375rem; }
+fieldset[disabled] .check, fieldset[disabled] .choice { cursor: not-allowed; }
+
+/* ---------- filters and the bulk bar ---------- */
+.loc-filters .field { min-width: 8.5rem; flex: 1 1 8.5rem; }
+.loc-filters .field--grow, .log-filters .field--grow { flex: 2 1 14rem; }
+.log-filters .field { min-width: 9rem; flex: 1 1 9rem; }
+.bulkbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.875rem; padding: 0.5rem; border: 1px solid var(--line); }
+.bulkbar--hint { display: flex; gap: 0.5rem; border: 0; padding: 0; }
+.bulkbar__spacer { flex: 1; }
+.row-actions { display: inline-flex; gap: 0.25rem; }
+.table .w-actions { width: 1%; white-space: nowrap; }
+.loc-note { max-width: 16rem; overflow-wrap: anywhere; }
+.loc-table .loc-partner { min-width: 11rem; }
+/* location dialog */
+.loc-stock > summary { padding: 0.25rem 0; cursor: pointer; }
+.danger-zone { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--line); }
+/* bulk create preview */
+.code-preview { display: grid; gap: 0.5rem; padding: 0.5rem; min-height: 4rem; border: 1px solid var(--line); }
+.code-list { display: flex; flex-wrap: wrap; gap: 0.375rem; max-height: 9.5rem; overflow-y: auto; }
+
+/* ---------- tariffs ---------- */
+.tariff-table td { vertical-align: middle; }
+.tariff-table td.r { width: 9.5rem; }
+.tariff-table .field { gap: 0.125rem; }
+.tariff-table tbody tr.group td { font-weight: bold; }
+.tariffs > .form-actions { margin-top: 1rem; }
+
+/* ---------- integrations ---------- */
+.courier-card .dl { grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr); }
+.feature-list { display: flex; flex-wrap: wrap; gap: 0.375rem 1rem; }
+.feature-list li { display: inline-flex; align-items: center; gap: 0.25rem; }
+.choice-row { display: grid; gap: 0.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
+.choice { display: flex; gap: 0.5rem; align-items: center; padding: 0.5rem; border: 1px solid var(--line); cursor: pointer; }
+.choice span { display: grid; gap: 0.125rem; }
+.choice input { flex: none; }
+
+/* ---------- logs ---------- */
+.seg { display: inline-flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; justify-self: start; max-width: 100%; }
+.seg a { display: inline-flex; align-items: center; gap: 0.375rem; }
+.seg a[aria-current="page"] { font-weight: bold; }
+.log-msg { max-width: 28rem; overflow-wrap: anywhere; }
+.log-table .link-btn { text-align: left; }
+.log-filters .field:has(input[type="date"]) { flex: 0 1 11rem; }
+.json { margin: 0; max-height: 20rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .bulkbar__spacer { display: none; }
+}

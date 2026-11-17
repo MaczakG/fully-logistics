@@ -1,0 +1,390 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Quotes"
+             xmlns:o="using:Fully.Wms.Modules.Orders"
+             xmlns:p="using:Fully.Wms.Modules.Partners"
+             xmlns:ctl="using:Fully.Wms.Controls"
+             x:Class="Fully.Wms.Modules.Quotes.QuoteView"
+             x:DataType="local:QuoteViewModel">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Fully.Wms/Modules/Orders/OrdersStyles.axaml" />
+    <Style Selector="Expander">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="Margin" Value="0,0,0,10" />
+    </Style>
+    <Style Selector="Border.costbox">
+      <Setter Property="Background" Value="{DynamicResource Panel}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="12,10" />
+      <Setter Property="Margin" Value="0,0,0,10" />
+    </Style>
+  </UserControl.Styles>
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCommand}" />
+  </UserControl.KeyBindings>
+  <UserControl.DataTemplates>
+    <!-- One form field: the label (with the size code), the box, the hint. -->
+    <DataTemplate DataType="local:QuoteField">
+      <StackPanel Margin="0,0,8,8">
+        <Grid ColumnDefinitions="Auto,*">
+          <Border Classes="tag" IsVisible="{Binding HasTag}" VerticalAlignment="Center" Margin="0,0,6,0"><TextBlock Text="{Binding Tag}" /></Border>
+          <TextBlock Grid.Column="1" Classes="label" Text="{Binding Label}" TextWrapping="Wrap" />
+        </Grid>
+        <TextBox Text="{Binding Text}" Classes.num="{Binding IsNumber}" IsReadOnly="{Binding ReadOnly}" />
+        <TextBlock Classes="muted small" Text="{Binding Hint}" IsVisible="{Binding HasHint}" TextWrapping="Wrap" Margin="0,4,0,0" />
+      </StackPanel>
+    </DataTemplate>
+  </UserControl.DataTemplates>
+
+  <DockPanel>
+    <!-- Head: number, status, client, who made it; print, copy, delete, save -->
+    <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,0,1" Padding="16,12">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Classes="h2" Text="{Binding Title}" VerticalAlignment="Center" />
+            <ctl:StatusTag Group="quote" Status="{Binding Status.Key, FallbackValue=''}" VerticalAlignment="Center" />
+            <Border Classes="tag warn" IsVisible="{Binding Dirty}" VerticalAlignment="Center"><TextBlock Text="Nem mentett változások" /></Border>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="{Binding ClientText}" FontWeight="SemiBold" />
+            <TextBlock Classes="muted small" Text="{Binding CreatedByName, StringFormat='· készítette {0}'}" VerticalAlignment="Center"
+                       IsVisible="{Binding CreatedByName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          </StackPanel>
+        </StackPanel>
+        <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+          <Button Command="{Binding PrintCommand}" Margin="0,0,8,0">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPrinter}" /><TextBlock Text="Nyomtatás / PDF" /></StackPanel>
+          </Button>
+          <Button Command="{Binding DuplicateCommand}" IsVisible="{Binding CanDuplicate}" Margin="0,0,8,0">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCopy}" /><TextBlock Text="Másolat" /></StackPanel>
+          </Button>
+          <Button Classes="danger" Command="{Binding DeleteCommand}" IsVisible="{Binding CanDelete}" Margin="0,0,8,0">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconTrash}" /><TextBlock Text="Törlés" /></StackPanel>
+          </Button>
+          <Button Classes="primary" Command="{Binding SaveCommand}" IsVisible="{Binding CanSave}" ToolTip.Tip="Ctrl+S">
+            <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconCheck}" /><TextBlock Text="Mentés" /></StackPanel>
+          </Button>
+        </WrapPanel>
+      </Grid>
+    </Border>
+
+    <Grid ColumnDefinitions="5*,6*">
+      <!-- The form -->
+      <ScrollViewer>
+        <StackPanel Margin="16" MinWidth="420">
+          <Border Classes="notice" IsVisible="{Binding ReadOnly}" Margin="0,0,0,10">
+            <TextBlock Text="Ezt az ajánlatot csak megtekintheted: a módosításhoz Ajánlatkészítő módosítása jog kell." />
+          </Border>
+
+          <Expander Header="Ügyfél és ajánlat" IsExpanded="True">
+            <StackPanel>
+              <TextBlock Classes="label" Text="Ügyfél a partnerek közül (nem kötelező)" />
+              <ComboBox ItemsSource="{Binding Clients}" SelectedItem="{Binding Partner}" HorizontalAlignment="Stretch" IsEnabled="{Binding CanSave}">
+                <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+              </ComboBox>
+              <WrapPanel Margin="0,6,0,10" IsVisible="{Binding CanSave}">
+                <Button Command="{Binding LoadClientCommand}" IsEnabled="{Binding HasPartner}" Margin="0,0,8,4">
+                  <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconUser}" /><TextBlock Text="Ügyféladatok betöltése" /></StackPanel>
+                </Button>
+                <Button Command="{Binding LoadTariffsCommand}" IsEnabled="{Binding HasPartner}" Margin="0,0,0,4">
+                  <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconBilling}" /><TextBlock Text="Partner tarifáinak betöltése" /></StackPanel>
+                </Button>
+              </WrapPanel>
+              <ItemsControl ItemsSource="{Binding ClientFields}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+              </ItemsControl>
+              <ctl:ColumnsPanel Columns="3">
+                <StackPanel Margin="0,0,8,8">
+                  <TextBlock Classes="label" Text="Kelte" />
+                  <CalendarDatePicker SelectedDate="{Binding OfferDate}" HorizontalAlignment="Stretch" IsEnabled="{Binding CanSave}" />
+                </StackPanel>
+                <ContentControl Content="{Binding ValidDays}" />
+                <StackPanel Margin="0,0,8,8">
+                  <TextBlock Classes="label" Text="Állapot" />
+                  <ComboBox ItemsSource="{Binding StatusChoices}" SelectedItem="{Binding Status}" HorizontalAlignment="Stretch" IsEnabled="{Binding CanSave}">
+                    <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
+              </ctl:ColumnsPanel>
+            </StackPanel>
+          </Expander>
+
+          <Expander Header="Havi forgalom" IsExpanded="True">
+            <ItemsControl ItemsSource="{Binding VolumeFields}">
+              <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            </ItemsControl>
+          </Expander>
+
+          <Expander Header="Kedvezmények" IsExpanded="True">
+            <StackPanel>
+              <ItemsControl ItemsSource="{Binding DiscountFields}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+              </ItemsControl>
+              <TextBlock Classes="muted small" TextWrapping="Wrap"
+                         Text="A beköltözési készletnél megadott darabszámig az ingyenes betárolás egyszeri kedvezményként szerepel az ajánlatban." />
+            </StackPanel>
+          </Expander>
+
+          <Expander Header="Tarifák (nettó)">
+            <StackPanel>
+              <WrapPanel IsVisible="{Binding CanSave}">
+                <Button Command="{Binding DefaultTariffsCommand}" Margin="0,0,8,4">
+                  <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconRefresh}" /><TextBlock Text="Alapértelmezett tarifák" /></StackPanel>
+                </Button>
+                <Button Command="{Binding LoadTariffsCommand}" IsEnabled="{Binding HasPartner}" Margin="0,0,0,4">
+                  <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconBilling}" /><TextBlock Text="Partner tarifáinak betöltése" /></StackPanel>
+                </Button>
+              </WrapPanel>
+              <TextBlock Classes="muted small" Text="{Binding TariffSource, StringFormat='Kiindulás: {0}.'}" Margin="0,4,0,0"
+                         IsVisible="{Binding TariffSource, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              <ItemsControl ItemsSource="{Binding TariffGroups}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="local:QuoteFieldGroup">
+                    <StackPanel>
+                      <TextBlock Classes="section" Text="{Binding Label}" Margin="0,10,0,6" />
+                      <ItemsControl ItemsSource="{Binding Fields}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                      </ItemsControl>
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Expander>
+
+          <Expander>
+            <Expander.Header>
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="Egyedi tételek" />
+                <TextBlock Classes="muted" Text="{Binding CustomCount}" />
+              </StackPanel>
+            </Expander.Header>
+            <StackPanel Spacing="8">
+              <TextBlock Classes="muted small" TextWrapping="Wrap" IsVisible="{Binding NoCustomItems}"
+                         Text="Nincs egyedi tétel. Partner tarifáinak betöltésekor az ügyfél egyedi tételei is ide kerülnek." />
+              <ItemsControl ItemsSource="{Binding CustomItems}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="local:CustomItemRow">
+                    <Border Classes="panel" Margin="0,0,0,8">
+                      <Grid ColumnDefinitions="*,Auto">
+                        <ctl:ColumnsPanel Columns="2">
+                          <ContentControl Content="{Binding Name}" />
+                          <StackPanel Margin="0,0,8,8">
+                            <TextBlock Classes="label" Text="Típus" />
+                            <ComboBox ItemsSource="{x:Static local:CustomItemRow.Kinds}" SelectedItem="{Binding Kind}" HorizontalAlignment="Stretch" IsEnabled="{Binding CanEdit}">
+                              <ComboBox.ItemTemplate><DataTemplate x:DataType="o:OrderChoice"><TextBlock Text="{Binding Label}" /></DataTemplate></ComboBox.ItemTemplate>
+                            </ComboBox>
+                          </StackPanel>
+                          <ContentControl Content="{Binding Unit}" />
+                          <ContentControl Content="{Binding Price}" />
+                          <ContentControl Content="{Binding Qty}" />
+                        </ctl:ColumnsPanel>
+                        <Button Grid.Column="1" Classes="ghost" Command="{Binding RemoveCommand}" IsVisible="{Binding CanEdit}" VerticalAlignment="Top"
+                                ToolTip.Tip="Tétel törlése"><PathIcon Data="{StaticResource IconTrash}" /></Button>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <Button Command="{Binding AddItemCommand}" IsVisible="{Binding CanSave}" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconPlus}" /><TextBlock Text="Tétel hozzáadása" /></StackPanel>
+              </Button>
+            </StackPanel>
+          </Expander>
+
+          <Expander Header="Saját cégadatok">
+            <StackPanel Spacing="6">
+              <TextBlock Text="{Binding CompanyName}" FontWeight="Bold" />
+              <ItemsControl ItemsSource="{Binding CompanyLines}">
+                <ItemsControl.ItemTemplate><DataTemplate x:DataType="x:String"><TextBlock Classes="small" Text="{Binding}" /></DataTemplate></ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Classes="muted small" Text="{Binding CompanyNote}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                <Button Classes="link" Content="Beállítások megnyitása" Command="{Binding OpenSettingsCommand}" IsVisible="{Binding CanSeeSettings}" />
+              </StackPanel>
+              <ContentControl Content="{Binding Signer}" />
+            </StackPanel>
+          </Expander>
+
+          <Expander Header="Feltételek (az ajánlatban megjelenő pontok)">
+            <StackPanel Spacing="6">
+              <TextBlock Classes="label" Text="Soronként egy pont" />
+              <TextBox Text="{Binding TermsText}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="160" IsReadOnly="{Binding ReadOnly}" />
+              <Button Command="{Binding DefaultTermsCommand}" IsVisible="{Binding CanSave}" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconRefresh}" /><TextBlock Text="Alapértelmezett feltételek" /></StackPanel>
+              </Button>
+            </StackPanel>
+          </Expander>
+
+          <!-- Internal costing, never printed -->
+          <Border Classes="panel" Margin="0,6,0,0">
+            <StackPanel Spacing="10">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <PathIcon Data="{StaticResource IconLock}" />
+                <TextBlock Classes="section" Text="Belső fedezetszámítás" VerticalAlignment="Center" />
+                <TextBlock Classes="muted small" Text="(nem kerül az ajánlatba)" VerticalAlignment="Center" />
+              </StackPanel>
+              <Border Classes="notice warn" IsVisible="{Binding Costing.HasWarning, FallbackValue=False}">
+                <TextBlock Text="{Binding Costing.Warning, FallbackValue=''}" />
+              </Border>
+              <ItemsControl ItemsSource="{Binding Costing.Kpis, FallbackValue={x:Null}}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="local:CostKpi">
+                    <Border Classes="kpi" Classes.ok="{Binding Tone, Converter={x:Static p:PartnerFormat.IsOk}}"
+                            Classes.danger="{Binding Tone, Converter={x:Static p:PartnerFormat.IsDanger}}">
+                      <StackPanel>
+                        <TextBlock Classes="kpilabel" Text="{Binding Label}" TextWrapping="Wrap" />
+                        <TextBlock Classes="kpivalue" Text="{Binding Value}" FontSize="20" />
+                        <TextBlock Classes="kpihint" Text="{Binding Hint}" IsVisible="{Binding HasHint}" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <Border Classes="costbox">
+                <StackPanel Spacing="6">
+                  <TextBlock Classes="section" Text="Munkaerő" />
+                  <ItemsControl ItemsSource="{Binding Costing.Work, FallbackValue={x:Null}}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="local:CostRow">
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,6">
+                          <StackPanel>
+                            <TextBlock Text="{Binding Name}" />
+                            <ItemsControl ItemsSource="{Binding Notes}">
+                              <ItemsControl.ItemTemplate><DataTemplate x:DataType="x:String"><TextBlock Classes="muted small" Text="{Binding}" TextWrapping="Wrap" /></DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                          </StackPanel>
+                          <TextBlock Grid.Column="1" Classes="mono" Text="{Binding Value}" FontWeight="Bold" Margin="8,0,0,0" />
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <Border BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="0,6,0,0">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Classes="small" Text="{Binding Costing.WorkTotalText, FallbackValue=''}" TextWrapping="Wrap" />
+                      <TextBlock Grid.Column="1" Classes="mono" Text="{Binding Costing.WorkTotal, FallbackValue=''}" FontWeight="Bold" Margin="8,0,0,0" />
+                    </Grid>
+                  </Border>
+                </StackPanel>
+              </Border>
+
+              <Border Classes="costbox">
+                <StackPanel Spacing="6">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Classes="section" Text="Tárolás és bérleti díj" />
+                    <TextBlock Classes="muted small" Text="{Binding Costing.RentHead, FallbackValue=''}" VerticalAlignment="Center" />
+                  </StackPanel>
+                  <TextBlock Classes="muted small" Text="Az ajánlatban nincs tárolóhely." IsVisible="{Binding !Costing.HasSizes, FallbackValue=False}" />
+                  <ItemsControl ItemsSource="{Binding Costing.Sizes, FallbackValue={x:Null}}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="local:CostRow">
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,6">
+                          <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                              <Border Classes="tag" IsVisible="{Binding HasTag}"><TextBlock Text="{Binding Tag}" /></Border>
+                              <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <ItemsControl ItemsSource="{Binding Notes}">
+                              <ItemsControl.ItemTemplate><DataTemplate x:DataType="x:String"><TextBlock Classes="muted small" Text="{Binding}" TextWrapping="Wrap" /></DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Classes="small neg" Text="{Binding Warn}" IsVisible="{Binding HasWarn}" TextWrapping="Wrap" />
+                          </StackPanel>
+                          <TextBlock Grid.Column="1" Classes="mono" Text="{Binding Value}" FontWeight="Bold" Margin="8,0,0,0" />
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <Border BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="0,6,0,0">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Classes="small" Text="{Binding Costing.StorageTotalText, FallbackValue=''}" TextWrapping="Wrap" />
+                      <TextBlock Grid.Column="1" Classes="mono" Text="{Binding Costing.StorageTotal, FallbackValue=''}" FontWeight="Bold" Margin="8,0,0,0" />
+                    </Grid>
+                  </Border>
+                </StackPanel>
+              </Border>
+
+              <Border Classes="costbox">
+                <StackPanel Spacing="6">
+                  <TextBlock Classes="section" Text="Havi összesítés" />
+                  <ItemsControl ItemsSource="{Binding Costing.Summary, FallbackValue={x:Null}}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="local:CostRow">
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,6">
+                          <StackPanel>
+                            <TextBlock Text="{Binding Name}" />
+                            <ItemsControl ItemsSource="{Binding Notes}">
+                              <ItemsControl.ItemTemplate><DataTemplate x:DataType="x:String"><TextBlock Classes="muted small" Text="{Binding}" /></DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                          </StackPanel>
+                          <TextBlock Grid.Column="1" Classes="mono" Text="{Binding Value}" FontWeight="Bold" Margin="8,0,0,0" />
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <Border BorderBrush="{DynamicResource Ink}" BorderThickness="0,2,0,0" Padding="0,6,0,0">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Text="Fedezet (profit)" FontWeight="Bold" />
+                      <TextBlock Grid.Column="1" Classes="mono" Text="{Binding Costing.Margin, FallbackValue=''}" FontWeight="Bold"
+                                 Classes.neg="{Binding Costing.MarginNegative, FallbackValue=False}" />
+                    </Grid>
+                  </Border>
+                </StackPanel>
+              </Border>
+              <TextBlock Classes="muted small" Text="{Binding Costing.MoveIn, FallbackValue=''}" TextWrapping="Wrap" IsVisible="{Binding Costing.HasMoveIn, FallbackValue=False}" />
+
+              <Expander Header="Feltételezések ennél az ajánlatnál" Margin="0">
+                <StackPanel Spacing="6">
+                  <TextBlock Classes="muted small" TextWrapping="Wrap"
+                             Text="Új ajánlatnál a Beállítások > Raktár > Költségkalkuláció értékei. Itt átírhatod őket, a módosítás csak erre az ajánlatra vonatkozik." />
+                  <TextBlock Classes="section" Text="Raktár" />
+                  <ItemsControl ItemsSource="{Binding PlaceFields}">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                  </ItemsControl>
+                  <TextBlock Classes="muted small" TextWrapping="Wrap"
+                             Text="Állványok méretenként: egy állványrekesz alapterülete a folyosó rá eső részével, a szintek száma, és hány hely van egy szinten. Egy hely helyigénye: alapterület / (szintek × hely szintenként)." />
+                  <ItemsControl ItemsSource="{Binding Racks}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="local:QuoteRackRow">
+                        <StackPanel Margin="0,4,0,0">
+                          <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,4">
+                            <Border Classes="tag"><TextBlock Text="{Binding Code}" /></Border>
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                          </StackPanel>
+                          <ItemsControl ItemsSource="{Binding Fields}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="3" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                          </ItemsControl>
+                        </StackPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <TextBlock Classes="section" Text="Munkaerő" />
+                  <ItemsControl ItemsSource="{Binding WorkFields}">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                  </ItemsControl>
+                  <TextBlock Classes="section" Text="Anyag" />
+                  <ItemsControl ItemsSource="{Binding MaterialFields}">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><ctl:ColumnsPanel Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                  </ItemsControl>
+                  <Button Command="{Binding DefaultCostingCommand}" IsVisible="{Binding CanSave}" HorizontalAlignment="Left">
+                    <StackPanel Orientation="Horizontal" Spacing="8"><PathIcon Data="{StaticResource IconRefresh}" /><TextBlock Text="Beállítások értékeinek betöltése" /></StackPanel>
+                  </Button>
+                </StackPanel>
+              </Expander>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- The paper -->
+      <Border Grid.Column="1" Background="{DynamicResource Paper}" BorderBrush="{DynamicResource Line}" BorderThickness="1,0,0,0">
+        <ScrollViewer>
+          <local:QuotePaperView DataContext="{Binding Paper}" Margin="20" IsVisible="{Binding $parent[local:QuoteView].((local:QuoteViewModel)DataContext).Paper, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </ScrollViewer>
+      </Border>
+    </Grid>
+  </DockPanel>
+</UserControl>

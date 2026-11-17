@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Fully.Wms.Modules.Inbound"
+             x:Class="Fully.Wms.Modules.Inbound.InboundLineEditView"
+             x:DataType="local:InboundLineEditViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14" MaxWidth="520" HorizontalAlignment="Stretch">
+      <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding Info}" />
+      <Grid ColumnDefinitions="*,*">
+        <StackPanel Margin="0,0,8,0">
+          <TextBlock Classes="label" Text="Átvett összesen" />
+          <TextBox Text="{Binding Received}" Classes="num" TextInputOptions.ContentType="Digits" />
+          <TextBlock Classes="muted small" Text="A sérült darabokkal együtt." />
+        </StackPanel>
+        <StackPanel Grid.Column="1">
+          <TextBlock Classes="label" Text="Ebből sérült" />
+          <TextBox Text="{Binding Damaged}" Classes="num" TextInputOptions.ContentType="Digits" />
+        </StackPanel>
+      </Grid>
+      <StackPanel IsVisible="{Binding CanTrack}">
+        <TextBlock Classes="label" Text="Sarzs" />
+        <TextBox Text="{Binding Lot}" Classes="mono" />
+      </StackPanel>
+      <StackPanel IsVisible="{Binding CanTrack}">
+        <TextBlock Classes="label" Text="Lejárat (ÉÉÉÉ-HH-NN)" />
+        <TextBox Text="{Binding Expiry}" Classes="mono" Watermark="2027-03-31" />
+      </StackPanel>
+      <StackPanel>
+        <TextBlock Classes="label" Text="Megjegyzés (nem kötelező)" />
+        <TextBox Text="{Binding Note}" />
+      </StackPanel>
+      <TextBlock Classes="error" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      <Button Classes="primary" HorizontalAlignment="Stretch" Content="Mentés" Command="{Binding SaveCommand}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

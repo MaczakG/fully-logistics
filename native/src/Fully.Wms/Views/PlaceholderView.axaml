@@ -1,0 +1,9 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Fully.Wms.ViewModels"
+             x:Class="Fully.Wms.Views.PlaceholderView"
+             x:DataType="vm:PlaceholderViewModel">
+  <Border Classes="notice" Margin="16" VerticalAlignment="Top">
+    <TextBlock Text="Ez a modul hamarosan elkészül az alkalmazásban." />
+  </Border>
+</UserControl>
