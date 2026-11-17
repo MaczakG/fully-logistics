@@ -7,7 +7,7 @@ namespace Fully.Wms.Core;
 // app's own Library folder, set by the iOS app).
 public sealed class AppSettings
 {
-    public const string DefaultServer = "https://3-71-236-97.sslip.io";
+    public const string DefaultServer = "https://app.fully.hu";
 
     public string Server { get; set; } = DefaultServer;
     public string? Email { get; set; }
@@ -28,7 +28,7 @@ public sealed class SettingsStore
 
     // Earlier default addresses of the server. The server has moved since, so a device that still
     // has one of them follows it (signed out: the old session belonged to the old server).
-    static readonly string[] OldServers = ["https://18-185-119-189.sslip.io"];
+    static readonly string[] OldServers = ["https://18-185-119-189.sslip.io", "https://3-71-236-97.sslip.io"];
 
     public SettingsStore(string? folder = null)
     {
