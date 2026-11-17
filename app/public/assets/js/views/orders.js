@@ -265,7 +265,6 @@
           <button class="btn" type="button" data-action="import">${FL.icon('upload-simple')}CSV import</button>
           <button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új rendelés</button>` : '',
       })}
-      <div data-kpis></div>
       <div data-tabs></div>
       <form class="toolbar" data-filters role="search">
         <div class="field field--grow"><label for="ol-q">Keresés</label>
@@ -274,7 +273,7 @@
         ${ui.field({ name: 'carrier_id', label: 'Fuvarozó', type: 'select', options: carriers, placeholder: 'Mind', value: state.carrier_id })}
         ${ui.field({ name: 'priority', label: 'Prioritás', type: 'select', options: [['express', 'Expressz'], ['normal', 'Normál']], placeholder: 'Mind', value: state.priority })}
         ${ui.field({ name: 'availability', label: 'Készlet', type: 'select', options: [['ok', 'Teljesíthető'], ['short', 'Hiányos']], placeholder: 'Mind', value: state.availability })}
-        <button class="btn btn--ghost" type="button" data-action="clear">${FL.icon('x')}Szűrők törlése</button>
+        ${ui.searchButtons({ action: 'clear' })}
       </form>
       <div class="ol-selbar" data-selbar hidden></div>
       <div data-table>${ui.loading()}</div>`);
@@ -288,15 +287,6 @@
       rows = data.items;
       sel.set.clear();
       const k = data.kpis;
-      const link = (extra) => `${FL.routes.orders}${FL.qs({ partner_id: state.partner_id, carrier_id: state.carrier_id, ...extra })}`;
-      root.querySelector('[data-kpis]').innerHTML = String(ui.kpis([
-        { label: 'Új', value: fmt.int(k.new), href: link({ status: 'new' }) },
-        { label: 'Teljesíthető', value: fmt.int(k.fulfillable), hint: 'új, teljes készlettel', tone: 'ok', href: link({ status: 'new', availability: 'ok' }) },
-        { label: 'Expressz', value: fmt.int(k.express), hint: 'még nincs becsomagolva', tone: k.express ? 'warn' : '', href: link({ priority: 'express' }) },
-        { label: 'Felfüggesztve', value: fmt.int(k.hold), href: link({ status: 'hold' }) },
-        { label: 'Komissió alatt', value: fmt.int(k.picking), href: link({ status: 'picking' }) },
-        { label: 'Feladásra kész', value: fmt.int(k.packed), href: link({ status: 'packed' }) },
-      ]));
       const total = k.new + k.hold + k.picking + k.packed;
       root.querySelector('[data-tabs]').innerHTML = String(ui.tabs(STATUS_TABS.map(([key, label]) => ({
         key, label, count: key ? k[key] : total,
@@ -346,11 +336,11 @@
     }
 
     const apply = () => { state.offset = 0; load().catch((e) => ui.toast(e.message, 'error')); };
-    filtersForm.addEventListener('submit', (e) => { e.preventDefault(); state.q = filtersForm.q.value.trim(); apply(); });
-    filtersForm.q.addEventListener('input', FL.debounce(() => { state.q = filtersForm.q.value.trim(); apply(); }, 350));
-    for (const name of ['partner_id', 'carrier_id', 'priority', 'availability']) {
-      filtersForm[name].addEventListener('change', () => { state[name] = filtersForm[name].value; apply(); });
-    }
+    filtersForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      for (const name of ['q', 'partner_id', 'carrier_id', 'priority', 'availability']) state[name] = filtersForm[name].value.trim();
+      apply();
+    });
     ui.enableRowLinks(root);
     ui.bind(root, {
       ...sel.handlers,

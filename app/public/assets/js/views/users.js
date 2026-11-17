@@ -88,16 +88,19 @@
         <section class="panel panel--flush">
           <form class="toolbar user-filters" data-filters novalidate>
             <div class="field field--grow"><label for="u-q">Keresés</label><input class="input" id="u-q" name="q" type="search" value="${state.filters.q}" placeholder="Név, e-mail vagy telefon" autocomplete="off"></div>
-            ${ui.field({ name: 'role_id', label: 'Szerepkör', type: 'select', value: state.filters.role_id, placeholder: 'Mind', options: state.roles.map((r) => ({ value: r.id, label: r.name })), attrs: 'data-action="filter"' })}
-            ${ui.field({ name: 'active', label: 'Állapot', type: 'select', value: state.filters.active, placeholder: 'Mind', options: [{ value: '1', label: 'Aktív' }, { value: '0', label: 'Letiltott' }], attrs: 'data-action="filter"' })}
+            ${ui.field({ name: 'role_id', label: 'Szerepkör', type: 'select', value: state.filters.role_id, placeholder: 'Mind', options: state.roles.map((r) => ({ value: r.id, label: r.name })) })}
+            ${ui.field({ name: 'active', label: 'Állapot', type: 'select', value: state.filters.active, placeholder: 'Mind', options: [{ value: '1', label: 'Aktív' }, { value: '0', label: 'Letiltott' }] })}
+            ${ui.searchButtons({ href: `${BASE}/lista` })}
           </form>
           <div class="slot" data-users></div>
         </section>`,
     });
     const $ = (s) => root.querySelector(s);
-    $('[data-filters]').addEventListener('submit', (e) => e.preventDefault());
-    const q = $('#u-q');
-    q.addEventListener('input', FL.debounce(() => { state.filters.q = q.value.trim(); load(); }, 250));
+    $('[data-filters]').addEventListener('submit', (e) => {
+      e.preventDefault();
+      for (const [name, value] of new FormData(e.target)) state.filters[name] = value.trim();
+      load();
+    });
 
     // What the signed-in user may do with this account (mirrors the server rules).
     const locked = (u) => u.is_admin && !isAdmin;
@@ -198,7 +201,6 @@
 
     const find = (id) => state.users.find((x) => x.id === Number(id));
     ui.bind(root, {
-      filter: (el) => { state.filters[el.name] = el.value; load(); },
       new: () => userDialog(null),
       edit: (el) => userDialog(Number(el.dataset.id)),
       reset: async (el) => {
@@ -274,7 +276,7 @@
     function paintRoleTabs() {
       $('[data-roles]').innerHTML = String(html`${roles.map((r) => html`
         <button class="role-tab" type="button" role="tab" id="role-tab-${r.id}" aria-controls="role-panel" aria-selected="${r.id === roleId}" tabindex="${r.id === roleId ? 0 : -1}" data-action="pick-role" data-id="${r.id}">
-          ${r.is_admin ? FL.icon('lock-simple') : ''}<span>${r.name}</span><span class="count">${fmt.int(r.user_count)}</span>${drafts.has(r.id) ? html`<span class="dot" title="Mentetlen változás" aria-label="mentetlen változás"></span>` : ''}
+          ${r.is_admin ? FL.icon('lock-simple') : ''}<span>${r.name}</span><span class="count">${fmt.int(r.user_count)}</span>${drafts.has(r.id) ? html`<span class="dot" title="Mentetlen változás" aria-label="mentetlen változás">*</span>` : ''}
         </button>`)}`);
       $('#role-panel').setAttribute('aria-labelledby', `role-tab-${roleId}`);
     }
@@ -366,7 +368,7 @@
       const tab = $(`#role-tab-${roleId}`);
       if (tab) {
         const dot = tab.querySelector('.dot');
-        if (n && !dot) tab.insertAdjacentHTML('beforeend', '<span class="dot" title="Mentetlen változás" aria-label="mentetlen változás"></span>');
+        if (n && !dot) tab.insertAdjacentHTML('beforeend', '<span class="dot" title="Mentetlen változás" aria-label="mentetlen változás">*</span>');
         if (!n && dot) dot.remove();
       }
     }

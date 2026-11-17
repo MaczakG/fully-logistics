@@ -21,7 +21,7 @@
   };
   const buzz = (ok) => { try { if (navigator.vibrate) navigator.vibrate(ok ? 40 : [90, 60, 90]); } catch { /* not supported */ } };
   const lotText = (t) => [t.lot ? `Tétel ${t.lot}` : '', t.expiry ? `Lejárat ${fmt.date(t.expiry)}` : ''].filter(Boolean).join(' · ');
-  const progressBar = (done, total, label) => html`<div class="progress" data-done="${total > 0 && done >= total}" role="progressbar" aria-label="${label}" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${done}"><span style="width:${total ? Math.min(100, Math.round((done / total) * 100)) : 0}%"></span></div>`;
+  const progressBar = (done, total, label) => html`<progress value="${Math.min(done, total)}" max="${Math.max(total, 1)}" aria-label="${label}"></progress>`;
   const orderHref = (id) => (FL.can('orders', 'view') ? `${FL.routes.orders}/${id}` : FL.can('history', 'view') ? `${FL.routes.history}/${id}` : null);
 
   /* ------------------------------------------------------------ wave list */
@@ -92,12 +92,6 @@
           <a class="btn" href="${FL.routes.picking}/csomagolas">${FL.icon('package')}Csomagolóállomás${data.ready_to_pack ? html` <span class="pk-count">${fmt.int(data.ready_to_pack)}</span>` : ''}</a>
           ${FL.can('picking', 'create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új hullám</button>` : ''}`,
       })}
-      ${ui.kpis([
-        { label: 'Nyitott', value: fmt.int(c.open || 0), hint: 'még nem kezdték el' },
-        { label: 'Kiszedés alatt', value: fmt.int(c.picking || 0) },
-        { label: 'Kiszedve', value: fmt.int(c.picked || 0), hint: 'csomagolásra vár' },
-        { label: 'Csomagolható rendelés', value: fmt.int(data.ready_to_pack), tone: data.ready_to_pack ? 'ok' : '', href: `${FL.routes.picking}/csomagolas` },
-      ])}
       ${ui.tabs(TABS.map(([key, label]) => ({ key, label, href: `${FL.routes.picking}${FL.qs({ status: key === 'active' ? '' : key })}`, count: key === 'active' ? activeCount : key === 'all' ? null : c[key] || 0 })), status, 'Hullámok állapot szerint')}
       ${ui.table({
         caption: 'Komissiós hullámok',

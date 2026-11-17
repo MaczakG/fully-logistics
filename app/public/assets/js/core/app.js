@@ -47,7 +47,6 @@
   FL.app = {};
 
   const appEl = () => document.getElementById('app');
-  const BRAND = '<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" fill="#E8BE3C"/><path d="M8 7h17v5.5H14v3.5h9v5.5h-9V26H8z" fill="#121518"/></svg>';
 
   /* ------------------------------------------------------------ navigation */
   FL.go = (hash) => {
@@ -72,9 +71,8 @@
   function authScreen(title, sub, body) {
     appEl().removeAttribute('aria-busy');
     appEl().innerHTML = String(html`<main class="auth"><div class="auth__card">
-      <div class="hazard" aria-hidden="true"></div>
       <div class="auth__body">
-        <div class="auth__brand">${raw(BRAND)}<div><b>Fully Logistics</b><span>WMS</span></div></div>
+        <div class="auth__brand"><div><b>Fully Logistics</b><span>WMS</span></div></div>
         <div><h1>${title}</h1>${sub ? html`<p class="muted">${sub}</p>` : ''}</div>
         ${body}
       </div></div></main>`);
@@ -186,10 +184,10 @@
     appEl().removeAttribute('aria-busy');
     appEl().innerHTML = String(html`<div class="shell">
       <aside class="sidebar" id="sidebar" aria-label="Főmenü">
-        <a class="sidebar__brand" href="#/">${raw(BRAND)}<span class="sidebar__name">Fully Logistics<span>WMS</span></span></a>
+        <a class="sidebar__brand" href="#/"><span class="sidebar__name">Fully Logistics<span>WMS</span></span></a>
         <nav aria-label="Modulok">
-          ${visibleGroups().map((group) => html`<ul class="menu-group">${group.items.map((i) => html`
-            <li><a class="menu-link" href="#/${i.route}" data-route="${i.route}">${FL.icon(i.icon)}<span>${i.label}</span></a></li>`)}</ul>`)}
+          ${visibleGroups().map((group) => html`<div class="menu-group"><p class="menu-group__title">${group.title}</p><ul>${group.items.map((i) => html`
+            <li><a class="menu-link" href="#/${i.route}" data-route="${i.route}">${i.label}</a></li>`)}</ul></div>`)}
         </nav>
         <div class="sidebar__foot">
           <p>${me.company.name}</p>
@@ -200,11 +198,9 @@
         <header class="topbar">
           <button class="btn btn--ghost btn--icon menu-toggle" type="button" data-action="menu" aria-controls="sidebar" aria-expanded="false" aria-label="Menü megnyitása">${FL.icon('list')}</button>
           <a class="btn btn--ghost btn--icon topbar__back" href="#/" aria-label="Vissza">${FL.icon('arrow-left')}</a>
-          <a class="topbar__brand" href="#/" aria-label="Kezdőképernyő">${raw(BRAND)}</a>
           <p class="topbar__title"></p>
           <span class="topbar__spacer"></span>
           <span class="cutoff" id="cutoff" data-cutoff title="Napi rendelési határidő: az eddig beérkező rendelések még aznap feladhatók"></span>
-          <button class="btn btn--ghost btn--icon topbar__theme" type="button" data-action="theme" aria-label="Téma váltása">${FL.icon('moon')}</button>
           <a class="btn btn--ghost btn--icon topbar__home" href="#/" aria-label="Kezdőképernyő">${FL.icon('squares-four')}</a>
           <div class="user-menu">
             <button class="user-menu__btn" type="button" data-action="user" aria-haspopup="true" aria-expanded="false" aria-controls="user-pop">
@@ -213,7 +209,6 @@
             <div class="popover" id="user-pop" hidden>
               <button type="button" data-action="profile">${FL.icon('identification-card')}Profil</button>
               <button type="button" data-action="password">${FL.icon('key')}Jelszó módosítása</button>
-              <button type="button" data-action="theme" class="popover__theme"></button>
               <hr>
               <button type="button" data-action="logout">${FL.icon('sign-out')}Kijelentkezés</button>
             </div>
@@ -230,13 +225,6 @@
     const setMenu = (open) => { root.dataset.menu = open ? 'open' : ''; menuBtn.setAttribute('aria-expanded', String(open)); };
     ui.bind(root.querySelector('.topbar'), {
       menu: () => setMenu(root.dataset.menu !== 'open'),
-      theme: () => {
-        pop.hidden = true;
-        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-        document.documentElement.dataset.theme = next;
-        try { localStorage.setItem('fl-theme', next); } catch { /* storage blocked */ }
-        updateThemeIcon();
-      },
       user: () => { pop.hidden = !pop.hidden; userBtn.setAttribute('aria-expanded', String(!pop.hidden)); },
       profile: () => { pop.hidden = true; editProfile(); },
       password: () => { pop.hidden = true; changePassword(false); },
@@ -250,7 +238,6 @@
     document.addEventListener('click', (e) => { if (!e.target.closest('.user-menu')) { pop.hidden = true; userBtn.setAttribute('aria-expanded', 'false'); } });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { pop.hidden = true; setMenu(false); } });
     root.querySelector('#sidebar').addEventListener('click', (e) => { if (e.target.closest('a')) setMenu(false); });
-    updateThemeIcon();
     tickCutoff();
     watchScrollRegions(root.querySelector('#content'));
   }
@@ -317,18 +304,7 @@
     tr.dataset.labelled = '1';
   }
 
-  function updateThemeIcon() {
-    const dark = document.documentElement.dataset.theme === 'dark';
-    const btn = document.querySelector('.topbar__theme');
-    if (btn) {
-      btn.innerHTML = String(FL.icon(dark ? 'sun' : 'moon'));
-      btn.setAttribute('aria-label', dark ? 'Váltás világos témára' : 'Váltás sötét témára');
-    }
-    const item = document.querySelector('.popover__theme');
-    if (item) item.innerHTML = String(html`${FL.icon(dark ? 'sun' : 'moon')}${dark ? 'Világos téma' : 'Sötét téma'}`);
-  }
-
-  // Daily cut-off countdown in the top bar (hazard stripes in the last 30 minutes).
+  // Daily cut-off countdown in the top bar.
   let cutoffTimer;
   function tickCutoff() {
     clearTimeout(cutoffTimer);
@@ -352,15 +328,7 @@
   }
 
   /* ------------------------------------------------------------ PDA home screen */
-  // Big tiles of the modules the user may open, with the work waiting in them (GET /api/home).
-  const TILE_COUNTS = {
-    inbound: (c) => ({ n: c.open, text: [c.active && `${c.active} átvételre vár`, c.open - c.active && `${c.open - c.active} várható`] }),
-    orders: (c) => ({ n: c.new, text: [c.new && `${c.new} új`, c.hold && `${c.hold} felfüggesztve`] }),
-    picking: (c) => ({ n: c.active + c.picked, text: [c.active && `${c.active} hullám kiszedésre`, c.picked && `${c.picked} csomagolásra`] }),
-    counts: (c) => ({ n: c.open, text: [c.open && `${c.open} nyitott leltár`] }),
-    transport: (c) => ({ n: c.today, text: [c.today && `${c.today} futárátvétel ma`] }),
-  };
-
+  // Big tiles of the modules the user may open.
   function renderHome(section) {
     const me = FL.state.me;
     FL.setTitle('Kezdőképernyő');
@@ -374,26 +342,12 @@
       ${groups.length ? groups.map((g) => html`<nav class="pda-home__group" aria-label="${g.title}">
         <h2>${g.title}</h2>
         <ul class="pda-tiles">${g.items.map((i) => html`<li><a class="pda-tile" href="#/${i.route}" data-key="${i.key}">
-          <span class="pda-tile__icon">${FL.icon(i.icon)}</span>
-          <span class="pda-tile__badge" data-badge hidden></span>
           <span class="pda-tile__label">${i.label}</span>
-          <span class="pda-tile__meta" data-meta>${i.hint}</span>
+          <span class="pda-tile__meta">${i.hint}</span>
         </a></li>`)}</ul>
       </nav>`) : ui.empty('A szerepköröd egyik modulhoz sem ad hozzáférést. Kérj jogosultságot az adminisztrátortól.', 'lock-simple')}
     </div>`);
     tickCutoff();
-    FL.api.get('/api/home').then((res) => {
-      for (const [key, c] of Object.entries(res.counts || {})) {
-        const tile = section.querySelector(`.pda-tile[data-key="${key}"]`);
-        if (!tile || !TILE_COUNTS[key]) continue;
-        const { n, text } = TILE_COUNTS[key](c);
-        const badge = tile.querySelector('[data-badge]');
-        badge.hidden = !n;
-        badge.textContent = n ? FL.fmt.int(n) : '';
-        tile.querySelector('[data-meta]').textContent = text.filter(Boolean).join(', ') || 'Nincs teendő';
-        tile.dataset.busy = n ? 'true' : 'false';
-      }
-    }).catch(() => { /* the tiles work without the counts */ });
   }
 
   // The top bar's back button: the page's own back link if it has one, else one level up.

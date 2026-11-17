@@ -23,8 +23,7 @@
 
   const link = (params) => ROUTE + FL.qs(params);
   const unitOf = (l) => l.unit || 'db';
-  const pct = (v, max) => (max > 0 ? Math.max(0, Math.min(100, Math.round((v / max) * 100))) : 0);
-  const bar = (value, max, done, label) => html`<div class="progress" ${done ? raw('data-done="true"') : ''} role="img" aria-label="${label || `${value} / ${max}`}"><span style="width:${pct(value, max)}%"></span></div>`;
+  const bar = (value, max, label) => html`<progress value="${Math.min(value, max)}" max="${Math.max(max, 1)}" aria-label="${label || `${value} / ${max}`}"></progress>`;
   const chip = (text, tone = 'neutral') => html`<span class="chip" data-tone="${tone}">${text}</span>`;
   const hasDiscrepancy = (l) => l.received_qty !== l.expected_qty || l.damaged_qty > 0 || l.putaway_qty < l.received_qty;
   const strip0 = (s) => String(s || '').replace(/^0+/, '');
@@ -65,7 +64,6 @@
       api.get('/api/lookup/partners', { type: 'client', all: 1 }),
       api.get('/api/lookup/partners', { type: 'supplier', all: 1 }),
     ]);
-    const k = data.kpis;
     const today = FL.today();
     const filtersOnly = { partner_id: f.partner_id, supplier_id: f.supplier_id, q: f.q, from: f.from, to: f.to, discrepancy: f.discrepancy, closed_from: f.closed_from };
     const filtered = Object.values(filtersOnly).some(Boolean);
@@ -75,12 +73,6 @@
 
     root.innerHTML = String(html`
       ${ui.pageHead({ title: 'Betárolás', lead: 'Várható szállítások, áruátvétel kézi szkennerrel és polcra helyezés.', actions })}
-      ${ui.kpis([
-        { label: 'Várható ma', value: fmt.int(k.expected_today), hint: k.overdue ? `${fmt.int(k.overdue)} késésben` : 'mai érkezés', tone: k.overdue ? 'warn' : '', href: link({ status: 'expected', from: k.today, to: k.today }) },
-        { label: 'Megérkezett', value: fmt.int(k.arrived), hint: 'átvételre vár', href: link({ status: 'arrived' }) },
-        { label: 'Átvétel alatt', value: fmt.int(k.receiving), hint: 'számlálás, polcra helyezés', href: link({ status: 'receiving' }) },
-        { label: 'Eltéréssel lezárt', value: fmt.int(k.discrepancy_30d), hint: 'elmúlt 30 nap', tone: k.discrepancy_30d ? 'danger' : '', href: link({ status: 'completed', discrepancy: 1, closed_from: k.discrepancy_since }) },
-      ])}
       ${ui.tabs(TABS.map(([key, label]) => ({ key, label, count: data.counts[key] ?? 0, href: link({ ...filtersOnly, status: key }) })), f.status, 'Betárolások állapot szerint')}
       <form class="toolbar inb-filters" data-filters role="search" aria-label="Betárolások szűrése">
         <input type="hidden" name="status" value="${f.status}">
@@ -92,10 +84,7 @@
         ${ui.field({ name: 'to', label: 'Várható eddig', type: 'date', value: f.to })}
         <input type="hidden" name="discrepancy" value="${f.discrepancy}">
         <input type="hidden" name="closed_from" value="${f.closed_from}">
-        <div class="actions">
-          <button class="btn" type="submit">${FL.icon('funnel')}Szűrés</button>
-          ${filtered ? html`<a class="btn btn--ghost" href="${link({ status: f.status })}">Szűrők törlése</a>` : ''}
-        </div>
+        ${ui.searchButtons(filtered ? { href: link({ status: f.status }) } : {})}
       </form>
       ${f.discrepancy === '1' ? ui.notice(html`Csak az eltéréssel lezárt betárolások${f.closed_from ? html` ${fmt.date(f.closed_from)} óta` : ''}.`, 'info') : ''}
       ${ui.table({
@@ -114,7 +103,7 @@
           } },
           { key: 'status', label: 'Állapot', render: (r) => html`<span class="inb-chips">${FL.status('inbound', r.status)}${r.has_discrepancy ? chip('Eltérés', 'danger') : ''}</span>` },
           { key: 'line_count', label: 'Tételek', align: 'r', cls: 'num' , render: (r) => fmt.int(r.line_count) },
-          { key: 'received', label: 'Átvett / várt', render: (r) => html`<span class="num">${fmt.int(r.received_qty)} / ${fmt.int(r.expected_qty)}</span>${bar(r.received_qty, Math.max(r.expected_qty, r.received_qty), r.received_qty === r.expected_qty && r.expected_qty > 0)}` },
+          { key: 'received', label: 'Átvett / várt', render: (r) => html`<span class="num">${fmt.int(r.received_qty)} / ${fmt.int(r.expected_qty)}</span>${bar(r.received_qty, Math.max(r.expected_qty, r.received_qty))}` },
           { key: 'putaway_qty', label: 'Polcon', align: 'r', cls: 'num', render: (r) => fmt.int(r.putaway_qty) },
           { key: 'source', label: 'Forrás', render: (r) => html`<span class="tag">${SOURCES[r.source] || r.source}</span>` },
         ],
@@ -439,12 +428,6 @@
         if (missingLot.length) notices.push(ui.notice(html`Polcra helyezés előtt add meg a sarzsot vagy a lejáratot: ${missingLot.map((l) => l.sku).join(', ')}.`, 'warn'));
       }
       region('summary').innerHTML = String(html`
-        ${ui.kpis([
-          { label: 'Várt mennyiség', value: fmt.int(t.expected), hint: `${fmt.int(t.lines)} tétel` },
-          { label: 'Átvett', value: fmt.int(t.received), hint: diff === 0 ? 'egyezik a várttal' : diff > 0 ? `${fmt.int(diff)} többlet` : `${fmt.int(-diff)} hiány`, tone: diff === 0 ? (t.received ? 'ok' : '') : 'warn' },
-          { label: 'Sérült', value: fmt.int(t.damaged), hint: !t.damaged ? 'nincs sérült áru' : OPEN.includes(s) ? 'karanténba tedd' : 'sérült áru', tone: t.damaged ? 'danger' : '' },
-          { label: 'Polcon', value: fmt.int(t.putaway), hint: t.received ? `${pct(t.putaway, t.received)}% az átvettből` : 'még semmi', tone: t.received && t.putaway === t.received ? 'ok' : '' },
-        ])}
         ${notices}`);
     }
 
@@ -567,7 +550,7 @@
           </div>
           <div class="inb-card__count"><b class="num">${fmt.int(l.received_qty)}</b><span class="num">/ ${fmt.int(l.expected_qty)} ${unitOf(l)}</span></div>
         </div>
-        ${bar(l.received_qty, Math.max(l.expected_qty, l.received_qty), lineState(l) === 'done', `Átvett ${l.received_qty}, várt ${l.expected_qty}`)}
+        ${bar(l.received_qty, Math.max(l.expected_qty, l.received_qty), `Átvett ${l.received_qty}, várt ${l.expected_qty}`)}
         <div class="inb-chips">
           ${l.issues.map((i) => chip(i.text, i.kind === 'damaged' ? 'danger' : 'warn'))}
           ${l.received_qty && l.received_qty === l.expected_qty && !l.damaged_qty ? chip('rendben', 'ok') : ''}
@@ -602,7 +585,7 @@
             ? html`<b class="num">${fmt.int(open)}</b><span>${unitOf(l)} polcra vár</span>`
             : html`<b class="num">${fmt.int(l.putaway_qty)}</b><span>${l.received_qty ? 'polcon, kész' : 'nincs átvett áru'}</span>`}</div>
         </div>
-        ${bar(l.putaway_qty, l.received_qty, l.received_qty > 0 && open === 0, `Polcon ${l.putaway_qty}, átvett ${l.received_qty}`)}
+        ${bar(l.putaway_qty, l.received_qty, `Polcon ${l.putaway_qty}, átvett ${l.received_qty}`)}
         <div class="inb-chips">
           ${l.putaways.map((p) => html`<span class="tag">${p.location_code}: ${fmt.int(p.qty)}</span>`)}
           ${open > 0 && l.suggested ? html`<span class="chip" data-tone="info" title="${l.suggested.reason}">javasolt: ${l.suggested.code}</span>` : ''}

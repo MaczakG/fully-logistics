@@ -92,13 +92,6 @@
         ${periodPicker(period)}
         <p class="small muted bl-snapinfo">${snap.last ? `Utolsó pillanatkép: ${fmt.date(snap.last.date)}, ${fmt.int(snap.last.rows)} raktárhely` : 'Még nincs tárolási pillanatkép.'}</p>
       </div>
-      <div class="bl-kpis">${ui.kpis([
-        { label: 'Nettó összesen', value: fmt.money(k.total_net), hint: `${label(period)}, érvénytelenítettek nélkül` },
-        { label: 'Számlázva', value: fmt.money(k.invoiced_net), hint: `${fmt.int(k.invoiced_count)} ügyfél`, tone: k.invoiced_count ? 'ok' : '' },
-        { label: 'Jóváhagyásra vár', value: fmt.int(k.draft_count), hint: fmt.money(k.draft_net), tone: k.draft_count ? 'warn' : '' },
-        { label: 'Számlázásra vár', value: fmt.int(k.approved_count), hint: fmt.money(k.approved_net) },
-        { label: 'Nincs elszámolás', value: fmt.int(k.missing_count), hint: 'aktív ügyfél' },
-      ])}</div>
       ${ui.table({
         caption: `Elszámolások, ${label(period)}`,
         rows,
@@ -353,11 +346,6 @@
             ${st.invoice_number ? html`<dt>Számla</dt><dd><span class="num">${st.invoice_number}</span> <span class="muted">(${st.invoice_provider === 'billingo' ? 'Billingo' : 'Számlázz.hu'}, ${fmt.dateTime(st.invoiced_at)})</span></dd>` : ''}
           </dl>
         </section>
-        ${ui.kpis([
-          { label: 'Nettó', value: fmt.money(st.net) },
-          { label: `ÁFA ${fmt.pct(st.vat_pct, 1)}`, value: fmt.money(st.vat), hint: 'soronként kerekítve' },
-          { label: 'Bruttó', value: fmt.money(st.gross) },
-        ])}
       </div>
       <section class="bl-section" aria-labelledby="bl-lines-title">
         <h2 id="bl-lines-title">Tételek</h2>
@@ -497,10 +485,11 @@
         actions: can('create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új tétel</button>` : '',
       })}
       ${tabs('entries', period)}
-      <div class="toolbar">
+      <form class="toolbar" data-filters role="search">
         ${periodPicker(period)}
-        ${ui.field({ name: 'partner', id: 'bl-partner', label: 'Ügyfél', type: 'select', value: partner, options, placeholder: 'Minden ügyfél', attrs: 'data-action="partner"' })}
-      </div>
+        ${ui.field({ name: 'partner', id: 'bl-partner', label: 'Ügyfél', type: 'select', value: partner, options, placeholder: 'Minden ügyfél' })}
+        ${ui.searchButtons(partner ? { href: link({ partner: '', offset: 0 }) } : {})}
+      </form>
       <div class="bl-tablebox">${ui.table({
         caption: `Rögzített tételek, ${label(period)}`,
         rows: data.items,
@@ -526,9 +515,9 @@
       ${ui.pager({ total: data.total, limit: data.limit, offset: data.offset })}</div>`);
 
     const byId = new Map(data.items.map((e) => [e.id, e]));
+    root.querySelector('[data-filters]').addEventListener('submit', (e) => { e.preventDefault(); FL.go(link({ partner: e.target.partner.value, offset: 0 })); });
     ui.bind(root, {
       ...periodHandlers((p) => FL.go(link({ period: p, offset: 0 })), period),
-      partner: (el) => FL.go(link({ partner: el.value, offset: 0 })),
       page: (el) => FL.go(link({ offset: Number(el.dataset.offset) })),
       new: () => entryDialog({ clients: options, partner }),
       edit: (el) => entryDialog({ clients: options, entry: byId.get(Number(el.dataset.id)) }),

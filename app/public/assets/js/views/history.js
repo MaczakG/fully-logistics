@@ -210,7 +210,6 @@
         lead: 'Feladott, kézbesített, visszáru és sztornózott rendelések. Kereshetsz rendelésszámra, vevőre, városra és nyomkövetési számra is.',
         actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás (CSV)</button>`,
       })}
-      <div data-kpis></div>
       <form class="toolbar hs-filters" data-filters role="search">
         <div class="field field--grow"><label for="hs-q">Keresés</label>
           <input class="input" id="hs-q" name="q" type="search" value="${state.q}" placeholder="Rendelésszám, vevő, város, nyomkövetési szám"></div>
@@ -224,8 +223,8 @@
           <button class="btn btn--sm btn--ghost" type="button" data-action="range" data-days="0">Ma</button>
           <button class="btn btn--sm btn--ghost" type="button" data-action="range" data-days="7">7 nap</button>
           <button class="btn btn--sm btn--ghost" type="button" data-action="range" data-days="30">30 nap</button>
-          <button class="btn btn--sm btn--ghost" type="button" data-action="clear">${FL.icon('x')}Törlés</button>
         </div>
+        ${ui.searchButtons({ action: 'clear' })}
       </form>
       <div data-table>${ui.loading()}</div>`);
 
@@ -235,14 +234,6 @@
     async function load() {
       history.replaceState(null, '', `${FL.routes.history}${FL.qs({ ...state, date_field: state.date_field === 'shipped' ? '' : state.date_field, offset: state.offset || '' })}`);
       const data = await api.get('/api/history', { ...query(), offset: state.offset, limit: 50 });
-      const k = data.kpis;
-      const kpiHref = (s) => `${FL.routes.history}${FL.qs({ ...state, status: s, offset: '', date_field: state.date_field === 'shipped' ? '' : state.date_field })}`;
-      root.querySelector('[data-kpis]').innerHTML = String(ui.kpis([
-        { label: 'Feladva', value: fmt.int(k.shipped), hint: 'úton a vevőhöz', href: kpiHref('shipped') },
-        { label: 'Kézbesítve', value: fmt.int(k.delivered), tone: 'ok', href: kpiHref('delivered') },
-        { label: 'Visszáru', value: fmt.int(k.returned), tone: k.returned ? 'warn' : '', href: kpiHref('returned') },
-        { label: 'Sztornózva', value: fmt.int(k.cancelled), href: kpiHref('cancelled') },
-      ]));
       const filtered = state.q || state.from || state.to || state.partner_id || state.carrier_id || state.status;
       root.querySelector('[data-table]').innerHTML = String(html`${ui.table({
         caption: 'Lezárt rendelések',
@@ -262,18 +253,15 @@
       })}${ui.pager({ total: data.total, limit: 50, offset: state.offset })}`);
     }
     const apply = () => { state.offset = 0; load().catch((e) => ui.toast(e.message, 'error')); };
-    form.addEventListener('submit', (e) => { e.preventDefault(); state.q = form.q.value.trim(); apply(); });
-    form.q.addEventListener('input', FL.debounce(() => { state.q = form.q.value.trim(); apply(); }, 350));
-    for (const name of ['date_field', 'from', 'to', 'partner_id', 'carrier_id', 'status']) {
-      form[name].addEventListener('change', () => {
-        state[name] = form[name].value;
-        if ((name === 'from' || name === 'to') && state.from && state.to && state.from > state.to) {
-          ui.toast('A kezdő dátum nem lehet későbbi a záró dátumnál.', 'error');
-          return;
-        }
-        apply();
-      });
-    }
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (form.from.value && form.to.value && form.from.value > form.to.value) {
+        ui.toast('A kezdő dátum nem lehet későbbi a záró dátumnál.', 'error');
+        return;
+      }
+      for (const name of ['q', 'date_field', 'from', 'to', 'partner_id', 'carrier_id', 'status']) state[name] = form[name].value.trim();
+      apply();
+    });
     ui.enableRowLinks(root);
     ui.bind(root, {
       range: (el) => {

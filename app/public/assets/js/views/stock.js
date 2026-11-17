@@ -55,11 +55,6 @@
   const searchField = (id, value, placeholder, label = 'Keresés') => html`<div class="field field--grow"><label for="${id}">${label}</label>
     <input class="input" id="${id}" name="q" type="search" value="${value}" placeholder="${placeholder}" autocomplete="off"></div>`;
 
-  const filterButtons = (clearHref, filtered) => html`<div class="actions">
-    <button class="btn" type="submit">${FL.icon('funnel')}Szűrés</button>
-    ${filtered ? html`<a class="btn btn--ghost" href="${clearHref}">Szűrők törlése</a>` : ''}
-  </div>`;
-
   function bindFilters(root, base) {
     const form = root.querySelector('[data-filters]');
     if (!form) return;
@@ -115,28 +110,18 @@
       api.get('/api/stock/locations', { limit: 1 }),
       clientList(),
     ]);
-    const s = data.summary;
-    const bySize = occ.summary.bySize;
-    const free = bySize.reduce((n, x) => n + x.empty, 0);
-    const total = bySize.reduce((n, x) => n + x.total, 0);
     const link = (p) => ROUTE + FL.qs(p);
     const filtered = Boolean(f.q || f.partner_id || f.status);
 
     root.innerHTML = String(html`
       ${head(html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}CSV export</button>`)}
       ${tabs('stock')}
-      ${ui.kpis([
-        { label: 'Cikkek', value: fmt.int(s.products), hint: `${fmt.int(s.on_hand)} db készleten` },
-        { label: 'Alacsony készlet', value: fmt.int(s.low), hint: 'a minimum alatt', tone: s.low ? 'warn' : '', href: link({ partner_id: f.partner_id, status: 'low' }) },
-        { label: 'Elfogyott', value: fmt.int(s.out), hint: 'nincs elérhető darab', tone: s.out ? 'danger' : '', href: link({ partner_id: f.partner_id, status: 'out' }) },
-        { label: 'Szabad tárolóhely', value: fmt.int(free), hint: `${fmt.int(total)} aktív tárolóhelyből`, href: `${ROUTE}/helyek?state=empty` },
-      ])}
       <form class="toolbar" data-filters role="search" aria-label="Készlet szűrése">
         ${searchField('stk-q', f.q, 'Cikkszám, megnevezés vagy EAN')}
         ${ui.field({ name: 'partner_id', label: 'Ügyfél', type: 'select', value: f.partner_id, placeholder: 'Minden ügyfél', options: partnerOptions(clients) })}
         ${ui.field({ name: 'status', label: 'Állapot', type: 'select', value: f.status, placeholder: 'Minden állapot',
           options: [['attention', 'Csak alacsony vagy elfogyott'], ['low', 'Alacsony'], ['out', 'Elfogyott'], ['ok', 'Rendben']] })}
-        ${filterButtons(ROUTE, filtered)}
+        ${ui.searchButtons(filtered ? { href: ROUTE } : {})}
       </form>
       ${ui.table({
         caption: 'Készlet termékenként',
@@ -191,7 +176,7 @@
             { key: 'empty', label: 'Szabad', align: 'r', cls: 'num', render: (z) => html`<a href="${ROUTE}/helyek?state=empty&size_id=${z.size_id}">${fmt.int(z.empty)}</a>${z.empty_dedicated ? html`<span class="sub">ebből ${fmt.int(z.empty_dedicated)} fix</span>` : ''}` },
             { key: 'usage', label: 'Kihasználtság', render: (z) => {
               const p = z.total ? Math.round((z.occupied / z.total) * 100) : 0;
-              return html`<div class="stk-usage"><div class="progress" role="img" aria-label="${p}% foglalt"><span style="width:${p}%"></span></div><span class="num small">${p}%</span></div>`;
+              return html`<div class="stk-usage"><progress value="${p}" max="100" aria-label="${p}% foglalt"></progress><span class="num small">${p}%</span></div>`;
             } },
           ],
         })}
@@ -229,7 +214,7 @@
         ${ui.field({ name: 'size_id', label: 'Méret', type: 'select', value: f.size_id, placeholder: 'Minden méret', options: sizes().map((z) => ({ value: z.id, label: `${z.code}, ${z.name}` })) })}
         ${ui.field({ name: 'partner_id', label: 'Ügyfél', type: 'select', value: f.partner_id, placeholder: 'Minden ügyfél', options: partnerOptions(clients) })}
         ${ui.field({ name: 'kind', label: 'Típus', type: 'select', value: f.kind, options: [...kinds, { value: 'all', label: 'Minden típus' }] })}
-        ${filterButtons(base, filtered)}
+        ${ui.searchButtons(filtered ? { href: base } : {})}
       </form>
       ${ui.table({
         caption: 'Raktárhelyek',
@@ -309,7 +294,6 @@
       const occ = store.filter((l) => l.occupant).length;
       return { total: store.length, occ, free: store.length - occ, ded: store.filter((l) => !l.occupant && l.dedicated).length };
     };
-    const all = counted(locs);
     const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
     const holders = data.partners;
 
@@ -331,11 +315,6 @@
       ${head(html`<a class="btn" href="${ROUTE}/helyek">${FL.icon('list')}Helyek listája</a>`)}
       ${tabs('map')}
       ${locs.length ? html`
-        ${ui.kpis([
-          { label: 'Tárolóhelyek', value: fmt.int(all.total), hint: 'aktív tároló- és karanténhely' },
-          { label: 'Foglalt', value: fmt.int(all.occ), hint: `${pct(all.occ, all.total)}%` },
-          { label: 'Szabad', value: fmt.int(all.free), hint: all.ded ? `ebből ${fmt.int(all.ded)} fix hely` : 'egyik ügyfélé sem' },
-        ])}
         <form class="toolbar map-filters" data-filters role="search" aria-label="Térkép szűrése">
           <div class="field field--grow"><label for="map-q">Hely kódja</label>
             <input class="input" id="map-q" name="q" type="search" value="${st.q}" placeholder="pl. A-01" autocomplete="off"></div>
@@ -517,12 +496,12 @@
     root.innerHTML = String(html`
       ${ui.pageHead({ crumb: { href: ROUTE, label: 'Készlet' }, title: html`<span class="mono">${p.sku}</span> ${p.name}`, lead: `${p.partner_name} (${p.partner_code})`, actions })}
       ${p.active ? '' : ui.notice('Ez a cikk inaktív: nem rendelhető, és új betárolásra sem vehető fel.', 'warn')}
-      ${ui.kpis([
+      ${ui.facts([
         { label: 'Készleten', value: fmt.int(a.onHand), hint: `${fmt.int(rows.length)} helyen` },
         { label: 'Foglalt', value: fmt.int(a.reserved), hint: 'nyitott rendelések' },
-        { label: 'Zárolt', value: fmt.int(a.blocked), hint: 'karanténban', tone: a.blocked ? 'danger' : '' },
-        { label: 'Elérhető', value: fmt.int(a.available), hint: `${a.status_label}, minimum ${fmt.int(p.min_stock)}`, tone: STOCK_STATUS[a.status][1] === 'ok' ? '' : STOCK_STATUS[a.status][1] },
-        { label: 'Beérkező', value: fmt.int(a.incoming), hint: 'nyitott betárolásokból', href: a.incoming ? '#/betarolas?status=open' : '' },
+        { label: 'Zárolt', value: fmt.int(a.blocked), hint: 'karanténban' },
+        { label: 'Elérhető', value: fmt.int(a.available), hint: `${a.status_label}, minimum ${fmt.int(p.min_stock)}` },
+        { label: 'Beérkező', value: fmt.int(a.incoming), hint: 'nyitott betárolásokból' },
       ])}
       <div class="stk-product">
         <section class="panel panel--flush" aria-labelledby="stk-loc-h">
@@ -752,7 +731,7 @@
         ${searchField('cat-q', f.q, 'Cikkszám, megnevezés vagy EAN')}
         ${ui.field({ name: 'partner_id', label: 'Ügyfél', type: 'select', value: f.partner_id, placeholder: 'Minden ügyfél', options: partnerOptions(clients) })}
         ${ui.field({ name: 'active', label: 'Állapot', type: 'select', value: f.active, options: [['1', 'Aktív'], ['0', 'Inaktív'], ['all', 'Mind']] })}
-        ${filterButtons(base, filtered)}
+        ${ui.searchButtons(filtered ? { href: base } : {})}
       </form>
       ${ui.table({
         caption: 'Cikktörzs',
@@ -866,7 +845,7 @@
         <input type="hidden" name="location_id" value="${f.location_id}">
         <input type="hidden" name="ref_type" value="${f.ref_type}">
         <input type="hidden" name="ref_id" value="${f.ref_id}">
-        ${filterButtons(base, filtered)}
+        ${ui.searchButtons(filtered ? { href: base } : {})}
       </form>
       ${f.product_id || f.location_id ? html`<div class="stk-tags" aria-label="Aktív szűrők">
         ${f.product_id ? html`<a class="chip stk-filter-chip" data-tone="info" href="${without('product_id')}" aria-label="Termékszűrő törlése">Termék: ${product ? `${product.sku} ${product.name}` : `#${f.product_id}`} ${FL.icon('x')}</a>` : ''}

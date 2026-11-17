@@ -233,12 +233,13 @@
         actions: can('create') ? html`<a class="btn btn--primary" href="${BASE}/uj">${FL.icon('plus')}Új ajánlat</a>`
           : html`<a class="btn" href="${BASE}/uj">${FL.icon('calculator')}Kalkulátor</a>`,
       })}
-      <div class="toolbar">
+      <form class="toolbar" data-filters role="search">
         <div class="field field--grow"><label for="qt-q">Keresés</label>
-          <input class="input" id="qt-q" type="search" value="${st.q}" placeholder="Ajánlatszám vagy ügyfél" autocomplete="off"></div>
+          <input class="input" id="qt-q" name="q" type="search" value="${st.q}" placeholder="Ajánlatszám vagy ügyfél" autocomplete="off"></div>
         <div class="field"><label for="qt-status">Állapot</label>
-          <select class="select" id="qt-status">${ui.options(statuses, st.status, 'Mind')}</select></div>
-      </div>
+          <select class="select" id="qt-status" name="status">${ui.options(statuses, st.status, 'Mind')}</select></div>
+        ${ui.searchButtons({ href: BASE })}
+      </form>
       <div class="qc-box" data-results>${ui.loading()}</div>`);
     const results = root.querySelector('[data-results]');
     const syncUrl = () => history.replaceState(null, '', `${BASE}${FL.qs({ q: st.q, status: st.status })}`);
@@ -270,9 +271,14 @@
     }
     ui.enableRowLinks(results);
     ui.bind(root, { page: (el) => { st.offset = Number(el.dataset.offset) || 0; load(); } });
-    const q = root.querySelector('#qt-q');
-    q.addEventListener('input', FL.debounce(() => { st.q = q.value.trim(); st.offset = 0; syncUrl(); load(); }, 250));
-    root.querySelector('#qt-status').addEventListener('change', (e) => { st.status = e.target.value; st.offset = 0; syncUrl(); load(); });
+    root.querySelector('[data-filters]').addEventListener('submit', (e) => {
+      e.preventDefault();
+      st.q = e.target.q.value.trim();
+      st.status = e.target.status.value;
+      st.offset = 0;
+      syncUrl();
+      load();
+    });
     await load();
   }
 
@@ -504,7 +510,6 @@
       if (!box) return;
       const r = calc(st.data);
       const k = costing(st.data, r);
-      const tone = k.margin >= 0 ? 'ok' : 'danger';
       const i = st.data.internal;
       const warn = [];
       if (k.missing.rent) warn.push('a raktár havi bérleti díja és alapterülete');
@@ -513,17 +518,16 @@
       const settingsLink = FL.can('settings', 'view') ? html` <a href="#/beallitasok/raktar">Beállítások > Raktár</a>` : '';
       box.innerHTML = String(html`
         ${warn.length ? ui.notice(html`Hiányzik ${warn.join(', ')}, ezért ez a költség 0 Ft-tal számít. Add meg lent a Feltételezések alatt, vagy a Beállításokban.${settingsLink}`, 'warn') : ''}
-        ${ui.kpis([
+        ${ui.facts([
           { label: 'Raktáros', value: `${nf2.format(k.staff)} fő`, hint: `${f1(k.hours)} munkaóra / hó` },
           { label: 'Foglalt terület', value: `${nf2.format(k.area)} m²`, hint: n(i.area_m2) > 0 ? `a raktár ${nf2.format(k.areaPct)}%-a` : 'nincs megadva alapterület' },
           { label: 'Közvetlen költség / hó', value: ft(k.cost), hint: 'bér, bérleti díj, csomagolóanyag' },
-          { label: 'Fedezet / hó', value: ft(k.margin), tone, hint: `bevétel ${ft(r.net)}` },
-          { label: 'Fedezeti arány', value: `${f1(k.pct)}%`, tone },
-          { label: 'Fedezet / rendelés', value: r.o > 0 ? ft(k.perOrder) : 'nincs rendelés', tone: r.o > 0 ? tone : '' },
+          { label: 'Fedezet / hó', value: ft(k.margin), hint: `bevétel ${ft(r.net)}` },
+          { label: 'Fedezeti arány', value: `${f1(k.pct)}%` },
+          { label: 'Fedezet / rendelés', value: r.o > 0 ? ft(k.perOrder) : 'nincs rendelés' },
           {
             label: 'Egyszeri kedvezmények megtérülése',
             value: r.oneOffTotal > 0 ? (k.margin > 0 ? `${f1(k.payback)} hónap` : 'nem térül meg') : 'nincs',
-            tone: r.oneOffTotal > 0 && k.margin <= 0 ? 'danger' : '',
           },
         ])}
         <div class="qc-cost">

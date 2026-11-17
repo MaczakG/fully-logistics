@@ -87,12 +87,13 @@
         actions: can('create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új partner</button>` : '',
       })}
       <div class="pt-box" data-tabs></div>
-      <div class="toolbar">
+      <form class="toolbar" data-filters role="search">
         <div class="field field--grow"><label for="pt-q">Keresés</label>
-          <input class="input" id="pt-q" type="search" value="${st.q}" placeholder="Név, kód, adószám, település vagy e-mail" autocomplete="off"></div>
+          <input class="input" id="pt-q" name="q" type="search" value="${st.q}" placeholder="Név, kód, adószám, település vagy e-mail" autocomplete="off"></div>
         <div class="field"><label for="pt-status">Állapot</label>
-          <select class="select" id="pt-status">${ui.options([['', 'Mind'], ['active', 'Aktív'], ['inactive', 'Inaktív']], st.status)}</select></div>
-      </div>
+          <select class="select" id="pt-status" name="status">${ui.options([['', 'Mind'], ['active', 'Aktív'], ['inactive', 'Inaktív']], st.status)}</select></div>
+        ${ui.searchButtons({ href: `${BASE}${FL.qs({ type: st.type })}` })}
+      </form>
       <div class="pt-box" data-results>${ui.loading()}</div>`);
 
     const tabsBox = root.querySelector('[data-tabs]');
@@ -136,9 +137,14 @@
       new: () => createDialog(st.type || 'client'),
       page: (el) => { st.offset = Number(el.dataset.offset) || 0; load(); },
     });
-    const qInput = root.querySelector('#pt-q');
-    qInput.addEventListener('input', FL.debounce(() => { st.q = qInput.value.trim(); st.offset = 0; syncUrl(); load(); }, 250));
-    root.querySelector('#pt-status').addEventListener('change', (e) => { st.status = e.target.value; st.offset = 0; syncUrl(); load(); });
+    root.querySelector('[data-filters]').addEventListener('submit', (e) => {
+      e.preventDefault();
+      st.q = e.target.q.value.trim();
+      st.status = e.target.status.value;
+      st.offset = 0;
+      syncUrl();
+      load();
+    });
     await load();
   }
 
@@ -1054,13 +1060,6 @@
     const k = s.kpis;
     const sm = s.storage_month;
     return html`
-      ${ui.kpis([
-        { label: 'Aktív cikkek', value: fmt.int(k.active_skus), href: FL.can('stock', 'view') ? '#/keszlet' : null },
-        { label: 'Készleten', value: fmt.qty(k.on_hand) },
-        { label: 'Foglalt tárolóhely', value: fmt.int(k.occupied_locations), hint: s.occupied_by_size.map((x) => `${fmt.int(x.locations)} ${x.code}`).join(', ') || 'nincs' },
-        { label: 'Nyitott betárolás', value: fmt.int(k.open_inbounds), tone: k.open_inbounds ? 'warn' : '' },
-        { label: `Rendelés, ${monthName(s.period)}`, value: fmt.int(k.orders_this_month), hint: `Előző hónap: ${fmt.int(k.orders_last_month)}` },
-      ])}
       <div class="grid-2">
         <section class="panel panel--flush">
           <div class="panel__head"><h2>Rendelések állapot szerint</h2></div>
@@ -1130,13 +1129,7 @@
   }
 
   function carrierSummary(s) {
-    const k = s.kpis;
     return html`
-      ${ui.kpis([
-        { label: 'Feladott rendelés ebben a hónapban', value: fmt.int(k.shipped_this_month), hint: monthName(s.period) },
-        { label: 'Feladott rendelés az előző hónapban', value: fmt.int(k.shipped_last_month), hint: monthName(s.last_period) },
-        { label: 'Futárátvétel ebben a hónapban', value: fmt.int(k.pickups_this_month) },
-      ])}
       <div class="grid-2">
         <section class="panel panel--flush">
           <div class="panel__head"><h2>Ügyfelek szerint, ebben a hónapban</h2></div>
@@ -1170,13 +1163,7 @@
   }
 
   function supplierSummary(s) {
-    const k = s.kpis;
     return html`
-      ${ui.kpis([
-        { label: `Betárolás ${s.year}-ban`, value: fmt.int(k.inbounds_this_year) },
-        { label: 'Nyitott betárolás', value: fmt.int(k.open_inbounds), tone: k.open_inbounds ? 'warn' : '' },
-        { label: `Átvett darab ${s.year}-ban`, value: fmt.int(k.received_this_year) },
-      ])}
       <section class="panel panel--flush">
         <div class="panel__head"><h2>Utolsó betárolások</h2></div>
         ${ui.table({

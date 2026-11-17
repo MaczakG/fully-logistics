@@ -259,7 +259,6 @@
       lead: 'Minden raktárhelynek egy mérete van; a méret havi díját ügyfelenként a partner Tarifák fülén adod meg. Egy helyen mindig csak egy partner áruja lehet.',
       actions,
       body: html`
-        <div class="slot loc-kpis" data-kpis></div>
         <section class="panel panel--flush" aria-labelledby="sizes-title">
           <div class="panel__head">
             <div><h2 id="sizes-title">Méretek</h2><p class="small muted">A lista bővíthető, például XXL vagy Fél raklap. Használt méret nem törölhető, csak inaktiválható.</p></div>
@@ -275,7 +274,13 @@
         </section>`,
     });
     const $ = (s) => root.querySelector(s);
-    $('[data-filters]').addEventListener('submit', (e) => e.preventDefault());
+    $('[data-filters]').addEventListener('submit', (e) => {
+      e.preventDefault();
+      for (const k of LOC_FILTERS) state.filters[k] = (e.target.elements[k]?.value || '').trim();
+      state.offset = 0;
+      sel.set.clear();
+      loadLocations();
+    });
 
     // ---------------------------------------------------------------- sizes
     const dims = (s) => {
@@ -351,15 +356,13 @@
       const zones = state.list.zones || [];
       $('[data-filters]').innerHTML = String(html`
         <div class="field field--grow"><label for="loc-q">Keresés</label><input class="input" id="loc-q" name="q" type="search" value="${f.q}" placeholder="Kód vagy megjegyzés" autocomplete="off"></div>
-        ${ui.field({ name: 'zone', label: 'Zóna', type: 'select', value: f.zone, placeholder: 'Mind', options: [...zones.map((z) => ({ value: z, label: z })), { value: '-', label: 'Zóna nélkül' }], attrs: 'data-action="filter"' })}
-        ${ui.field({ name: 'size_id', label: 'Méret', type: 'select', value: f.size_id, placeholder: 'Mind', options: state.sizes.map((s) => ({ value: s.id, label: `${s.code} ${s.name}` })), attrs: 'data-action="filter"' })}
-        ${ui.field({ name: 'kind', label: 'Típus', type: 'select', value: f.kind, placeholder: 'Mind', options: Object.entries(meta().locationKinds || {}).map(([value, label]) => ({ value, label })), attrs: 'data-action="filter"' })}
-        ${ui.field({ name: 'occupied', label: 'Foglaltság', type: 'select', value: f.occupied, placeholder: 'Mind', options: [{ value: '1', label: 'Foglalt' }, { value: '0', label: 'Üres' }], attrs: 'data-action="filter"' })}
-        ${ui.field({ name: 'partner_id', label: 'Partner', type: 'select', value: f.partner_id, placeholder: 'Mind', options: state.clients, attrs: 'data-action="filter"' })}
-        ${ui.field({ name: 'active', label: 'Állapot', type: 'select', value: f.active, placeholder: 'Mind', options: [{ value: '1', label: 'Aktív' }, { value: '0', label: 'Inaktív' }], attrs: 'data-action="filter"' })}
-        ${Object.values(f).some(Boolean) ? html`<button class="btn btn--ghost" type="button" data-action="clear-filters">${FL.icon('x')}Szűrők törlése</button>` : ''}`);
-      const q = $('#loc-q');
-      q.addEventListener('input', FL.debounce(() => { state.filters.q = q.value.trim(); state.offset = 0; sel.set.clear(); loadLocations(); }, 300));
+        ${ui.field({ name: 'zone', label: 'Zóna', type: 'select', value: f.zone, placeholder: 'Mind', options: [...zones.map((z) => ({ value: z, label: z })), { value: '-', label: 'Zóna nélkül' }] })}
+        ${ui.field({ name: 'size_id', label: 'Méret', type: 'select', value: f.size_id, placeholder: 'Mind', options: state.sizes.map((s) => ({ value: s.id, label: `${s.code} ${s.name}` })) })}
+        ${ui.field({ name: 'kind', label: 'Típus', type: 'select', value: f.kind, placeholder: 'Mind', options: Object.entries(meta().locationKinds || {}).map(([value, label]) => ({ value, label })) })}
+        ${ui.field({ name: 'occupied', label: 'Foglaltság', type: 'select', value: f.occupied, placeholder: 'Mind', options: [{ value: '1', label: 'Foglalt' }, { value: '0', label: 'Üres' }] })}
+        ${ui.field({ name: 'partner_id', label: 'Partner', type: 'select', value: f.partner_id, placeholder: 'Mind', options: state.clients })}
+        ${ui.field({ name: 'active', label: 'Állapot', type: 'select', value: f.active, placeholder: 'Mind', options: [{ value: '1', label: 'Aktív' }, { value: '0', label: 'Inaktív' }] })}
+        ${ui.searchButtons({ action: 'clear-filters' })}`);
     }
 
     function syncUrl() {
@@ -390,7 +393,6 @@
         box.removeAttribute('aria-busy');
       }
       if (state.offset && !state.list.items.length && state.list.total) { state.offset = 0; return loadLocations(); }
-      paintKpis();
       paintLocations();
       paintSelection();
       // Zone options come from the data: repaint the filter bar only when they changed.
@@ -398,16 +400,6 @@
       const shown = zoneSel ? [...zoneSel.options].map((o) => o.value).filter((v) => v && v !== '-').join(',') : null;
       if (shown !== (state.list.zones || []).join(',')) paintFilters();
       return undefined;
-    }
-
-    function paintKpis() {
-      const s = state.list.summary || {};
-      $('[data-kpis]').innerHTML = String(ui.kpis([
-        { label: 'Raktárhely összesen', value: fmt.int(s.total) },
-        { label: 'Foglalt', value: fmt.int(s.occupied), hint: s.total ? `${fmt.pct((s.occupied / s.total) * 100, 0)} kihasználtság` : '' },
-        { label: 'Üres aktív tárolóhely', value: fmt.int(s.empty_storage), tone: s.total && !s.empty_storage ? 'warn' : '' },
-        { label: 'Inaktív', value: fmt.int((s.total || 0) - (s.active || 0)) },
-      ]));
     }
 
     function paintLocations() {
@@ -724,12 +716,6 @@
         paintFilters();
         loadLocations();
         $('#locs-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      },
-      filter: (el) => {
-        state.filters[el.name] = el.value;
-        state.offset = 0;
-        sel.set.clear();
-        loadLocations();
       },
       'clear-filters': () => {
         state.filters = Object.fromEntries(LOC_FILTERS.map((k) => [k, '']));
@@ -1073,26 +1059,30 @@
         </section>`,
     });
     const $ = (s) => root.querySelector(s);
-    $('[data-filters]').addEventListener('submit', (e) => e.preventDefault());
+    $('[data-filters]').addEventListener('submit', (e) => {
+      e.preventDefault();
+      for (const [name, value] of new FormData(e.target)) state.filters[name] = value.trim();
+      state.offset = 0;
+      load();
+    });
     const f = state.filters;
     const dateFields = html`
-      ${ui.field({ name: 'from', label: 'Dátumtól', type: 'date', value: f.from, attrs: 'data-action="filter"' })}
-      ${ui.field({ name: 'to', label: 'Dátumig', type: 'date', value: f.to, attrs: 'data-action="filter"' })}`;
+      ${ui.field({ name: 'from', label: 'Dátumtól', type: 'date', value: f.from })}
+      ${ui.field({ name: 'to', label: 'Dátumig', type: 'date', value: f.to })}
+      ${ui.searchButtons({ href: `${BASE}/naplo${FL.qs({ log: kind === 'integration' ? 'integracio' : '' })}` })}`;
     $('[data-filters]').innerHTML = String(kind === 'audit'
       ? html`
         <div class="field field--grow"><label for="log-q">Keresés</label><input class="input" id="log-q" name="q" type="search" value="${f.q}" placeholder="Leírás vagy név" autocomplete="off"></div>
-        ${ui.field({ name: 'module', label: 'Modul', type: 'select', value: f.module, placeholder: 'Mind', options: opts.modules.map((m) => ({ value: m.key, label: m.name })), attrs: 'data-action="filter"' })}
-        ${ui.field({ name: 'user_id', label: 'Felhasználó', type: 'select', value: f.user_id, placeholder: 'Mind', options: opts.users.map((u) => ({ value: u.id, label: `${u.name}${u.active ? '' : ' (letiltva)'}` })), attrs: 'data-action="filter"' })}
-        ${ui.field({ name: 'entity', label: 'Tétel', type: 'select', value: f.entity, placeholder: 'Mind', options: opts.entities.map((e) => ({ value: e, label: ENTITY_LABELS[e] || e })), attrs: 'data-action="filter"' })}
+        ${ui.field({ name: 'module', label: 'Modul', type: 'select', value: f.module, placeholder: 'Mind', options: opts.modules.map((m) => ({ value: m.key, label: m.name })) })}
+        ${ui.field({ name: 'user_id', label: 'Felhasználó', type: 'select', value: f.user_id, placeholder: 'Mind', options: opts.users.map((u) => ({ value: u.id, label: `${u.name}${u.active ? '' : ' (letiltva)'}` })) })}
+        ${ui.field({ name: 'entity', label: 'Tétel', type: 'select', value: f.entity, placeholder: 'Mind', options: opts.entities.map((e) => ({ value: e, label: ENTITY_LABELS[e] || e })) })}
         ${dateFields}`
       : html`
         <div class="field field--grow"><label for="log-q">Keresés</label><input class="input" id="log-q" name="q" type="search" value="${f.q}" placeholder="Üzenet vagy művelet" autocomplete="off"></div>
-        ${ui.field({ name: 'system', label: 'Rendszer', type: 'select', value: f.system, placeholder: 'Mind', options: opts.systems.map((s) => ({ value: s, label: s })), attrs: 'data-action="filter"' })}
-        ${ui.field({ name: 'ok', label: 'Eredmény', type: 'select', value: f.ok, placeholder: 'Mind', options: [{ value: '1', label: 'Sikeres' }, { value: '0', label: 'Hibás' }], attrs: 'data-action="filter"' })}
-        ${ui.field({ name: 'direction', label: 'Irány', type: 'select', value: f.direction, placeholder: 'Mind', options: [{ value: 'out', label: 'Kimenő (mi hívtuk)' }, { value: 'in', label: 'Bejövő (minket hívtak)' }], attrs: 'data-action="filter"' })}
+        ${ui.field({ name: 'system', label: 'Rendszer', type: 'select', value: f.system, placeholder: 'Mind', options: opts.systems.map((s) => ({ value: s, label: s })) })}
+        ${ui.field({ name: 'ok', label: 'Eredmény', type: 'select', value: f.ok, placeholder: 'Mind', options: [{ value: '1', label: 'Sikeres' }, { value: '0', label: 'Hibás' }] })}
+        ${ui.field({ name: 'direction', label: 'Irány', type: 'select', value: f.direction, placeholder: 'Mind', options: [{ value: 'out', label: 'Kimenő (mi hívtuk)' }, { value: 'in', label: 'Bejövő (minket hívtak)' }] })}
         ${dateFields}`);
-    const q = $('#log-q');
-    q.addEventListener('input', FL.debounce(() => { state.filters.q = q.value.trim(); state.offset = 0; load(); }, 300));
 
     async function load() {
       const query = { ...state.filters, offset: state.offset || '' };
@@ -1148,7 +1138,6 @@
       });
     }
     ui.bind(root, {
-      filter: (el) => { state.filters[el.name] = el.value; state.offset = 0; load(); },
       page: (el) => { state.offset = Number(el.dataset.offset) || 0; load(); },
       details: (el) => details(state.data.items.find((x) => x.id === Number(el.dataset.id))),
       'export-log': (el) => ui.run(el, () => api.download('/api/settings/audit/export', state.filters)),

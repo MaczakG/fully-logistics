@@ -3,7 +3,7 @@
      FL.icon(name)                     inline icon from the sprite
      FL.can(module, action)            permission of the signed-in user
      FL.status(kind, key)              status chip (labels and colours from /api/meta)
-     FL.ui.pageHead / kpis / table / empty / tabs / pager
+     FL.ui.pageHead / facts / table / empty / tabs / pager
      FL.ui.field(...)                  labelled form field; FL.ui.formValues(form); FL.ui.showErrors(form, err)
      FL.ui.dialog(...) / confirm(...)  modal dialogs on the native <dialog>
      FL.ui.toast(text, tone)           short message bottom right
@@ -36,22 +36,16 @@
 
   /* ------------------------------------------------------------ layout pieces */
 
-  // { title, lead, crumb: { href, label }, actions: html }
-  ui.pageHead = ({ title, lead, crumb, actions }) => html`
+  // { title, lead, crumb: { href, label }, actions: html }. No heading or lead: the top bar names the
+  // module, a detail page shows its back link and the record's name in one line.
+  ui.pageHead = ({ title, crumb, actions }) => html`
     <header class="page-head">
-      <div class="page-head__text">
-        ${crumb ? html`<a class="crumb" href="${crumb.href}">${FL.icon('arrow-left')}${crumb.label}</a>` : ''}
-        <h1>${title}</h1>
-        ${lead ? html`<p>${lead}</p>` : ''}
-      </div>
+      ${crumb ? html`<p class="page-head__text"><a class="crumb" href="${crumb.href}">${FL.icon('arrow-left')}${crumb.label}</a> / ${title}</p>` : ''}
       ${actions ? html`<div class="actions">${actions}</div>` : ''}
     </header>`;
 
-  // [{ label, value, hint, tone, href }]
-  ui.kpis = (items) => html`<div class="kpis">${items.map((k) => {
-    const inner = html`<span class="kpi__label">${k.label}</span><span class="kpi__value">${k.value}</span>${k.hint ? html`<span class="kpi__hint">${k.hint}</span>` : ''}`;
-    return k.href ? html`<a class="kpi" href="${k.href}" data-tone="${k.tone || ''}">${inner}</a>` : html`<div class="kpi" data-tone="${k.tone || ''}">${inner}</div>`;
-  })}</div>`;
+  // Figures as a plain label: value list. [{ label, value, hint }]
+  ui.facts = (items) => html`<dl class="dl">${items.map((k) => html`<dt>${k.label}</dt><dd>${k.value}${k.hint ? html` (${k.hint})` : ''}</dd>`)}</dl>`;
 
   ui.empty = (text = 'Nincs megjeleníthető adat.', icon = 'info') => html`<div class="empty">${FL.icon(icon)}<p>${text}</p></div>`;
   ui.loading = (text = 'Betöltés...') => html`<div class="loading" role="status">${text}</div>`;
@@ -99,6 +93,13 @@
   // tabs([{ key, label, count, href }], activeKey): links (hash routes) styled as tabs.
   ui.tabs = (items, active, label = 'Fülek') => html`<nav class="tabs" aria-label="${label}">${items.map((t) => html`
     <a class="tab" href="${t.href}" ${t.key === active ? raw('aria-current="page"') : ''}>${t.icon ? FL.icon(t.icon) : ''}${t.label}${t.count != null ? html` <span class="count">${t.count}</span>` : ''}</a>`)}</nav>`;
+
+  // The end of a filter form above a list: Keresés submits it; the reset is a link ({ href }) or a
+  // data-action button ({ action }), or left out.
+  ui.searchButtons = ({ href, action } = {}) => html`<div class="actions toolbar__buttons">
+    <button class="btn btn--primary" type="submit">${FL.icon('magnifying-glass')}Keresés</button>
+    ${href ? html`<a class="btn" href="${href}">Szűrők törlése</a>` : action ? html`<button class="btn" type="button" data-action="${action}">Szűrők törlése</button>` : ''}
+  </div>`;
 
   // pager({ total, limit, offset }) with buttons data-action="page" data-offset="N"
   ui.pager = ({ total, limit, offset }) => {
@@ -493,7 +494,7 @@
         if (!preview) { ui.toast(`Importálva: ${FL.fmt.int(res.imported)} ${unit}.`, 'ok'); resolve(res); return true; }
         const box = form.querySelector('[data-preview]');
         box.innerHTML = String(html`
-          ${ui.kpis([{ label: 'Sorok', value: FL.fmt.int(res.rows) }, { label: 'Importálható', value: FL.fmt.int(res.valid), tone: 'ok' }, { label: 'Hibás', value: FL.fmt.int(res.errors.length), tone: res.errors.length ? 'danger' : '' }])}
+          ${ui.facts([{ label: 'Sorok', value: FL.fmt.int(res.rows) }, { label: 'Importálható', value: FL.fmt.int(res.valid) }, { label: 'Hibás', value: FL.fmt.int(res.errors.length) }])}
           ${res.errors.length ? ui.table({ columns: [{ key: 'line', label: 'Sor', align: 'r', cls: 'num' }, { key: 'message', label: 'Hiba' }], rows: res.errors.slice(0, 100) }) : ''}
           ${res.warnings && res.warnings.length ? ui.table({ caption: 'Figyelmeztetések (ezek a sorok is importálódnak)', columns: [{ key: 'line', label: 'Sor', align: 'r', cls: 'num' }, { key: 'message', label: 'Figyelmeztetés' }], rows: res.warnings.slice(0, 100) }) : ''}
           ${res.valid ? ui.notice(res.errors.length ? 'A hibás sorok kimaradnak. Az importálás a többit rögzíti.' : 'Minden sor rendben. Indíthatod az importálást.', res.errors.length ? 'warn' : 'ok') : ui.notice('Nincs importálható sor.', 'danger')}`);

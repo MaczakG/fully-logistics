@@ -24,9 +24,8 @@
   const lotText = (l) => [l.lot, l.expiry ? fmt.date(l.expiry) : ''].filter(Boolean).join(' · ');
 
   function progressBar(done, total, label) {
-    const pct = total ? Math.round((done / total) * 100) : 0;
     return html`<div class="cnt-progress">
-      <div class="progress" role="progressbar" aria-label="${label}" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${done}" data-done="${total > 0 && done === total}"><span style="width:${pct}%"></span></div>
+      <progress value="${done}" max="${Math.max(total, 1)}" aria-label="${label}"></progress>
       <span class="small muted num">${fmt.int(done)} / ${fmt.int(total)} ${label}</span>
     </div>`;
   }
@@ -54,11 +53,11 @@
         actions: FL.can('counts', 'create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új leltár</button>` : '',
       })}
       <form class="toolbar" data-filters role="search">
+        <div class="field field--grow"><label for="cnt-q">Keresés</label>
+          <input class="input" id="cnt-q" name="q" type="search" value="${filters.q}" placeholder="Szám, hely, cikkszám vagy megjegyzés"></div>
         ${ui.field({ name: 'status', label: 'Állapot', type: 'select', options: STATUS_FILTER, value: filters.status })}
         ${ui.field({ name: 'type', label: 'Típus', type: 'select', options: Object.entries(TYPES), value: filters.type, placeholder: 'Mind' })}
-        <div class="field field--grow"><label for="cnt-q">Keresés</label>
-          <div class="input-group"><input class="input" id="cnt-q" name="q" type="search" value="${filters.q}" placeholder="Szám, hely, cikkszám vagy megjegyzés">
-          <button class="btn" type="submit" aria-label="Keresés">${FL.icon('magnifying-glass')}</button></div></div>
+        ${ui.searchButtons({ href: '#/leltar' })}
       </form>
       ${ui.table({
         caption: 'Leltárak',
@@ -78,8 +77,7 @@
 
     ui.enableRowLinks(root);
     const form = root.querySelector('[data-filters]');
-    form.addEventListener('change', (e) => { if (e.target.name !== 'q') go({ [e.target.name]: e.target.value }); });
-    form.addEventListener('submit', (e) => { e.preventDefault(); go({ q: form.elements.q.value.trim() }); });
+    form.addEventListener('submit', (e) => { e.preventDefault(); go({ q: form.elements.q.value.trim(), status: form.elements.status.value, type: form.elements.type.value }); });
     ui.bind(root, {
       new: (el) => ui.run(el, openCreate),
       page: (el) => go({ offset: el.dataset.offset }),
@@ -216,11 +214,6 @@
           ${secondary.map((k) => btn(k))}
           ${primary ? btn(primary, 'btn--primary') : ''}`,
       })}
-      ${ui.kpis([
-        { label: 'Helyek', value: `${fmt.int(p.done_locations)} / ${fmt.int(p.locations)}`, hint: 'kész / összes' },
-        { label: 'Tételek', value: `${fmt.int(p.counted_lines)} / ${fmt.int(p.lines)}`, hint: 'számolt / összes' },
-        visible ? { label: 'Eltérő tétel', value: fmt.int(diffLines), tone: diffLines ? 'warn' : '' } : { label: 'Vak leltár', value: 'igen', hint: 'a mennyiség könyvelés után látszik' },
-      ])}
       <div class="grid-2 cnt-detail">
         <section class="panel">
           <div class="panel__head"><h2>Adatok</h2></div>
@@ -390,7 +383,7 @@
             <h2 class="small muted">Helyek (${fmt.int(state.locations.length)})</h2>
             <ul>${state.locations.map((l) => html`<li><button type="button" class="cnt-locbtn" data-action="open" data-id="${l.location_id}"
               data-state="${l.done ? 'done' : l.counted ? 'partial' : 'todo'}" ${state.current && state.current.location.id === l.location_id ? raw('aria-current="true"') : ''}>
-              <span class="num">${l.code}</span><span class="visually-hidden">${l.done ? ' kész' : l.counted ? ' folyamatban' : ' számolatlan'}</span></button></li>`)}</ul>
+              <span class="num">${l.code}</span>${l.done ? ' kész' : l.counted ? ' folyamatban' : ''}</button></li>`)}</ul>
           </section>
         </div>`);
       const input = ui.bindScan(root, scanId, onScan);
@@ -675,13 +668,6 @@
             ${postable ? html`<button class="btn btn--primary" type="button" data-action="post" ${s.counted ? '' : raw('disabled')}>${FL.icon('seal-check')}Eltérések könyvelése</button>` : ''}`,
         })}
         ${!postable ? ui.notice(c.status === 'posted' ? 'Ez a leltár már könyvelve van.' : `A leltár állapota: ${FL.statusLabel('count', c.status)}.`, c.status === 'posted' ? 'ok' : 'info') : ''}
-        ${ui.kpis([
-          { label: 'Számolt tétel', value: `${fmt.int(s.counted)} / ${fmt.int(s.lines)}`, hint: s.uncounted ? `${fmt.int(s.uncounted)} számolatlan, nem változik` : 'minden tétel számolva' },
-          { label: 'Egyezik', value: fmt.int(s.matching) },
-          { label: 'Többlet', value: fmt.int(s.surplus), hint: s.surplus_qty ? `+${fmt.int(s.surplus_qty)} db` : '', tone: s.surplus ? 'ok' : '' },
-          { label: 'Hiány', value: fmt.int(s.shortage), hint: s.shortage_qty ? `-${fmt.int(s.shortage_qty)} db` : '', tone: s.shortage ? 'danger' : '' },
-          { label: 'Változott készlet', value: fmt.int(s.changed), hint: 'mozgás a leltár indítása óta', tone: s.changed ? 'warn' : '' },
-        ])}
         ${s.changed && postable ? ui.notice(html`<p><b>${fmt.int(s.changed)} tételnél mozgott a készlet a leltár indítása óta</b> (kiszedés, betárolás, áttárolás). A várható mennyiség ezért elavult lehet.</p>
           <p>Tételenként döntsd el: számold újra a helyet, vagy jelöld be a „Könyvelhető” mezőt, és a készlet a számolt mennyiségre áll.${openChanged ? ` Még ${openChanged} döntés hiányzik.` : ''}</p>`, 'warn') : ''}
         <div class="toolbar"><label class="check"><input type="checkbox" data-action="only-diff" ${onlyDiff ? raw('checked') : ''}><span>Csak az eltérések és a változott tételek</span></label></div>

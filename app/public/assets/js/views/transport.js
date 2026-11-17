@@ -65,7 +65,6 @@
     const b = await api.get('/api/transport/board', { date });
     const canCreate = FL.can('transport', 'create');
     const canEdit = FL.can('transport', 'edit');
-    const t = b.totals;
 
     const card = (c) => {
       const active = c.waiting.orders || c.pickups.length;
@@ -109,12 +108,6 @@
         <button class="btn" type="button" data-action="today" ${date === b.today ? raw('disabled') : ''}>Ma</button>
         <p class="tr-daylabel">${fmt.dateLong(date)}${date === b.today ? ', ma' : ''}</p>
       </div>
-      ${ui.kpis([
-        { label: 'Feladásra vár', value: fmt.int(t.waiting.orders), hint: `${fmt.int(t.waiting.packages)} csomag, minden fuvarozó`, tone: t.waiting.orders ? 'warn' : '' },
-        { label: 'Hozzárendelve', value: fmt.int(t.assigned.orders), hint: `${fmt.int(t.assigned.packages)} csomag erre a napra` },
-        { label: 'Átvételek', value: fmt.int(t.pickups), hint: 'erre a napra' },
-        { label: 'Utánvét', value: codText(t.assigned.cod), hint: `${fmt.int(t.assigned.cod_orders)} utánvétes rendelés` },
-      ])}
       ${b.no_carrier.orders ? ui.notice(`${fmt.int(b.no_carrier.orders)} feladásra kész rendelésnek nincs fuvarozója, ezért egyik átvételhez sem rendelhető. Állítsd be a fuvarozót a Megrendeléseknél.`, 'warn') : ''}
       ${b.carriers.length ? html`<div class="grid-3 tr-cards">${b.carriers.map(card)}</div>`
       : ui.empty('Még nincs fuvarozó partner. Vedd fel a Partnerek között (típus: fuvarozó).', 'truck')}`);
@@ -191,12 +184,6 @@
             <dt>Átvétel napja</dt><dd>${fmt.date(p.date)}${win ? `, ${win}` : ''}</dd>
           </dl>
         </header>
-        ${ui.kpis([
-          { label: 'Rendelés', value: fmt.int(tt.orders) },
-          { label: 'Csomag', value: fmt.int(tt.packages) },
-          { label: 'Súly', value: fmt.kg(tt.weight_kg) || '0 kg' },
-          { label: 'Utánvét', value: codText(tt.cod), hint: `${fmt.int(tt.cod_orders)} utánvétes` },
-        ])}
         <div class="no-print tr-notices">
           ${p.problems.not_packed.length ? ui.notice(`Nem feladásra kész rendelés a manifeszten: ${p.problems.not_packed.join(', ')}. Vedd le őket, különben a manifeszt nem zárható le.`, 'danger') : ''}
           ${open && p.problems.no_tracking ? ui.notice(`${fmt.int(p.problems.no_tracking)} rendelésnek nincs nyomkövetési száma. Lezárható így is, de a webshop nem kap követési linket.`, 'warn') : ''}
@@ -424,14 +411,14 @@
       })}
       ${tabs('transports')}
       <form class="toolbar" data-filters role="search">
+        <div class="field field--grow"><label for="tr-q">Keresés</label>
+          <input class="input" id="tr-q" name="q" type="search" value="${filters.q}" placeholder="Szám, cím, jármű, hivatkozás"></div>
         ${ui.field({ name: 'status', label: 'Állapot', type: 'select', options: STATUS_FILTER, value: filters.status })}
         ${ui.field({ name: 'direction', label: 'Irány', type: 'select', options: Object.entries(DIRECTIONS), value: filters.direction, placeholder: 'Mind' })}
         ${ui.field({ name: 'partner_id', label: 'Ügyfél', type: 'select', options: clients, value: filters.partner_id, placeholder: 'Mind' })}
         ${ui.field({ name: 'from', label: 'Naptól', type: 'date', value: filters.from })}
         ${ui.field({ name: 'to', label: 'Napig', type: 'date', value: filters.to })}
-        <div class="field field--grow"><label for="tr-q">Keresés</label>
-          <div class="input-group"><input class="input" id="tr-q" name="q" type="search" value="${filters.q}" placeholder="Szám, cím, jármű, hivatkozás">
-          <button class="btn" type="submit" aria-label="Keresés">${FL.icon('magnifying-glass')}</button></div></div>
+        ${ui.searchButtons({ href: `${ROOT}/fuvarok` })}
       </form>
       ${ui.table({
         caption: 'Fuvarok',
@@ -453,8 +440,10 @@
 
     ui.enableRowLinks(root);
     const form = root.querySelector('[data-filters]');
-    form.addEventListener('change', (e) => { if (e.target.name !== 'q') FL.go(listHash({ [e.target.name]: e.target.value, offset: '' })); });
-    form.addEventListener('submit', (e) => { e.preventDefault(); FL.go(listHash({ q: form.elements.q.value.trim(), offset: '' })); });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      FL.go(listHash({ ...Object.fromEntries(new FormData(form)), q: form.elements.q.value.trim(), offset: '' }));
+    });
     const refs = { clients, carriers };
     const back = () => FL.go(listHash());
     ui.bind(root, {
