@@ -1,0 +1,42 @@
+# Fully Logistics WMS on its own server. The link comes from one of two profiles:
+#   docker compose --profile caddy up -d --build    public IP, ports 80 and 443 open (Caddy, HTTPS)
+#   docker compose --profile tunnel up -d --build   no open port needed (Cloudflare Tunnel)
+# Settings and secrets: .env next to this file (see TELEPITES.md).
+services:
+  wms:
+    build:
+      context: ../../..
+      dockerfile: app/deploy/docker/Dockerfile
+    image: fully-wms
+    restart: unless-stopped
+    environment:
+      SETUP_TOKEN: ${SETUP_TOKEN:?SETUP_TOKEN is missing from .env}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is missing from .env}
+    volumes:
+      - ${WMS_DATA_DIR:?WMS_DATA_DIR is missing from .env}:/data
+    ports:
+      - "127.0.0.1:8787:8787"
+
+  caddy:
+    profiles: [caddy]
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      WMS_DOMAIN: ${WMS_DOMAIN:-}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on: [wms]
+
+  tunnel:
+    profiles: [tunnel]
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on: [wms]
+
+volumes:
+  caddy-data:

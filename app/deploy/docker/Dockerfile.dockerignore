@@ -1,0 +1,4 @@
+**/node_modules
+app/dist
+app/data
+app/deploy/docker/.env
