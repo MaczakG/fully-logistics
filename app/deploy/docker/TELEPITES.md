@@ -4,6 +4,8 @@ Ez az útmutató egy másik Claude munkamenetnek (vagy egy rendszergazdának) sz
 dolgozik a cég saját, fizikai Ubuntu szerverén. A cél: a böngészős WMS (`app/`, Node.js + SQLite)
 Docker konténerben fusson, és egy linken keresztül (pl. `https://wms.fully.hu`) elérhető legyen.
 
+A már telepített szerver frissítése, ellenőrzése és visszaállítása: [FRISSITES.md](FRISSITES.md).
+
 A konténer fájljai ebben a mappában vannak (`app/deploy/docker/`): `Dockerfile`,
 `compose.yaml`, `Caddyfile`. Ezek ki vannak próbálva: az image felépül, induláskor lefutnak a
 migrációk, a beállító kóddal létrejön az első admin, a belépés működik, és az adatok
@@ -225,14 +227,6 @@ Használat: `sudo fully-wms-update`. Az új konténer induláskor maga futtatja 
 - [ ] `sudo reboot` után a link magától újra működik.
 - [ ] `/var/backups/fully-wms` alatt van mai mentés, és a timer aktív
   (`systemctl list-timers fully-wms-backup.timer`).
-
-## Utána (külön feladat a tárolóban)
-
-A natív asztali és iPhone alkalmazás alapértelmezett szervercíme még egy régi, megszűnt címre
-mutat. A címet a `native/src/Fully.Wms.Core/SettingsStore.cs` fájl `DefaultServer` értéke adja
-(a régit tedd az `OldServers` listába), a hozzá tartozó teszt a
-`native/tests/Fully.Wms.Tests/SettingsStoreTests.cs`. Ezt az új linkre kell átírni, és PR-ben
-beküldeni.
 
 ## Mit jelents a felhasználónak
 
