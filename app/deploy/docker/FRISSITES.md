@@ -10,7 +10,7 @@ A WMS a `wms` mini PC-n fut Dockerben, kívülről a `https://app.fully.hu` cím
 | --- | --- |
 | Szerver | `wms`, Ubuntu Server 26.04 LTS, LAN IP `192.168.0.132` |
 | Belépés | `ssh mag_user@192.168.0.132`, csak kulccsal (a laptop `id_ed25519` kulcsa) |
-| Kód | `/opt/fully-wms/repo`, követett ág: `claude/zen-einstein-rdf7rm` (MaczakG/fully-logistics, csak olvasási deploy kulcs) |
+| Kód | `/opt/fully-wms/repo`, követett ág: `main` (MaczakG/fully-logistics, csak olvasási deploy kulcs) |
 | Docker-fájlok és `.env` | `/opt/fully-wms/repo/app/deploy/docker` |
 | Konténerek | `docker-wms-1` (WMS, csak `127.0.0.1:8787`), `docker-tunnel-1` (Cloudflare Tunnel) |
 | Adatok | `/var/lib/fully-wms`: adatbázis `fully-app.sqlite`, feltöltött fájlok `files/` |
@@ -24,7 +24,7 @@ Minden `docker compose` parancsot a Docker-mappából kell futtatni: `cd /opt/fu
 
 Az új verzió akkor kerül a szerverre, ha a kód már fent van a GitHubon a követett ágon, és a szerveren lefut a `sudo fully-wms-update`. A leállás általában fél percnél rövidebb.
 
-1. A változás kerüljön fel a követett ágra (most `claude/zen-einstein-rdf7rm`, a PR beolvasztása után `main`). A szerver csak a GitHubra már feltöltött kódot látja.
+1. A változás kerüljön be a `main` ágba (PR-rel, beolvasztva). A szerver csak a GitHubra már feltöltött kódot látja.
 2. Lépj be a laptopról: `ssh mag_user@192.168.0.132`
 3. Nézd meg, mi jön (nem kötelező): `sudo git -C /opt/fully-wms/repo fetch && sudo git -C /opt/fully-wms/repo log --oneline HEAD..@{u}`
 4. Telepítsd: `sudo fully-wms-update`
@@ -61,7 +61,7 @@ Ha az új verzió hibás, állj vissza az előző commitra. Ha az új verzió mi
 4. Építsd újra: `sudo docker compose up -d --build wms`
 5. Ellenőrizd az előző rész szerint.
 
-Ezután a tároló nincs ágon, ezért a következő `fully-wms-update` előtt állj vissza az ágra: `sudo git -C /opt/fully-wms/repo checkout claude/zen-einstein-rdf7rm` (vagy `main`).
+Ezután a tároló nincs ágon, ezért a következő `fully-wms-update` előtt állj vissza az ágra: `sudo git -C /opt/fully-wms/repo checkout main`.
 
 ### Az adatbázis visszaállítása mentésből
 
@@ -81,16 +81,16 @@ sudo chown 1000:1000 /var/lib/fully-wms/fully-app.sqlite
 
 Ha a szerveren lévő mentés is elveszett, a Google Drive-ról húzd vissza: `sudo rclone --config /root/.config/rclone/rclone.conf copy gdrive:db-<időbélyeg>.sqlite.gz /var/backups/fully-wms/`
 
-## Átállás a main ágra
+## Követett ág
 
-Ameddig a MaczakG/fully-logistics#2 PR nincs beolvasztva, a szerver a `claude/zen-einstein-rdf7rm` ágat követi. A beolvasztás után egyszer át kell állítani a `main`-re, különben az új verziók nem érkeznek meg.
+A szerver 2026-11-17 óta a `main` ágat követi: a MaczakG/fully-logistics#2 beolvasztása után átállítottuk, és a `dd35501` commit fut rajta. Ha egyszer másik ágra kell váltani, ez a menete:
 
 1. `sudo git -C /opt/fully-wms/repo fetch origin`
-2. `sudo git -C /opt/fully-wms/repo switch main`
+2. `sudo git -C /opt/fully-wms/repo switch <ág>`
 3. `sudo fully-wms-update`
-4. Ellenőrzés: `sudo git -C /opt/fully-wms/repo branch --show-current` → `main`
+4. Ellenőrzés: `sudo git -C /opt/fully-wms/repo branch --show-current`
 
-A deploy kulcs az egész tárolóra érvényes, ehhez nem kell újat felvenni. Ettől kezdve a frissítés a `main` ágról jön.
+A deploy kulcs az egész tárolóra érvényes, ágváltáshoz nem kell újat felvenni.
 
 ## Rendszer- és konténerfrissítések
 
