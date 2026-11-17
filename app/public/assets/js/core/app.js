@@ -12,7 +12,7 @@
 (() => {
   'use strict';
   const FL = window.FL;
-  const { html, raw, ui } = FL;
+  const { html, ui } = FL;
 
   // hint: the second line of the tile on the phone (PDA) home screen.
   const MENU = [
