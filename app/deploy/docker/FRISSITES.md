@@ -133,7 +133,7 @@ Ezek megszegése adatvesztést vagy leállást okoz, ezért frissítéskor is é
 - Az `ENCRYPTION_KEY` értékét a `.env`-ben soha ne generáld újra és ne írd felül. Ha elveszik, a mentett futár-, webshop- és számlázó-jelszavakat mindenkinek újra meg kell adnia.
 - A `.env` csak a szerveren létezik (root, 600). Ne másold ki, ne tedd gitbe, ne küldd el chatben.
 - Titkot (jelszó, token, kulcs) soha ne írj chatbe. Ha valamit a `.env`-be kell írni, a szerver termináljában tedd: `sudo nano .env`.
-- Ne futtasd a `server/demo-seed.mjs` szkriptet: kitalált demóadatokat tesz az éles adatbázisba.
+- Demóadatot (`server/demo-seed.mjs`, `server/demo-history.mjs`) csak a tulajdonos kérésére tegyél fel, a [DEMOADATOK.md](DEMOADATOK.md) szerint: kitalált adatokat tesz az éles adatbázisba.
 - Frissítés előtt mindig legyen mentés. A `fully-wms-update` ezt magától megcsinálja, kézzel: `sudo fully-wms-backup`.
 - A Cloudflare DNS-ben a `fully.hu`, `www`, `mail` és `ftp` rekord maradjon „DNS only” (szürke felhő), különben leáll az e-mail. Csak az `app` legyen narancs.
 - A deploy kulcs csak olvasni tud: a szerverről nem lehet a GitHubra írni, és ez így is maradjon.

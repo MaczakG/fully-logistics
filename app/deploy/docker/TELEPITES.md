@@ -18,7 +18,8 @@ migrációk, a beállító kóddal létrejön az első admin, a belépés műkö
   és a szerveren lévő `.env` fájlban maradnak. Ha a felhasználónak kell beírnia valamit
   (pl. a Cloudflare tunnel tokenjét), azt a szerver termináljába írja (`sudo nano .env`), ne a
   chatbe.
-- **Ne futtasd a `server/demo-seed.mjs` szkriptet.** Az kitalált demóadatokat tesz az éles
+- **Demóadatot csak a tulajdonos kérésére tegyél fel**, a [DEMOADATOK.md](DEMOADATOK.md)
+  szerint. A `server/demo-seed.mjs` és a `server/demo-history.mjs` kitalált adatokat tesz az éles
   adatbázisba.
 - Az `ENCRYPTION_KEY` értékét telepítés után **soha ne generáld újra**. Ha elveszik, a mentett
   futár-, webshop- és számlázó-jelszavakat mindenkinek újra meg kell adnia.

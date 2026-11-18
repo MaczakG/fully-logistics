@@ -703,7 +703,7 @@ export function formatSummary(s) {
     `- Fuvarszervezés: ${sumOf(s.pickups)} futárátvétel (${list(s.pickups, [['closed', 'lezárt'], ['planned', 'tervezett'], ['arrived', 'futár a rámpán']])}), ${s.transports} fuvar`,
     `- Leltár: ${s.counts} nyitott leltár`,
     `- Ajánlatok: ${sumOf(s.quotes)} (${list(s.quotes, [['draft', 'piszkozat'], ['sent', 'elküldve'], ['accepted', 'elfogadva'], ['rejected', 'elutasítva']])})`,
-    `- Elszámolás: ${s.billing_entries} rögzített tétel, ${sumOf(s.statements)} piszkozat elszámolás (${Object.keys(s.statements).join(', ')})`,
+    `- Elszámolás: ${s.billing_entries} rögzített tétel, ${sumOf(s.statements)} elszámolás (${Object.keys(s.statements).join(', ')})`,
   ].join('\n');
 }
 
