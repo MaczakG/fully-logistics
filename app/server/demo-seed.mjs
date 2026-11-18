@@ -271,7 +271,7 @@ const LOCATION_NOTE = 'Demó adat';
 // ---------------------------------------------------------------- small helpers
 
 // Valid EAN-13 (GS1 Hungary prefix 599) for item number n.
-function ean13(n) {
+export function ean13(n) {
   const body = `5999876${String(n).padStart(5, '0')}`;
   const sum = body.split('').reduce((s, d, i) => s + Number(d) * (i % 2 ? 3 : 1), 0);
   return `${body}${(10 - (sum % 10)) % 10}`;
@@ -337,7 +337,7 @@ async function freeLocationCode(db, code) {
 
 // Saves the demo_data setting (direct SQL: there is no endpoint for it). Location ids of an
 // earlier, interrupted run are kept.
-async function saveDemoSetting(db, locationIds) {
+export async function saveDemoSetting(db, locationIds) {
   const prev = await getSetting(db, DEMO_SETTING, null);
   const ids = new Set([...(prev && Array.isArray(prev.location_ids) ? prev.location_ids : []), ...locationIds]);
   await setSetting(db, DEMO_SETTING, { created_at: (prev && prev.created_at) || nowIso(), location_ids: [...ids].sort((a, b) => a - b) });
