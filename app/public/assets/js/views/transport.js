@@ -56,38 +56,31 @@
 
   /* ------------------------------------------------------------ day board */
   async function renderBoard(root, ctx) {
+    root.classList.add('list-page');
     const date = isDate(ctx.query.get('date')) ? ctx.query.get('date') : FL.today();
     const b = await api.get('/api/transport/board', { date });
     const canCreate = FL.can('transport', 'create');
     const canEdit = FL.can('transport', 'edit');
 
-    const card = (c) => {
-      const active = c.waiting.orders || c.pickups.length;
-      return html`<article class="panel tr-card" data-active="${active ? 'true' : 'false'}" aria-labelledby="tr-c-${c.id}">
-        <div class="panel__head">
-          <h2 id="tr-c-${c.id}">${c.name}</h2>
-          ${carrierLabel(c.carrier_code) ? html`<span class="tag">${carrierLabel(c.carrier_code)}</span>` : ''}
-        </div>
-        <dl class="tr-stats">
-          <div><dt>Feladásra vár</dt><dd class="num">${fmt.int(c.waiting.orders)}</dd>
-            <dd class="small muted">${c.waiting.orders ? `${fmt.int(c.waiting.packages)} csomag${c.waiting.cod_orders ? `, utánvét ${codText(c.waiting.cod)}` : ''}` : 'nincs'}</dd></div>
-          <div><dt>Hozzárendelve</dt><dd class="num">${fmt.int(c.assigned.orders)}</dd>
-            <dd class="small muted">${c.assigned.orders ? `${fmt.int(c.assigned.packages)} csomag` : 'erre a napra'}</dd></div>
-          <div><dt>Utánvét</dt><dd class="num">${codText(c.assigned.cod)}</dd><dd class="small muted">${fmt.int(c.assigned.cod_orders)} utánvétes</dd></div>
-        </dl>
-        ${c.pickups.length ? html`<ul class="tr-pickups">${c.pickups.map((p) => html`<li>
-          <div class="tr-pickups__main">
-            <a class="num" href="${ROOT}/atvetel/${p.id}">${p.number}</a> ${FL.status('pickup', p.status)}
-            <span class="small muted">${windowText(p.window_from, p.window_to) || 'nincs időablak'} · ${fmt.int(p.totals.orders)} rendelés${p.manifest_number && p.manifest_number !== p.number ? ` · ${p.manifest_number}` : ''}</span>
-          </div>
-          <div class="actions">
-            ${OPEN.includes(p.status) && canEdit && c.waiting.orders ? html`<button class="btn btn--sm" type="button" data-action="assign-all" data-id="${p.id}" data-n="${c.waiting.orders}">${FL.icon('plus')}Mind hozzá (${fmt.int(c.waiting.orders)})</button>` : ''}
-            <a class="btn btn--sm" href="${ROOT}/atvetel/${p.id}">${OPEN.includes(p.status) ? 'Manifeszt' : 'Megnyitás'}</a>
-          </div>
-        </li>`)}</ul>` : html`<p class="small muted">Erre a napra nincs futárátvétel.</p>`}
-        ${canCreate && c.status === 'active' ? html`<div class="actions"><button class="btn btn--sm" type="button" data-action="new" data-carrier="${c.id}">${FL.icon('plus-circle')}Átvétel felvétele</button></div>` : ''}
-      </article>`;
-    };
+    // One row per carrier: what waits, what is on the day's pickups, and the pickups themselves.
+    const columns = [
+      { key: 'name', label: 'Fuvarozó', render: (c) => html`${c.name}${carrierLabel(c.carrier_code) ? html`<span class="sub">${carrierLabel(c.carrier_code)}</span>` : ''}` },
+      { key: 'waiting', label: 'Feladásra vár', align: 'r', cls: 'num', render: (c) => html`${fmt.int(c.waiting.orders)}${c.waiting.orders ? html`<span class="sub">${fmt.int(c.waiting.packages)} csomag${c.waiting.cod_orders ? `, utánvét ${codText(c.waiting.cod)}` : ''}</span>` : ''}` },
+      { key: 'assigned', label: 'Hozzárendelve', align: 'r', cls: 'num', render: (c) => html`${fmt.int(c.assigned.orders)}${c.assigned.orders ? html`<span class="sub">${fmt.int(c.assigned.packages)} csomag</span>` : ''}` },
+      { key: 'cod', label: 'Utánvét', align: 'r', cls: 'num', render: (c) => html`${codText(c.assigned.cod)}<span class="sub">${fmt.int(c.assigned.cod_orders)} utánvétes</span>` },
+      {
+        key: 'pickups', label: 'Futárátvételek', render: (c) => (c.pickups.length ? c.pickups.map((p) => html`<div>
+          <a class="num" href="${ROOT}/atvetel/${p.id}">${p.number}</a> ${FL.status('pickup', p.status)}
+          <span class="sub">${windowText(p.window_from, p.window_to) || 'nincs időablak'} · ${fmt.int(p.totals.orders)} rendelés${p.manifest_number && p.manifest_number !== p.number ? ` · ${p.manifest_number}` : ''}</span></div>`)
+          : html`<span class="muted">erre a napra nincs</span>`),
+      },
+      {
+        key: 'act', label: 'Műveletek', cls: 'w-actions', render: (c) => html`<span class="row-actions">
+          ${c.pickups.filter((p) => OPEN.includes(p.status) && canEdit && c.waiting.orders).map((p) => html`<button class="btn btn--sm" type="button" data-action="assign-all" data-id="${p.id}" data-n="${c.waiting.orders}">${FL.icon('plus')}${p.number}: mind hozzá (${fmt.int(c.waiting.orders)})</button>`)}
+          ${canCreate && c.status === 'active' ? html`<button class="btn btn--sm" type="button" data-action="new" data-carrier="${c.id}">${FL.icon('plus-circle')}Átvétel felvétele</button>` : ''}
+        </span>`,
+      },
+    ];
 
     root.innerHTML = String(html`
       ${ui.pageHead({
@@ -104,8 +97,7 @@
         <p class="tr-daylabel">${fmt.dateLong(date)}${date === b.today ? ', ma' : ''}</p>
       </div>
       ${b.no_carrier.orders ? ui.notice(`${fmt.int(b.no_carrier.orders)} feladásra kész rendelésnek nincs fuvarozója, ezért egyik átvételhez sem rendelhető. Állítsd be a fuvarozót a Megrendeléseknél.`, 'warn') : ''}
-      ${b.carriers.length ? html`<div class="grid-3 tr-cards">${b.carriers.map(card)}</div>`
-      : ui.empty('Még nincs fuvarozó partner. Vedd fel a Partnerek között (típus: fuvarozó).', 'truck')}`);
+      ${ui.table({ caption: 'Fuvarozók a napon', rows: b.carriers, columns, empty: 'Még nincs fuvarozó partner. Vedd fel a Partnerek között (típus: fuvarozó).' })}`);
 
     const goDay = (d) => FL.go(`${ROOT}${d === FL.today() ? '' : FL.qs({ date: d })}`);
     root.querySelector('#tr-date').addEventListener('change', (e) => { if (isDate(e.target.value)) goDay(e.target.value); });

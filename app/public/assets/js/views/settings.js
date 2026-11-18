@@ -871,46 +871,38 @@
 
   // What the courier adapter supports (listCouriers() features).
   const FEATURES = [['tracking', 'Nyomkövetés'], ['cod', 'Utánvét'], ['pickupPoints', 'Csomagpont, automata'], ['testMode', 'Teszt rendszer']];
-  const featureList = (f) => {
-    if (!f || !Object.keys(f).length) return '';
-    return html`<ul class="feature-list" aria-label="Támogatott funkciók">
-      ${FEATURES.map(([k, label]) => html`<li data-on="${f[k] ? 'true' : 'false'}">${FL.icon(f[k] ? 'check' : 'x')}${label}<span class="visually-hidden">: ${f[k] ? 'igen' : 'nem'}</span></li>`)}
-      ${f.closeRequired ? html`<li data-on="warn">${FL.icon('info')}Napi zárás kötelező</li>` : ''}
-    </ul>`;
-  };
+  // What an integration can do, in words: "Nyomkövetés, Utánvét, napi zárás kötelező".
+  const featureText = (f = {}) => [...FEATURES.filter(([k]) => f[k]).map(([, label]) => label), ...(f.closeRequired ? ['napi zárás kötelező'] : [])].join(', ');
 
   // ================================================================ Futárszolgálatok
   async function couriersTab(root) {
+    root.classList.add('list-page');
     const data = await api.get('/api/settings/couriers');
+    const carrierName = (id) => { const p = data.carriers.find((x) => x.id === id); return p ? p.name : ''; };
+    const columns = [
+      { key: 'name', label: 'Futárszolgálat', render: (c) => html`<button class="link-btn" type="button" data-action="edit-courier" data-code="${c.code}">${c.name}</button>` },
+      { key: 'state', label: 'Állapot', render: (c) => (c.active ? html`<span class="chip" data-tone="ok">Aktív</span>` : c.configured ? html`<span class="chip">Kikapcsolva</span>` : html`<span class="chip" data-tone="info">Nincs beállítva</span>`) },
+      { key: 'carrier', label: 'Fuvarozó partner', render: (c) => (c.carrier_id ? carrierName(c.carrier_id) : html`<span class="muted">nincs összekapcsolva</span>`) },
+      { key: 'access', label: 'Hozzáférés', render: (c) => (Object.values(c.credentials || {}).some(Boolean) ? 'megadva' : html`<span class="muted">nincs megadva</span>`) },
+      { key: 'features', label: 'Tudja', render: (c) => featureText(c.features) },
+      { key: 'updated_at', label: 'Utoljára mentve', cls: 'nowrap', render: (c) => (c.updated_at ? fmt.dateTime(c.updated_at) : html`<span class="muted">soha</span>`) },
+      { key: 'error', label: 'Hiba', render: (c) => (c.error || c.last_error ? html`<span class="diff-neg">${c.error || c.last_error}</span>` : '') },
+      {
+        key: 'act', label: 'Műveletek', cls: 'w-actions', render: (c) => html`<span class="row-actions">
+          <button class="btn btn--sm" type="button" data-action="edit-courier" data-code="${c.code}">${FL.icon(can('edit') ? 'pencil-simple' : 'eye')}${can('edit') ? 'Beállítás' : 'Megtekintés'}</button>
+          ${can('edit') ? html`<button class="btn btn--sm" type="button" data-action="test-courier" data-code="${c.code}" ${c.configured ? '' : raw('disabled title="Előbb mentsd a hozzáférési adatokat"')}>${FL.icon('plugs-connected')}Kapcsolat tesztelése</button>` : ''}
+          ${c.error && can('edit') ? html`<button class="btn btn--sm btn--danger" type="button" data-action="clear-courier" data-code="${c.code}">${FL.icon('trash')}Tárolt hozzáférés törlése</button>` : ''}
+        </span>`,
+      },
+    ];
     const paint = () => {
       frame(root, 'futarok', {
-        lead: 'A saját futárszerződéseink hozzáférési adatai. Ezekkel készülnek a címkék és a nyomkövetés. A titkos adatokat titkosítva tároljuk, és soha nem jelenítjük meg.',
         body: html`
           ${readOnlyNotice()}
-          ${data.items.length ? html`<div class="grid-2 courier-grid">${data.items.map((c) => courierCard(c))}</div>`
+          ${data.items.length ? ui.table({ caption: 'Futárszolgálatok', rows: data.items, columns })
             : ui.notice('A futár integrációk (GLS, DPD, Foxpost, MPL, DHL) még nincsenek telepítve ebben a verzióban. Amint elérhetők, itt adhatod meg a hozzáférési adatokat. Addig a nyomkövetési számot kézzel lehet rögzíteni.', 'info')}`,
       });
     };
-    const carrierName = (id) => { const p = data.carriers.find((x) => x.id === id); return p ? p.name : ''; };
-    function courierCard(c) {
-      const chip = c.active ? html`<span class="chip" data-tone="ok">Aktív</span>` : c.configured ? html`<span class="chip">Kikapcsolva</span>` : html`<span class="chip" data-tone="info">Nincs beállítva</span>`;
-      return html`<section class="panel courier-card" aria-labelledby="cr-${c.code}">
-        <div class="panel__head"><h2 id="cr-${c.code}">${c.name}</h2>${chip}</div>
-        <dl class="dl">
-          <dt>Fuvarozó partner</dt><dd>${c.carrier_id ? carrierName(c.carrier_id) : html`<span class="muted">nincs összekapcsolva</span>`}</dd>
-          <dt>Hozzáférés</dt><dd>${Object.values(c.credentials || {}).some(Boolean) ? 'megadva' : html`<span class="muted">nincs megadva</span>`}</dd>
-          <dt>Utoljára mentve</dt><dd>${c.updated_at ? fmt.dateTime(c.updated_at) : html`<span class="muted">soha</span>`}</dd>
-        </dl>
-        ${featureList(c.features)}
-        ${c.error ? ui.notice(c.error, 'danger') : ''}
-        ${c.error && can('edit') ? html`<div class="actions"><button class="btn btn--danger" type="button" data-action="clear-courier" data-code="${c.code}">${FL.icon('trash')}Tárolt hozzáférés törlése</button></div>` : ''}
-        ${c.last_error ? ui.notice(html`<b>Utolsó hiba:</b> ${c.last_error}`, 'warn') : ''}
-        <div class="actions">
-          <button class="btn" type="button" data-action="edit-courier" data-code="${c.code}">${FL.icon(can('edit') ? 'pencil-simple' : 'eye')}${can('edit') ? 'Beállítás' : 'Megtekintés'}</button>
-          ${can('edit') ? html`<button class="btn" type="button" data-action="test-courier" data-code="${c.code}" ${c.configured ? '' : raw('disabled title="Előbb mentsd a hozzáférési adatokat"')}>${FL.icon('plugs-connected')}Kapcsolat tesztelése</button>` : ''}
-        </div>
-      </section>`;
-    }
     function courierDialog(c) {
       const carriers = data.carriers.filter((p) => p.carrier_code === c.code).map((p) => ({ value: p.id, label: `${p.name}${p.status === 'active' ? '' : ' (inaktív)'}` }));
       ui.dialog({
