@@ -146,7 +146,7 @@ export function commonSettingFields({ codDefault, carrierHelp = '' }) {
     { key: 'ignore_skus', label: 'Kihagyott cikkszámok', type: 'text', required: false, default: '',
       help: 'Vesszővel elválasztva azok a webshop cikkszámok, amelyek nem raktári áruk (például ajándékcsomagolás, szolgáltatás). Ezek a tételek nem kerülnek a rendelésbe.' },
     { key: 'push_fulfillment', label: 'Feladás visszaküldése a webshopba', type: 'checkbox', required: false, default: true,
-      help: 'Feladáskor (futárátvétel lezárásakor) a rendelést teljesítettre állítjuk a webshopban a csomagszámmal.' },
+      help: 'Feladáskor (futárátadás lezárásakor) a rendelést teljesítettre állítjuk a webshopban a csomagszámmal.' },
     { key: 'cancel_sync', label: 'Webshopban törölt rendelés sztornózása', type: 'checkbox', required: false, default: true,
       help: 'Ha a rendelést a webshopban törlik, nálunk is sztornózzuk, amíg még nem kezdtük el a komissiót.' },
     { key: 'stock_sync', label: 'Készlet visszaküldése', type: 'checkbox', required: false, default: false,

@@ -35,8 +35,8 @@
       { key: 'orders', path: 'megrendelesek', label: 'Megrendelések' },
       { key: 'picking', path: 'komissio', label: 'Komissió' },
       { key: 'counts', path: 'leltar', label: 'Leltár' },
-      { key: 'transport', path: 'fuvarszervezes', label: 'Futárátvételek' },
-      { key: 'transport', path: 'fuvarszervezes/fuvarok', label: 'Raklapos fuvarok' },
+      { key: 'transport', path: 'fuvarszervezes', label: 'Futárátadás' },
+      { key: 'transport', path: 'fuvarszervezes/fuvarok', label: 'Egyedi fuvarok' },
     ] },
     { title: 'Lekérdezések', items: [
       { key: 'stock', path: 'keszlet', label: 'Készlet' },

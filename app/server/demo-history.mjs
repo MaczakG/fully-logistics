@@ -102,7 +102,7 @@ const MORE_CLIENTS = [
   ['PECABOLT', 'Pecabolt Horgászcikk Kft.', '2890', 'Tata', 'Ady Endre út 7.', [['Pergető horgászbot, 3 m', 0.4], ['Monofil damil, 0,25 mm', 0.1], ['Csalis doboz', 0.3]]],
 ];
 const MORE_PARTNERS = [
-  { type: 'carrier', code: 'DEMO-DPD', name: 'DPD Hungária Kft.', carrier_code: 'dpd', notes: 'Napi átvétel 15:00 és 16:00 között.' },
+  { type: 'carrier', code: 'DEMO-DPD', name: 'DPD Hungária Kft.', carrier_code: 'dpd', notes: 'Napi futárátadás 15:00 és 16:00 között.' },
   { type: 'carrier', code: 'DEMO-DUNACARGO', name: 'Duna Cargo Szállítmányozási Kft.', zip: '2310', city: 'Szigetszentmiklós', address: 'Leshegy út 30.', notes: 'Raklapos és kamionos fuvarok.' },
   ...[['PANNONPACK', 'Pannon Csomagolóanyag Kft.', '9027', 'Győr'], ['AGROMAG', 'Agro-Mag Kft.', '6800', 'Hódmezővásárhely'], ['EUROKOZMETIK', 'EuroKozmetik Gyártó Kft.', '2600', 'Vác'],
     ['DELPAPIR', 'Dél-Alföldi Papír Zrt.', '6500', 'Baja'], ['BALATONTEXTIL', 'Balaton Textil Kft.', '8360', 'Keszthely']]
@@ -272,7 +272,7 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
       const waiting = await first(db, "SELECT COUNT(*) AS n FROM orders WHERE status = 'packed' AND pickup_id IS NULL AND carrier_id = ?", carrierId);
       const open = await first(db, "SELECT id FROM carrier_pickups WHERE carrier_id = ? AND status IN ('planned', 'arrived') ORDER BY id LIMIT 1", carrierId);
       if (!waiting.n && !open) continue;
-      const pickupId = open ? open.id : (await api.post('/api/transport/pickups', { carrier_id: carrierId, date: day, window_from: from, window_to: to, note: 'Napi átvétel' })).id;
+      const pickupId = open ? open.id : (await api.post('/api/transport/pickups', { carrier_id: carrierId, date: day, window_from: from, window_to: to, note: 'Napi átadás' })).id;
       if (waiting.n) await api.post(`/api/transport/pickups/${pickupId}/orders`, { all: true });
       if (last) continue;
       await api.post(`/api/transport/pickups/${pickupId}/arrived`);

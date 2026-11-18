@@ -704,7 +704,7 @@ async function unpackOrder(ctx, id, body) {
   const o = await first(db, 'SELECT o.id, o.number, o.status, o.pickup_id, cp.number AS pickup_number FROM orders o LEFT JOIN carrier_pickups cp ON cp.id = o.pickup_id WHERE o.id = ?', id);
   if (!o) throw notFound('A rendelés nem található.');
   if (o.status !== 'packed') throw conflict(`Csak becsomagolt rendelés csomagolása vonható vissza (most: ${orderLabel(o.status)}).`);
-  if (o.pickup_id) throw conflict(`A(z) ${o.number} rendelés már egy futárátvételhez tartozik (${o.pickup_number}). Előbb vedd ki onnan.`);
+  if (o.pickup_id) throw conflict(`A(z) ${o.number} rendelés már egy futárátadáshoz tartozik (${o.pickup_number}). Előbb vedd ki onnan.`);
   await setOrderStatus(ctx, id, 'picking', `Csomagolás visszavonva: ${reason}`, { tracking_number: '', label_document_id: null, packed_at: null });
   await audit(ctx, { module: 'picking', action: 'edit', entity: 'order', entityId: id, summary: `${o.number}: csomagolás visszavonva (${reason})` });
   return packingOrder(ctx, id);

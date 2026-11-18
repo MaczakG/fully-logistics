@@ -1154,11 +1154,11 @@
           })}
         </section>
         <section class="panel panel--flush">
-          <div class="panel__head"><h2>Utolsó futárátvételek</h2></div>
+          <div class="panel__head"><h2>Utolsó futárátadások</h2></div>
           ${ui.table({
-            caption: 'Utolsó futárátvételek',
+            caption: 'Utolsó futárátadások',
             rows: s.last_pickups,
-            empty: 'Még nem volt futárátvétel.',
+            empty: 'Még nem volt futárátadás.',
             columns: [
               { key: 'number', label: 'Szám', cls: 'num' },
               { key: 'date', label: 'Nap', cls: 'nowrap', render: (r) => html`${fmt.date(r.date)}${r.window_from ? html`<span class="sub">${r.window_from}${r.window_to ? ` és ${r.window_to} között` : ''}</span>` : ''}` },

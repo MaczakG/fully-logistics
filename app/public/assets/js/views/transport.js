@@ -1,7 +1,7 @@
 /* Fuvarszervezés (#/fuvarszervezes): carrier pickups and pallet or truck transports.
-     #/fuvarszervezes?date=YYYY-MM-DD   Futárátvételek: day board per carrier (default: today in Budapest)
+     #/fuvarszervezes?date=YYYY-MM-DD   Futárátadás: day board per courier (carriers with a courier code) (default: today in Budapest)
      #/fuvarszervezes/atvetel/:id       one pickup: manifest, scanning parcels, waiting orders, close, print
-     #/fuvarszervezes/fuvarok           Raklapos fuvarok: list with filters
+     #/fuvarszervezes/fuvarok           Egyedi fuvarok (every transport that is not a courier parcel): list with filters
      #/fuvarszervezes/fuvarok/:id       the list with the transport's dialog open */
 (() => {
   'use strict';
@@ -23,17 +23,19 @@
 
   /* ------------------------------------------------------------ pickup dialog */
   async function pickupDialog({ pickup = null, carrierId = '', date = FL.today() } = {}) {
-    const carriers = pickup ? [] : await ui.partnerOptions('carrier');
+    // only couriers (a partner with a courier code); every other carrier is an egyedi fuvar
+    const carriers = pickup ? [] : (await api.get('/api/lookup/partners', { type: 'carrier' })).items
+      .filter((p) => p.carrier_code).map((p) => ({ value: p.id, label: p.name }));
     if (!pickup && !carriers.length) {
-      ui.toast('Nincs aktív fuvarozó partner. Vedd fel a Partnerek között.', 'error');
+      ui.toast('Nincs aktív futárszolgálat partner (GLS, DPD, Foxpost, MPL, DHL). Vedd fel a Partnerek között.', 'error');
       return;
     }
     ui.dialog({
-      title: pickup ? `${pickup.number} módosítása` : 'Új futárátvétel',
-      submitLabel: pickup ? 'Mentés' : 'Átvétel felvétele',
+      title: pickup ? `${pickup.number} módosítása` : 'Új futárátadás',
+      submitLabel: pickup ? 'Mentés' : 'Átadás felvétele',
       body: html`<div class="form-grid">
         ${pickup ? html`<p class="span-all">Fuvarozó: <b>${pickup.carrier_name}</b></p>`
-        : ui.field({ name: 'carrier_id', label: 'Fuvarozó', type: 'select', options: carriers, value: carrierId, placeholder: 'Válassz fuvarozót', required: true, span: 'all' })}
+        : ui.field({ name: 'carrier_id', label: 'Futárszolgálat', type: 'select', options: carriers, value: carrierId, placeholder: 'Válassz futárszolgálatot', required: true, span: 'all' })}
         ${ui.field({ name: 'date', label: 'Nap', type: 'date', value: pickup ? pickup.date : date, required: true, min: FL.today() })}
         ${ui.field({ name: 'window_from', label: 'Időablak eleje', type: 'time', value: pickup ? pickup.window_from : '', optional: true })}
         ${ui.field({ name: 'window_to', label: 'Időablak vége', type: 'time', value: pickup ? pickup.window_to : '', optional: true })}
@@ -43,7 +45,7 @@
         const v = ui.formValues(form);
         if (pickup) {
           await api.patch(`/api/transport/pickups/${pickup.id}`, v);
-          ui.toast('Futárátvétel mentve.', 'ok');
+          ui.toast('Futárátadás mentve.', 'ok');
           FL.reload();
           return;
         }
@@ -69,7 +71,7 @@
       { key: 'assigned', label: 'Hozzárendelve', align: 'r', cls: 'num', render: (c) => html`${fmt.int(c.assigned.orders)}${c.assigned.orders ? html`<span class="sub">${fmt.int(c.assigned.packages)} csomag</span>` : ''}` },
       { key: 'cod', label: 'Utánvét', align: 'r', cls: 'num', render: (c) => html`${codText(c.assigned.cod)}<span class="sub">${fmt.int(c.assigned.cod_orders)} utánvétes</span>` },
       {
-        key: 'pickups', label: 'Futárátvételek', render: (c) => (c.pickups.length ? c.pickups.map((p) => html`<div>
+        key: 'pickups', label: 'Futárátadások', render: (c) => (c.pickups.length ? c.pickups.map((p) => html`<div>
           <a class="num" href="${ROOT}/atvetel/${p.id}">${p.number}</a> ${FL.status('pickup', p.status)}
           <span class="sub">${windowText(p.window_from, p.window_to) || 'nincs időablak'} · ${fmt.int(p.totals.orders)} rendelés${p.manifest_number && p.manifest_number !== p.number ? ` · ${p.manifest_number}` : ''}</span></div>`)
           : html`<span class="muted">erre a napra nincs</span>`),
@@ -77,7 +79,7 @@
       {
         key: 'act', label: 'Műveletek', cls: 'w-actions', render: (c) => html`<span class="row-actions">
           ${c.pickups.filter((p) => OPEN.includes(p.status) && canEdit && c.waiting.orders).map((p) => html`<button class="btn btn--sm" type="button" data-action="assign-all" data-id="${p.id}" data-n="${c.waiting.orders}">${FL.icon('plus')}${p.number}: mind hozzá (${fmt.int(c.waiting.orders)})</button>`)}
-          ${canCreate && c.status === 'active' ? html`<button class="btn btn--sm" type="button" data-action="new" data-carrier="${c.id}">${FL.icon('plus-circle')}Átvétel felvétele</button>` : ''}
+          ${canCreate && c.status === 'active' ? html`<button class="btn btn--sm" type="button" data-action="new" data-carrier="${c.id}">${FL.icon('plus-circle')}Átadás felvétele</button>` : ''}
         </span>`,
       },
     ];
@@ -85,9 +87,9 @@
     root.innerHTML = String(html`
       ${ui.pageHead({
         title: 'Fuvarszervezés',
-        lead: 'Napi futárátvételek fuvarozónként: a feladásra kész csomagok manifesztre kerülnek, a lezárással feladjuk őket.',
+        lead: 'Napi futárátadások fuvarozónként: a feladásra kész csomagok manifesztre kerülnek, a lezárással feladjuk őket.',
         actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
-          ${canCreate ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új futárátvétel</button>` : ''}`,
+          ${canCreate ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új futárátadás</button>` : ''}`,
       })}
       <div class="toolbar tr-daybar">
         <button class="btn btn--icon" type="button" data-action="day" data-delta="-1" aria-label="Előző nap">${FL.icon('caret-left')}</button>
@@ -96,15 +98,15 @@
         <button class="btn" type="button" data-action="today" ${date === b.today ? raw('disabled') : ''}>Ma</button>
         <p class="tr-daylabel">${fmt.dateLong(date)}${date === b.today ? ', ma' : ''}</p>
       </div>
-      ${b.no_carrier.orders ? ui.notice(`${fmt.int(b.no_carrier.orders)} feladásra kész rendelésnek nincs fuvarozója, ezért egyik átvételhez sem rendelhető. Állítsd be a fuvarozót a Megrendeléseknél.`, 'warn') : ''}
-      ${ui.table({ caption: 'Fuvarozók a napon', rows: b.carriers, columns, empty: 'Még nincs fuvarozó partner. Vedd fel a Partnerek között (típus: fuvarozó).' })}`);
+      ${b.no_carrier.orders ? ui.notice(`${fmt.int(b.no_carrier.orders)} feladásra kész rendelésnek nincs fuvarozója, ezért egyik futárátadáshoz sem rendelhető. Állítsd be a fuvarozót a Megrendeléseknél.`, 'warn') : ''}
+      ${ui.table({ caption: 'Fuvarozók a napon', rows: b.carriers, columns, empty: 'Még nincs futárszolgálat partner. Vedd fel a Partnerek között (típus: fuvarozó, futárszolgálat megadásával).' })}`);
 
     const goDay = (d) => FL.go(`${ROOT}${d === FL.today() ? '' : FL.qs({ date: d })}`);
     root.querySelector('#tr-date').addEventListener('change', (e) => { if (isDate(e.target.value)) goDay(e.target.value); });
     ui.bind(root, {
       day: (el) => goDay(FL.addDays(date, Number(el.dataset.delta))),
       today: () => goDay(FL.today()),
-      export: () => ui.exportCsv('futaratvetelek', [
+      export: () => ui.exportCsv('futaratadas', [
         { label: 'Nap', render: () => date },
         { label: 'Fuvarozó', key: 'name' },
         { label: 'Feladásra vár (rendelés)', render: (c) => c.waiting.orders },
@@ -112,12 +114,12 @@
         { label: 'Hozzárendelve (rendelés)', render: (c) => c.assigned.orders },
         { label: 'Hozzárendelve (csomag)', render: (c) => c.assigned.packages },
         { label: 'Utánvét', render: (c) => codText(c.assigned.cod) },
-        { label: 'Átvételek', render: (c) => c.pickups.map((p) => p.number).join(', ') },
+        { label: 'Futárátadások', render: (c) => c.pickups.map((p) => p.number).join(', ') },
       ], b.carriers),
       new: (el) => ui.run(el, () => pickupDialog({ carrierId: el.dataset.carrier || '', date: date < b.today ? b.today : date })),
       'assign-all': (el) => ui.run(el, async () => {
         const res = await api.post(`/api/transport/pickups/${el.dataset.id}/orders`, { all: true });
-        ui.toast(`${fmt.int(res.assigned)} rendelés a(z) ${res.pickup.number} átvételhez rendelve.`, 'ok');
+        ui.toast(`${fmt.int(res.assigned)} rendelés a(z) ${res.pickup.number} futárátadáshoz rendelve.`, 'ok');
         FL.reload();
       }),
     });
@@ -161,7 +163,7 @@
       const closeAllowed = open && FL.can('transport', 'approve') && p.orders.length;
       root.innerHTML = String(html`
         <div class="no-print">${ui.pageHead({
-          crumb: { href: `${ROOT}${p.date === FL.today() ? '' : FL.qs({ date: p.date })}`, label: 'Futárátvételek' },
+          crumb: { href: `${ROOT}${p.date === FL.today() ? '' : FL.qs({ date: p.date })}`, label: 'Futárátadás' },
           title: html`${p.number} ${FL.status('pickup', p.status)}`,
           lead: `${p.carrier_name}, ${fmt.dateLong(p.date)}${win ? `, ${win}` : ''}`,
           actions: html`
@@ -178,7 +180,7 @@
           <dl class="dl small">
             <dt>Manifesztszám</dt><dd class="num">${p.manifest_number || p.number}${p.manifest_document_id ? html` · <a href="${api.documentUrl(p.manifest_document_id, true)}" target="_blank" rel="noopener">jegyzék (PDF)</a>` : ''}</dd>
             <dt>Fuvarozó</dt><dd>${p.carrier_name}</dd>
-            <dt>Átvétel napja</dt><dd>${fmt.date(p.date)}${win ? `, ${win}` : ''}</dd>
+            <dt>Átadás napja</dt><dd>${fmt.date(p.date)}${win ? `, ${win}` : ''}</dd>
           </dl>
         </header>
         <div class="no-print tr-notices">
@@ -209,7 +211,7 @@
         </footer>
         ${editable && p.waiting.length ? html`<section class="panel panel--flush no-print" aria-labelledby="tr-wait-title">
           <div class="panel__head"><div><h2 id="tr-wait-title">Feladásra vár</h2>
-            <p class="small muted">${fmt.int(p.waiting.length)} csomagolt ${p.carrier_short} rendelés, még nincs átvételen</p></div>
+            <p class="small muted">${fmt.int(p.waiting.length)} csomagolt ${p.carrier_short} rendelés, még nincs futárátadáson</p></div>
             <div class="actions">
               <button class="btn btn--sm" type="button" data-action="add-selected" ${selected.size ? '' : raw('disabled')}>${FL.icon('plus')}Kijelöltek hozzáadása${selected.size ? ` (${selected.size})` : ''}</button>
               <button class="btn btn--sm" type="button" data-action="add-all">${FL.icon('plus-circle')}Mind hozzáadása (${fmt.int(p.waiting.length)})</button>
@@ -275,7 +277,7 @@
       print: () => window.print(),
       csv: (el) => ui.run(el, () => api.download(`/api/transport/pickups/${p.id}/manifest.csv`)),
       cancel: async (el) => {
-        if (!(await ui.confirm({ title: 'Futárátvétel törlése', text: `Törlöd a(z) ${p.number} átvételt? A ${fmt.int(p.orders.length)} rendelése újra feladásra vár.`, confirmLabel: 'Törlés', tone: 'danger' }))) return;
+        if (!(await ui.confirm({ title: 'Futárátadás törlése', text: `Törlöd a(z) ${p.number} futárátadást? A ${fmt.int(p.orders.length)} rendelése újra feladásra vár.`, confirmLabel: 'Törlés', tone: 'danger' }))) return;
         await ui.run(el, async () => {
           await api.del(`/api/transport/pickups/${p.id}`);
           ui.toast(`${p.number} törölve.`, 'ok');
@@ -292,7 +294,7 @@
             <p><b>${fmt.int(tt.orders)} rendelés</b>, ${fmt.int(tt.packages)} csomag${tt.weight_kg ? `, ${fmt.kg(tt.weight_kg)}` : ''}, utánvét ${codText(tt.cod)} megy át a(z) ${p.carrier_name} futárnak.</p>
             <p class="small muted">A rendelések állapota Feladva lesz, a webshopok megkapják a nyomkövetési számokat. Ez nem vonható vissza.</p>
             ${p.problems.no_tracking ? ui.notice(`${fmt.int(p.problems.no_tracking)} rendelésnek nincs nyomkövetési száma.`, 'warn') : ''}
-            ${ui.field({ name: 'manifest_number', label: 'A fuvarozó manifesztszáma', optional: true, hint: `Ha üresen hagyod, az átvétel száma lesz: ${p.number}.` })}`,
+            ${ui.field({ name: 'manifest_number', label: 'A fuvarozó manifesztszáma', optional: true, hint: `Ha üresen hagyod, a futárátadás száma lesz: ${p.number}.` })}`,
           onSubmit: async (form) => {
             const body = ui.formValues(form);
             let res;

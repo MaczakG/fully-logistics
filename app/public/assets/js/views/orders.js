@@ -457,7 +457,7 @@
             ['Utánvét', o.cod_amount ? fmt.money(o.cod_amount) : 'nincs'],
             ['Hullám', o.wave ? (FL.can('picking', 'view') ? html`<a class="mono" href="${FL.routes.picking}/${o.wave.id}">${o.wave.number}</a>` : html`<span class="mono">${o.wave.number}</span>`) : ''],
             ['Becsomagolva', o.packed_at ? fmt.dateTime(o.packed_at) : ''],
-            ['Futárátvétel', o.pickup ? html`<span class="mono">${o.pickup.number}</span>` : ''],
+            ['Futárátadás', o.pickup ? html`<span class="mono">${o.pickup.number}</span>` : ''],
             ['Feladva', o.shipped_at ? fmt.dateTime(o.shipped_at) : ''],
             ['Kézbesítve', o.delivered_at ? fmt.dateTime(o.delivered_at) : ''],
             ['Sztornózva', o.cancelled_at ? fmt.dateTime(o.cancelled_at) : ''],

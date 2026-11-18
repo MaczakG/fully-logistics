@@ -140,7 +140,7 @@ const OTHER_PARTNERS = [
     key: 'GLS',
     partner: {
       type: 'carrier', code: 'DEMO-GLS', name: 'GLS General Logistics Systems Hungary Kft.', carrier_code: 'gls',
-      notes: 'Napi futárátvétel 14:00 és 15:00 között, a manifesztet a sofőr írja alá.',
+      notes: 'Napi futárátadás 14:00 és 15:00 között, a manifesztet a sofőr írja alá.',
     },
   },
   {
@@ -519,9 +519,9 @@ export async function seedDemo({ worker, env, adminId, log = console.log, today 
     }
 
     // Closed GLS pickup: ships the older orders.
-    log('Futárátvételek...');
+    log('Futárátadások...');
     const closed = await api.post('/api/transport/pickups', {
-      carrier_id: state.partners.GLS, date: pickupDay, window_from: '14:00', window_to: '15:00', note: 'Napi GLS átvétel',
+      carrier_id: state.partners.GLS, date: pickupDay, window_from: '14:00', window_to: '15:00', note: 'Napi GLS átadás',
     });
     await api.post(`/api/transport/pickups/${closed.id}/orders`, { order_ids: orderIds(['shipped', 'delivered', 'returned']) });
     await api.post(`/api/transport/pickups/${closed.id}/arrived`);
@@ -700,7 +700,7 @@ export function formatSummary(s) {
     `- Betárolások: ${sumOf(s.inbounds)} (${list(s.inbounds, [['completed', 'lezárt'], ['receiving', 'átvétel alatt'], ['arrived', 'megérkezett'], ['expected', 'várható']])})`,
     `- Rendelések: ${sumOf(s.orders)} (${list(s.orders, ORDER_LABELS)}), visszáru: ${s.returns}`,
     `- Komissió: ${sumOf(s.waves)} hullám (${list(s.waves, [['completed', 'lezárt'], ['picking', 'kiszedés alatt'], ['open', 'nyitott'], ['picked', 'kiszedve']])})`,
-    `- Fuvarszervezés: ${sumOf(s.pickups)} futárátvétel (${list(s.pickups, [['closed', 'lezárt'], ['planned', 'tervezett'], ['arrived', 'futár a rámpán']])}), ${s.transports} fuvar`,
+    `- Fuvarszervezés: ${sumOf(s.pickups)} futárátadás (${list(s.pickups, [['closed', 'lezárt'], ['planned', 'tervezett'], ['arrived', 'futár a rámpán']])}), ${s.transports} fuvar`,
     `- Leltár: ${s.counts} nyitott leltár`,
     `- Ajánlatok: ${sumOf(s.quotes)} (${list(s.quotes, [['draft', 'piszkozat'], ['sent', 'elküldve'], ['accepted', 'elfogadva'], ['rejected', 'elutasítva']])})`,
     `- Elszámolás: ${s.billing_entries} rögzített tétel, ${sumOf(s.statements)} elszámolás (${Object.keys(s.statements).join(', ')})`,
@@ -871,7 +871,7 @@ export async function removeDemo({ env, log = console.log }) {
   log([
     'Demó adatok törölve:',
     `- ${out.partners} partner, ${out.products} termék, ${out.orders} rendelés, ${out.inbounds} betárolás, ${out.returns} visszáru`,
-    `- ${out.waves} hullám, ${out.pickups} futárátvétel, ${out.transports} fuvar, ${out.counts} leltár, ${out.quotes} ajánlat`,
+    `- ${out.waves} hullám, ${out.pickups} futárátadás, ${out.transports} fuvar, ${out.counts} leltár, ${out.quotes} ajánlat`,
     `- ${out.statements} elszámolás, ${out.billing_entries} rögzített tétel, ${out.movements} készletmozgás, ${out.documents} dokumentum (${out.files} fájl)`,
     `- Raktárhelyek: ${out.locations_deleted} törölve, ${out.locations_inactivated} inaktiválva${out.locations_kept.length ? `, valódi készlet miatt maradt: ${out.locations_kept.join(', ')}` : ''}`,
     ...(kept.length ? [`- Inaktiválva, mert valódi adat hivatkozik rá: ${kept.join(', ')}`] : []),

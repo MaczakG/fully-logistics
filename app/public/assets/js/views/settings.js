@@ -1021,7 +1021,7 @@
   const ENTITY_LABELS = {
     settings: 'Beállítás', location: 'Raktárhely', location_size: 'Raktárhely méret', courier_account: 'Futárfiók', user: 'Felhasználó', role: 'Szerepkör',
     order: 'Rendelés', inbound: 'Betárolás', wave: 'Komissiós hullám', count: 'Leltár', product: 'Cikk', partner: 'Partner', quote: 'Ajánlat',
-    statement: 'Elszámolás', transport: 'Fuvar', pickup: 'Futárátvétel', return: 'Visszáru', api_key: 'API kulcs', webshop: 'Webshop kapcsolat', document: 'Dokumentum',
+    statement: 'Elszámolás', transport: 'Fuvar', pickup: 'Futárátadás', return: 'Visszáru', api_key: 'API kulcs', webshop: 'Webshop kapcsolat', document: 'Dokumentum',
   };
   const AUDIT_FILTERS = ['q', 'module', 'user_id', 'entity', 'from', 'to'];
   const INTEG_FILTERS = ['q', 'system', 'ok', 'direction', 'from', 'to'];

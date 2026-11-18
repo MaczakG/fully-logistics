@@ -76,8 +76,8 @@ export const MODULES = [
   {
     key: 'transport', name: 'Fuvarszervezés', group: 'warehouse',
     actions: {
-      view: 'Futárátvételek és fuvarok megtekintése',
-      create: 'Fuvar és futárátvétel felvétele',
+      view: 'Futárátadások és egyedi fuvarok megtekintése',
+      create: 'Egyedi fuvar és futárátadás felvétele',
       edit: 'Fuvar módosítása, rendelések hozzárendelése',
       delete: 'Fuvar törlése',
       approve: 'Manifeszt lezárása (feladás)',
