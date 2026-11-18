@@ -231,7 +231,6 @@
       <div class="main">
         <header class="topbar">
           <a class="btn btn--ghost btn--icon topbar__back" href="#/" aria-label="Vissza">${FL.icon('arrow-left')}</a>
-          <a class="topbar__brand" href="#/">Fully Logistics <span>WMS</span></a>
           <p class="topbar__title"></p>
           <nav class="topnav" aria-label="Főmenü">
             ${visibleGroups().map((g) => html`<div class="topnav__group">
