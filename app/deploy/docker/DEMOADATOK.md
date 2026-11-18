@@ -12,7 +12,7 @@ a demóadatokat teszi fel úgy, ahogy fél éve álltak, aztán az azóta eltelt
 végigjátssza:
 
 - **Rendelések:** minden nap érkeznek webshoprendelések, néhányat sztornóznak vagy felfüggesztenek.
-- **Raktári munka hétköznap:** komissió, csomagolás, majd átadás a GLS-nek és a Foxpostnak. A csomagot
+- **Raktári munka hétköznap:** komissió, csomagolás, majd átadás a GLS-nek, a DPD-nek és a Foxpostnak. A csomagot
   egy-két nap múlva kézbesítik, és néhány visszajön.
 - **Készlet:** ha fogy, utánrendel. A szállítmányt átveszi és polcra teszi.
 - **Elszámolás:** esténként tárolási pillanatkép készül, pénteken óradíjas munka kerül rögzítésre,
@@ -20,8 +20,8 @@ végigjátssza:
 - **A mai nap** délelőttje a futtatás előtti másfél órába kerül: új rendelések, egy félig kiszedett
   hullám és futárra váró csomagok.
 
-Eredmény: körülbelül 2800 rendelés, 260 futárátvétel, 70 betárolás és 18 jóváhagyott elszámolás.
-Három demóügyfél, két fuvarozó és egy beszállító adatai. Futásidő: fél perc körül.
+Eredmény: 30 partner (20 webshop-ügyfél 65 termékkel, 4 fuvarozó, 6 beszállító), körülbelül 7000
+rendelés, 390 futárátvétel, 175 betárolás és 120 jóváhagyott elszámolás. Futásidő: egy perc körül.
 
 **Biztonság:**
 - Minden demóadat `DEMO-` kezdetű partnerkódot és cikkszámot kap. A valódi adatokhoz nem nyúl.
