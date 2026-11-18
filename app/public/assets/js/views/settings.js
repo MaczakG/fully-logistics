@@ -14,25 +14,14 @@
   'use strict';
   const { html, raw, ui, api, fmt } = FL;
   const BASE = '#/beallitasok';
-  const TABS = [
-    { key: 'cegadatok', label: 'Cégadatok' },
-    { key: 'raktar', label: 'Raktár' },
-    { key: 'raktarhelyek', label: 'Raktárhelyek' },
-    { key: 'meretek', label: 'Méretek' },
-    { key: 'alaptarifak', label: 'Alap tarifák' },
-    { key: 'futarok', label: 'Futárszolgálatok' },
-    { key: 'szamlazo', label: 'Számlázó' },
-    { key: 'naplo', label: 'Napló' },
-  ];
   const can = (action) => FL.can('settings', action);
   const meta = () => FL.state.meta;
   const kindLabel = (k) => (meta().locationKinds || {})[k] || k;
 
-  // Page frame shared by every tab: header, tab bar, body.
+  // Page frame shared by every part: header and body (the main menu leads to the parts).
   function frame(root, tab, { lead, actions, body }) {
     root.innerHTML = String(html`
       ${ui.pageHead({ title: 'Beállítások', lead, actions })}
-      ${ui.tabs(TABS.map((t) => ({ key: t.key, label: t.label, href: `${BASE}/${t.key}` })), tab, 'Beállítások részei')}
       ${body}`);
   }
 

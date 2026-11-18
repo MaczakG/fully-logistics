@@ -21,11 +21,6 @@
   };
   const carrierLabel = (code) => (code && FL.state.meta.carriers[code]) || '';
 
-  const tabs = (active) => ui.tabs([
-    { key: 'pickups', label: 'Futárátvételek', href: ROOT },
-    { key: 'transports', label: 'Raklapos fuvarok', href: `${ROOT}/fuvarok` },
-  ], active, 'Fuvarszervezés nézetei');
-
   /* ------------------------------------------------------------ pickup dialog */
   async function pickupDialog({ pickup = null, carrierId = '', date = FL.today() } = {}) {
     const carriers = pickup ? [] : await ui.partnerOptions('carrier');
@@ -100,7 +95,6 @@
         lead: 'Napi futárátvételek fuvarozónként: a feladásra kész csomagok manifesztre kerülnek, a lezárással feladjuk őket.',
         actions: canCreate ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új futárátvétel</button>` : '',
       })}
-      ${tabs('pickups')}
       <div class="toolbar tr-daybar">
         <button class="btn btn--icon" type="button" data-action="day" data-delta="-1" aria-label="Előző nap">${FL.icon('caret-left')}</button>
         <div class="field"><label for="tr-date">Nap</label><input class="input" id="tr-date" type="date" value="${date}"></div>
@@ -410,7 +404,6 @@
         lead: 'Raklapos és kamionos fuvarok ügyfeleinknek: ajánlatkéréstől a leszállításig.',
         actions: FL.can('transport', 'create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új fuvar</button>` : '',
       })}
-      ${tabs('transports')}
       <form class="toolbar" data-filters role="search">
         <div class="field field--grow"><label for="tr-q">Keresés</label>
           <input class="input" id="tr-q" name="q" type="search" value="${filters.q}" placeholder="Szám, cím, jármű, hivatkozás"></div>

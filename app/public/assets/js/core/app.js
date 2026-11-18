@@ -1,4 +1,4 @@
-/* App shell: first-run setup, login, sidebar menu, top bar, hash router.
+/* App shell: first-run setup, login, top bar with the main menu, hash router.
    Views register themselves in views/*.js:
 
      FL.view('orders', {
@@ -6,42 +6,74 @@
        async render(root, ctx) { ... }   // root: an empty <section>; ctx: { params, query, path }
      });
 
-   Routes are "#/<route>/<param>/<param>?a=1". The menu below decides the order, route, icon and
-   which permission module guards each view. A view without "view" permission is hidden from the
-   menu and its route shows a message instead. */
+   Routes are "#/<route>/<param>/<param>?a=1". MODULES below give each route its view, name and
+   the permission module that guards it; MENU is the main menu across the top. An entry without
+   "view" permission is hidden from the menu, and its route shows a message instead. */
 (() => {
   'use strict';
   const FL = window.FL;
   const { html, ui } = FL;
 
-  // hint: the second line of the tile on the phone (PDA) home screen.
+  const MODULES = [
+    { key: 'inbound', route: 'betarolas', label: 'Betárolás' },
+    { key: 'orders', route: 'megrendelesek', label: 'Megrendelések' },
+    { key: 'picking', route: 'komissio', label: 'Komissió' },
+    { key: 'counts', route: 'leltar', label: 'Leltár' },
+    { key: 'stock', route: 'keszlet', label: 'Készlet' },
+    { key: 'history', route: 'rendelestortenet', label: 'Rendeléstörténet' },
+    { key: 'transport', route: 'fuvarszervezes', label: 'Fuvarszervezés' },
+    { key: 'partners', route: 'partnerek', label: 'Partnerek' },
+    { key: 'quotes', route: 'ajanlatkeszito', label: 'Ajánlatkészítő' },
+    { key: 'billing', route: 'elszamolas', label: 'Elszámolás' },
+    { key: 'settings', route: 'beallitasok', label: 'Beállítások' },
+    { key: 'users', route: 'felhasznalok', label: 'Felhasználók' },
+  ];
+  // The main menus and their entries; an entry opens a page (path) of a module (key).
   const MENU = [
-    { title: 'Raktár', items: [
-      { key: 'inbound', route: 'betarolas', label: 'Betárolás', hint: 'Átvétel, polcra helyezés' },
-      { key: 'orders', route: 'megrendelesek', label: 'Megrendelések', hint: 'Nyitott rendelések' },
-      { key: 'picking', route: 'komissio', label: 'Komissió', hint: 'Kiszedés, csomagolás' },
-      { key: 'counts', route: 'leltar', label: 'Leltár', hint: 'Leltárszámlálás' },
-      { key: 'stock', route: 'keszlet', label: 'Készlet', hint: 'Cikk vagy hely keresése' },
-      { key: 'history', route: 'rendelestortenet', label: 'Rendeléstörténet', hint: 'Lezárt rendelések, visszáru' },
-      { key: 'transport', route: 'fuvarszervezes', label: 'Fuvarszervezés', hint: 'Futárátvétel, fuvarok' },
+    { title: 'Mozgások', items: [
+      { key: 'inbound', path: 'betarolas', label: 'Betárolás' },
+      { key: 'orders', path: 'megrendelesek', label: 'Megrendelések' },
+      { key: 'picking', path: 'komissio', label: 'Komissió' },
+      { key: 'counts', path: 'leltar', label: 'Leltár' },
+      { key: 'transport', path: 'fuvarszervezes', label: 'Futárátvételek' },
+      { key: 'transport', path: 'fuvarszervezes/fuvarok', label: 'Raklapos fuvarok' },
     ] },
-    { title: 'Kereskedelem', items: [
-      { key: 'partners', route: 'partnerek', label: 'Partnerek', hint: 'Ügyfelek, beszállítók' },
-      { key: 'quotes', route: 'ajanlatkeszito', label: 'Ajánlatkészítő', hint: 'Árajánlatok' },
-      { key: 'billing', route: 'elszamolas', label: 'Elszámolás', hint: 'Havi elszámolás' },
+    { title: 'Lekérdezések', items: [
+      { key: 'stock', path: 'keszlet', label: 'Készlet' },
+      { key: 'stock', path: 'keszlet/mozgasok', label: 'Készletmozgások' },
+      { key: 'stock', path: 'keszlet/foglaltsag', label: 'Foglaltság' },
+      { key: 'stock', path: 'keszlet/terkep', label: 'Raktártérkép' },
+      { key: 'history', path: 'rendelestortenet', label: 'Rendeléstörténet' },
     ] },
-    { title: 'Rendszer', items: [
-      { key: 'settings', route: 'beallitasok', label: 'Beállítások', hint: 'Raktárhelyek, beállítások' },
-      { key: 'users', route: 'felhasznalok', label: 'Felhasználók', hint: 'Munkatársak, jogosultságok' },
+    { title: 'Számlázás', items: [
+      { key: 'billing', path: 'elszamolas', label: 'Havi elszámolások' },
+      { key: 'billing', path: 'elszamolas/tetelek', label: 'Egyedi tételek és munkaórák' },
+      { key: 'quotes', path: 'ajanlatkeszito', label: 'Ajánlatok' },
+    ] },
+    { title: 'Alapadatok', items: [
+      { key: 'partners', path: 'partnerek', label: 'Partnerek' },
+      { key: 'stock', path: 'keszlet/cikktorzs', label: 'Cikktörzs' },
+      { key: 'settings', path: 'beallitasok/raktarhelyek', label: 'Raktárhelyek' },
+      { key: 'settings', path: 'beallitasok/meretek', label: 'Méretek' },
+      { key: 'settings', path: 'beallitasok/alaptarifak', label: 'Alap tarifák' },
+    ] },
+    { title: 'Beállítás', items: [
+      { key: 'settings', path: 'beallitasok/cegadatok', label: 'Cégadatok' },
+      { key: 'settings', path: 'beallitasok/raktar', label: 'Raktár' },
+      { key: 'settings', path: 'beallitasok/futarok', label: 'Futárszolgálatok' },
+      { key: 'settings', path: 'beallitasok/szamlazo', label: 'Számlázó' },
+      { key: 'users', path: 'felhasznalok/lista', label: 'Felhasználók' },
+      { key: 'users', path: 'felhasznalok/jogosultsagok', label: 'Jogosultságok' },
+      { key: 'settings', path: 'beallitasok/naplo', label: 'Napló' },
     ] },
   ];
-  const ITEMS = MENU.flatMap((g) => g.items);
-  const byRoute = Object.fromEntries(ITEMS.map((i) => [i.route, i]));
-  FL.routes = Object.fromEntries(ITEMS.map((i) => [i.key, `#/${i.route}`]));
+  const ENTRIES = MENU.flatMap((g) => g.items.map((i) => ({ ...i, group: g.title })));
+  const byRoute = Object.fromEntries(MODULES.map((m) => [m.route, m]));
+  FL.routes = Object.fromEntries(MODULES.map((m) => [m.key, `#/${m.route}`]));
 
   FL.state = { me: null, permissions: {}, meta: null };
   // Phone width: the app works like a hand terminal (PDA). Home screen with big tiles instead of the
-  // side menu, a back button in the top bar, large touch targets (css: "PDA" section of app.css).
+  // main menu, a back button in the top bar, large touch targets (css: "PDA" section of app.css).
   const pdaQuery = window.matchMedia('(max-width: 640px)');
   FL.pda = () => pdaQuery.matches;
   FL.app = {};
@@ -177,28 +209,36 @@
   function visibleGroups() {
     return MENU.map((g) => ({ ...g, items: g.items.filter((i) => FL.can(i.key, 'view')) })).filter((g) => g.items.length);
   }
-  const visibleItems = () => visibleGroups().flatMap((g) => g.items);
+
+  // The menu entry of a page: the longest entry path the page's path starts with (matched). A
+  // module's own start page (e.g. #/beallitasok) gets its module's last entry, for the main menu only.
+  function entryFor(path) {
+    const hits = ENTRIES.filter((e) => path === e.path || path.startsWith(`${e.path}/`));
+    if (hits.length) return { ...hits.reduce((a, b) => (b.path.length > a.path.length ? b : a)), matched: true };
+    const route = path.split('/')[0];
+    const own = ENTRIES.filter((e) => e.path.split('/')[0] === route);
+    return own.length ? { ...own[own.length - 1], matched: false } : null;
+  }
+  function markNav(entry) {
+    document.querySelectorAll('.topnav__menu a').forEach((a) => (entry && entry.matched && a.dataset.path === entry.path ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
+    document.querySelectorAll('.topnav__btn').forEach((b) => b.classList.toggle('is-current', !!entry && b.dataset.group === entry.group));
+  }
 
   function renderShell() {
     const me = FL.state.me;
     appEl().removeAttribute('aria-busy');
     appEl().innerHTML = String(html`<div class="shell">
-      <aside class="sidebar" id="sidebar" aria-label="Főmenü">
-        <a class="sidebar__brand" href="#/"><span class="sidebar__name">Fully Logistics<span>WMS</span></span></a>
-        <nav aria-label="Modulok">
-          ${visibleGroups().map((group) => html`<div class="menu-group"><p class="menu-group__title">${group.title}</p><ul>${group.items.map((i) => html`
-            <li><a class="menu-link" href="#/${i.route}" data-route="${i.route}">${i.label}</a></li>`)}</ul></div>`)}
-        </nav>
-        <div class="sidebar__foot">
-          <p>${me.company.name}</p>
-          <p><a href="https://fully.hu" target="_blank" rel="noopener">fully.hu</a></p>
-        </div>
-      </aside>
       <div class="main">
         <header class="topbar">
-          <button class="btn btn--ghost btn--icon menu-toggle" type="button" data-action="menu" aria-controls="sidebar" aria-expanded="false" aria-label="Menü megnyitása">${FL.icon('list')}</button>
           <a class="btn btn--ghost btn--icon topbar__back" href="#/" aria-label="Vissza">${FL.icon('arrow-left')}</a>
+          <a class="topbar__brand" href="#/">Fully Logistics <span>WMS</span></a>
           <p class="topbar__title"></p>
+          <nav class="topnav" aria-label="Főmenü">
+            ${visibleGroups().map((g) => html`<div class="topnav__group">
+              <button class="topnav__btn" type="button" aria-expanded="false" data-group="${g.title}">${g.title}${FL.icon('caret-down')}</button>
+              <ul class="topnav__menu" hidden>${g.items.map((i) => html`<li><a href="#/${i.path}" data-path="${i.path}">${i.label}</a></li>`)}</ul>
+            </div>`)}
+          </nav>
           <span class="topbar__spacer"></span>
           <span class="cutoff" id="cutoff" data-cutoff title="Napi rendelési határidő: az eddig beérkező rendelések még aznap feladhatók"></span>
           <a class="btn btn--ghost btn--icon topbar__home" href="#/" aria-label="Kezdőképernyő">${FL.icon('squares-four')}</a>
@@ -221,10 +261,21 @@
     const root = appEl();
     const pop = root.querySelector('#user-pop');
     const userBtn = root.querySelector('[data-action="user"]');
-    const menuBtn = root.querySelector('[data-action="menu"]');
-    const setMenu = (open) => { root.dataset.menu = open ? 'open' : ''; menuBtn.setAttribute('aria-expanded', String(open)); };
+    const nav = root.querySelector('.topnav');
+    const closeNav = (keep) => nav.querySelectorAll('.topnav__btn').forEach((b) => {
+      if (b === keep) return;
+      b.setAttribute('aria-expanded', 'false');
+      b.nextElementSibling.hidden = true;
+    });
+    nav.addEventListener('click', (e) => {
+      const btn = e.target.closest('.topnav__btn');
+      if (!btn) { if (e.target.closest('a')) closeNav(); return; }
+      const open = btn.getAttribute('aria-expanded') !== 'true';
+      closeNav(btn);
+      btn.setAttribute('aria-expanded', String(open));
+      btn.nextElementSibling.hidden = !open;
+    });
     ui.bind(root.querySelector('.topbar'), {
-      menu: () => setMenu(root.dataset.menu !== 'open'),
       user: () => { pop.hidden = !pop.hidden; userBtn.setAttribute('aria-expanded', String(!pop.hidden)); },
       profile: () => { pop.hidden = true; editProfile(); },
       password: () => { pop.hidden = true; changePassword(false); },
@@ -235,9 +286,11 @@
         showLogin('Kijelentkeztél.');
       },
     });
-    document.addEventListener('click', (e) => { if (!e.target.closest('.user-menu')) { pop.hidden = true; userBtn.setAttribute('aria-expanded', 'false'); } });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { pop.hidden = true; setMenu(false); } });
-    root.querySelector('#sidebar').addEventListener('click', (e) => { if (e.target.closest('a')) setMenu(false); });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.user-menu')) { pop.hidden = true; userBtn.setAttribute('aria-expanded', 'false'); }
+      if (!e.target.closest('.topnav')) closeNav();
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { pop.hidden = true; closeNav(); } });
     tickCutoff();
     watchScrollRegions(root.querySelector('#content'));
   }
@@ -341,10 +394,7 @@
       <p class="cutoff pda-home__cutoff" data-cutoff></p>
       ${groups.length ? groups.map((g) => html`<nav class="pda-home__group" aria-label="${g.title}">
         <h2>${g.title}</h2>
-        <ul class="pda-tiles">${g.items.map((i) => html`<li><a class="pda-tile" href="#/${i.route}" data-key="${i.key}">
-          <span class="pda-tile__label">${i.label}</span>
-          <span class="pda-tile__meta">${i.hint}</span>
-        </a></li>`)}</ul>
+        <ul class="pda-tiles">${g.items.map((i) => html`<li><a class="pda-tile" href="#/${i.path}">${i.label}</a></li>`)}</ul>
       </nav>`) : ui.empty('A szerepköröd egyik modulhoz sem ad hozzáférést. Kérj jogosultságot az adminisztrátortól.', 'lock-simple')}
     </div>`);
     tickCutoff();
@@ -370,7 +420,7 @@
     if (!route) {
       if (current && current.destroy) { try { current.destroy(); } catch { /* ignore */ } }
       current = null;
-      document.querySelectorAll('.menu-link').forEach((a) => a.removeAttribute('aria-current'));
+      markNav(null);
       if (FL.pda()) {
         const section = document.createElement('section');
         content.replaceChildren(section);
@@ -378,13 +428,14 @@
         content.focus({ preventScroll: true });
         return;
       }
-      const first = visibleItems()[0];
-      if (first) location.replace(`#/${first.route}`);
+      const first = visibleGroups().flatMap((g) => g.items)[0];
+      if (first) location.replace(`#/${first.path}`);
       else content.innerHTML = String(ui.empty('A szerepköröd egyik modulhoz sem ad hozzáférést. Kérj jogosultságot az adminisztrátortól.', 'lock-simple'));
       return;
     }
     const item = byRoute[route];
-    document.querySelectorAll('.menu-link').forEach((a) => { if (a.dataset.route === route) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    const entry = entryFor(path);
+    markNav(entry);
     if (current && current.destroy) { try { current.destroy(); } catch { /* ignore */ } }
     current = null;
     const section = document.createElement('section');
@@ -395,7 +446,7 @@
       section.innerHTML = String(ui.empty('Ez az oldal nem létezik.', 'warning-circle'));
       return;
     }
-    FL.setTitle(item.label);
+    FL.setTitle(entry && entry.matched ? entry.label : item.label);
     if (!FL.can(item.key, 'view')) {
       section.innerHTML = String(ui.empty(`Nincs jogosultságod a(z) ${item.label} modulhoz.`, 'lock-simple'));
       return;

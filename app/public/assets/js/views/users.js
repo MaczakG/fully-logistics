@@ -9,10 +9,6 @@
   'use strict';
   const { html, raw, ui, api, fmt } = FL;
   const BASE = '#/felhasznalok';
-  const TABS = [
-    { key: 'lista', label: 'Felhasználók' },
-    { key: 'jogosultsagok', label: 'Jogosultságok' },
-  ];
   const can = (action) => FL.can('users', action);
   const me = () => FL.state.me.user;
   const GROUPS = [['warehouse', 'Raktár'], ['commercial', 'Kereskedelem'], ['admin', 'Adminisztráció']];
@@ -27,7 +23,6 @@
   function frame(root, tab, { lead, actions, body }) {
     root.innerHTML = String(html`
       ${ui.pageHead({ title: 'Felhasználók', lead, actions })}
-      ${ui.tabs(TABS.map((t) => ({ ...t, href: `${BASE}/${t.key}` })), tab, 'Felhasználók részei')}
       ${body}`);
   }
 

@@ -64,14 +64,6 @@
     });
   }
 
-  const tabs = (active) => ui.tabs([
-    { key: 'stock', label: 'Készlet', href: ROUTE },
-    { key: 'catalog', label: 'Cikktörzs', href: `${ROUTE}/cikktorzs` },
-    { key: 'movements', label: 'Mozgások', href: `${ROUTE}/mozgasok` },
-    { key: 'occupancy', label: 'Foglaltság', href: `${ROUTE}/foglaltsag` },
-    { key: 'map', label: 'Térkép', href: `${ROUTE}/terkep` },
-  ], active, 'Készlet fülei');
-
   const head = (actions) => ui.pageHead({
     title: 'Készlet',
     lead: 'Ügyfelenkénti készlet raktárhely és sarzs szerint, cikktörzs és készletmozgások.',
@@ -114,7 +106,6 @@
 
     root.innerHTML = String(html`
       ${head(html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}CSV export</button>`)}
-      ${tabs('stock')}
       <form class="toolbar" data-filters role="search" aria-label="Készlet szűrése">
         ${searchField('stk-q', f.q, 'Cikkszám, megnevezés vagy EAN')}
         ${ui.field({ name: 'partner_id', label: 'Ügyfél', type: 'select', value: f.partner_id, placeholder: 'Minden ügyfél', options: partnerOptions(clients) })}
@@ -166,7 +157,6 @@
     const row = (label, cell, total) => html`<tr><td>${label}</td>${codes.map((c) => html`<td class="r num">${cell(bySize.get(c) || { total: 0, occupied: 0, empty: 0 })}</td>`)}<td class="r num">${total}</td></tr>`;
     root.innerHTML = String(html`
       ${head(html`<a class="btn" href="${ROUTE}/helyek">${FL.icon('list')}Helyek listája</a>`)}
-      ${tabs('occupancy')}
       ${ui.table({
         caption: 'Foglalt tárolóhelyek ügyfelenként és méret szerint',
         empty: 'Egyik tárolóhelyen sincs áru.',
@@ -305,7 +295,6 @@
 
     root.innerHTML = String(html`
       ${head(html`<a class="btn" href="${ROUTE}/helyek">${FL.icon('list')}Helyek listája</a>`)}
-      ${tabs('map')}
       ${locs.length ? html`
         <form class="toolbar map-filters" data-filters role="search" aria-label="Térkép szűrése">
           <div class="field field--grow"><label for="map-q">Hely kódja</label>
@@ -719,7 +708,6 @@
         ${canCreate ? html`<button class="btn" type="button" data-action="import">${FL.icon('upload-simple')}CSV import</button>` : ''}
         <button class="btn" type="button" data-action="export">${FL.icon('download-simple')}CSV export</button>
         ${canCreate ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új cikk</button>` : ''}`)}
-      ${tabs('catalog')}
       <form class="toolbar" data-filters role="search" aria-label="Cikkek szűrése">
         ${searchField('cat-q', f.q, 'Cikkszám, megnevezés vagy EAN')}
         ${ui.field({ name: 'partner_id', label: 'Ügyfél', type: 'select', value: f.partner_id, placeholder: 'Minden ügyfél', options: partnerOptions(clients) })}
@@ -827,7 +815,6 @@
     const without = (key) => base + FL.qs({ ...f, [key]: '' });
     root.innerHTML = String(html`
       ${head(html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}CSV export</button>`)}
-      ${tabs('movements')}
       <form class="toolbar" data-filters role="search" aria-label="Mozgások szűrése">
         ${searchField('mov-q', f.q, 'Cikkszám, név, hely vagy sarzs')}
         ${ui.field({ name: 'partner_id', label: 'Ügyfél', type: 'select', value: f.partner_id, placeholder: 'Minden ügyfél', options: partnerOptions(clients) })}

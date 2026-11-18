@@ -32,11 +32,6 @@
     return money(l.price);
   };
 
-  const tabs = (active, period) => ui.tabs([
-    { key: 'statements', label: 'Havi elszámolások', href: `#/elszamolas?period=${period}` },
-    { key: 'entries', label: 'Egyedi tételek és munkaórák', href: `#/elszamolas/tetelek?period=${period}` },
-  ], active, 'Elszámolás nézetek');
-
   // Month picker: previous / select / next. onChange(period).
   function periodPicker(period) {
     const now = FL.thisMonth();
@@ -84,7 +79,6 @@
           ${canCreate ? html`<button class="btn" type="button" data-action="snapshot">${FL.icon('database')}Pillanatkép rögzítése most</button>
             <button class="btn btn--primary" type="button" data-action="generate">${FL.icon('calculator')}<span data-generate-label>Elszámolások készítése</span></button>` : ''}`,
       })}
-      ${tabs('statements', period)}
       ${invoicingNotice(data.invoicing)}
       ${snap.missing.length ? ui.notice(html`A tárolási díj a napi pillanatképekből számolódik. ${label(period)} ${fmt.int(snap.expected)} napjából
         ${fmt.int(snap.missing.length)} napra nincs pillanatkép, ezekre nem számolunk tárolást:
@@ -486,7 +480,6 @@
         lead: 'Óradíjas munka (szettképzés, átcímkézés) és darabonként számlázott egyedi tételek ügyfelenként és naponta. A havi elszámolás ezekből számol.',
         actions: can('create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új tétel</button>` : '',
       })}
-      ${tabs('entries', period)}
       <form class="toolbar" data-filters role="search">
         ${periodPicker(period)}
         ${ui.field({ name: 'partner', id: 'bl-partner', label: 'Ügyfél', type: 'select', value: partner, options, placeholder: 'Minden ügyfél' })}
