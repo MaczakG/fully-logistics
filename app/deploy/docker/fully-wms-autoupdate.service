@@ -1,0 +1,9 @@
+# Installs a new version of the followed branch, if there is one (see AUTOFRISSITES.md).
+[Unit]
+Description=Fully Logistics WMS automatic update
+Wants=network-online.target
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/fully-wms-autoupdate

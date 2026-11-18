@@ -1,0 +1,21 @@
+#!/bin/bash
+# Runs every minute (fully-wms-autoupdate.timer): installs the new version of the followed branch
+# with fully-wms-update when there is one. A version whose update failed is not tried again, only
+# the next new commit. Paused while the repository is not on a branch (after a rollback).
+set -euo pipefail
+REPO=/opt/fully-wms/repo
+FAILED=/var/lib/fully-wms-autoupdate/failed
+git -C "$REPO" symbolic-ref -q HEAD >/dev/null || exit 0
+git -C "$REPO" fetch -q origin
+NEW=$(git -C "$REPO" rev-parse '@{u}')
+[ "$(git -C "$REPO" rev-parse HEAD)" = "$NEW" ] && exit 0
+[ "$(cat "$FAILED" 2>/dev/null)" = "$NEW" ] && exit 0
+echo "New version: $(git -C "$REPO" log -1 --format='%h %s' "$NEW")"
+if /usr/local/sbin/fully-wms-update; then
+  rm -f "$FAILED"
+else
+  install -d -m 700 "$(dirname "$FAILED")"
+  echo "$NEW" > "$FAILED"
+  echo "Update failed, this version is not tried again: $NEW" >&2
+  exit 1
+fi
