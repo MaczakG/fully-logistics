@@ -36,6 +36,10 @@
       { key: 'picking', path: 'komissio', label: 'Komissió' },
       { key: 'counts', path: 'leltar', label: 'Leltár' },
       { key: 'transport', path: 'fuvarszervezes', label: 'Futárátadás' },
+    ] },
+    { title: 'Fuvarszervezés', items: [
+      { key: 'transport', path: 'fuvarszervezes/tervezo', label: 'Fuvartervező' },
+      { key: 'transport', path: 'fuvarszervezes/teherautok', label: 'Teherautók' },
       { key: 'transport', path: 'fuvarszervezes/fuvarok', label: 'Egyedi fuvarok' },
     ] },
     { title: 'Lekérdezések', items: [

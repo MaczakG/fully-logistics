@@ -473,6 +473,8 @@
       const [section, id] = ctx.params;
       if (!section) return renderBoard(root, ctx);
       if (section === 'fuvarok') return renderTransports(root, ctx);
+      if (section === 'tervezo' && !id) return FL.planner.renderPlanner(root, ctx);
+      if (section === 'teherautok' && !id) return FL.planner.renderTrucks(root, ctx);
       if (section === 'atvetel' && /^\d+$/.test(id || '')) return renderPickup(root, id);
       root.innerHTML = String(ui.empty('Ez az oldal nem létezik.', 'warning-circle'));
       return undefined;

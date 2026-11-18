@@ -1,0 +1,39 @@
+/* Fuvarszervezés: Fuvartervező (prefix tp-) and Teherautók. Layout only. */
+.tp .tp-selinfo { margin-right: auto; }
+.tp .table tr[draggable="true"] { cursor: grab; }
+.tp .table tr[data-current="true"] td { background: var(--sap-selected); }
+.tp .table tr[data-carrier], .tp .table tr[data-truck], .tr-trucks .table tbody tr { cursor: pointer; }
+.tp .table tr[data-inactive] td { color: var(--sap-text-2); }
+.tp [data-over="true"] { outline: 2px dashed var(--sap-brand); outline-offset: -2px; background: var(--sap-brand-weak); }
+.tp-pane__head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 2.25rem; padding: 0.25rem var(--pad); font-weight: bold; background: #fff; border-bottom: 1px solid var(--line); }
+.tp-pane__head .small { min-width: 0; overflow: hidden; font-weight: normal; text-overflow: ellipsis; white-space: nowrap; }
+.tp-cap { display: block; height: 0.3125rem; margin-top: 0.25rem; background: var(--line); border-radius: 0.25rem; overflow: hidden; }
+.tp-cap > i { display: block; height: 100%; background: var(--sap-brand); }
+.tp-cap[data-over] > i { background: var(--sap-error); }
+.tp-swatch { display: inline-block; width: 0.625rem; height: 0.625rem; margin-right: 0.375rem; border-radius: 50%; vertical-align: baseline; }
+.tp-hint { padding: 1rem var(--pad); color: var(--sap-text-2); }
+.tp-bottom { border-top: 2px solid var(--line); background: #fff; }
+/* z-index 0: Leaflet's own layers (400-1000) stay inside the map, under the menus */
+.tp-map { position: relative; z-index: 0; min-height: 18rem; }
+.tp-map[hidden] { display: none; }
+.tp-pin span { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; color: #fff; font: bold 0.75rem Arial, sans-serif; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+.tp-legend { position: absolute; z-index: 500; right: 0.5rem; bottom: 1.5rem; display: grid; gap: 0.25rem; max-width: calc(100% - 1rem); padding: 0.375rem 0.5rem; font-size: 0.75rem; background: #fff; border-radius: 0.25rem; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); }
+.tp-map .leaflet-popup-content { font: 0.8125rem Arial, sans-serif; }
+.tp-map .leaflet-popup-content .btn { margin-top: 0.375rem; }
+.tp-legend__item { display: block; padding: 0.125rem 0.25rem; text-align: left; font: inherit; color: inherit; background: none; border: 0; border-radius: 0.25rem; cursor: pointer; }
+.tp-legend__item:hover, .tp-legend__item[aria-pressed="true"] { background: var(--sap-brand-weak); }
+.tp-legend .btn { justify-self: start; }
+@media (min-width: 641px) {
+  .content .list-page .tp-top { flex: 1 1 0; }
+  .content .list-page.tp[data-map] .tp-top { flex: 1.7 1 0; }
+  .content .list-page .tp-top > .tp-map { flex: 1 1 0; min-height: 0; }
+  .content .list-page .tp-bottom { display: grid; grid-template-columns: 1fr 1fr 2fr; flex: 1.25 1 0; min-height: 0; }
+  .content .list-page .tp-pane { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+  .tp-pane + .tp-pane { border-left: 1px solid var(--line); }
+}
+/* Phones: the parts one under the other, the map a fixed height. */
+@media (max-width: 640px) {
+  .tp-map { height: 60vh; }
+  .tp-pane + .tp-pane { border-top: 1px solid var(--line); }
+  .tp .table-wrap { overflow-x: auto; }
+}

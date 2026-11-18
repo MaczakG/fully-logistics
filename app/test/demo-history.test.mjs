@@ -33,6 +33,10 @@ test('a week of demo history: every stage, nothing in the future, removable', as
     assert.ok((await one('SELECT COUNT(*) AS n FROM orders')).n > 50);
     assert.ok((await one("SELECT COUNT(*) AS n FROM carrier_pickups WHERE status = 'closed'")).n >= 2);
     assert.ok((await one('SELECT COUNT(DISTINCT date) AS n FROM storage_snapshots')).n >= 6);
+    // pallets went out on trucks, and today's trucks are partly planned
+    assert.equal((await one('SELECT COUNT(*) AS n FROM trucks')).n, 5);
+    assert.ok((await one("SELECT COUNT(*) AS n FROM orders WHERE truck_id IS NOT NULL AND status IN ('shipped', 'delivered')")).n > 5);
+    assert.ok((await one("SELECT COUNT(*) AS n FROM order_events WHERE text LIKE 'Feladva: % teherautóval%'")).n > 0);
     // The simulated clock reaches the app's own dates and the tables' default timestamps alike.
     const now = new Date().toISOString();
     for (const [table, column] of [['orders', 'created_at'], ['movements', 'at'], ['audit_log', 'at'], ['order_events', 'at']]) {
@@ -44,6 +48,7 @@ test('a week of demo history: every stage, nothing in the future, removable', as
     execFileSync('node', ['server/demo-seed.mjs', '--remove'], { cwd: APP, env, stdio: 'pipe' });
     assert.equal((await one('SELECT COUNT(*) AS n FROM orders')).n, 0);
     assert.equal((await one("SELECT COUNT(*) AS n FROM partners WHERE code LIKE 'DEMO-%'")).n, 0);
+    assert.equal((await one('SELECT COUNT(*) AS n FROM trucks')).n, 0);
   } finally {
     DB.close();
     rmSync(dir, { recursive: true, force: true });

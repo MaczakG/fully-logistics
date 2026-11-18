@@ -108,6 +108,13 @@ sudo nano .env   # COMPOSE_PROFILES és WMS_DOMAIN a válaszok szerint
 
 A `.env` szerepel a `.gitignore`-ban, nem kerül a gitbe.
 
+**Fuvartervező térkép.** A térkép az OpenStreetMap csempéit tölti be a böngészőben
+(`tile.openstreetmap.org`), a címek helyét pedig a szerver keresi ki egyszer az OpenStreetMap
+Nominatim szolgáltatásától (másodpercenként legfeljebb egy cím, utána az adatbázisban marad). Ehhez a
+szerver a teherautóra váró rendelések szállítási címét (irányítószám, város, utca) és a raktár címét
+küldi el, nevet és telefonszámot nem. Ha ez nem kívánatos, a `.env` fájlba írd: `GEOCODER_URL=`
+(üresen); ekkor a térképen csak a már ismert címek látszanak.
+
 ### 4/A. Link Caddyvel (`COMPOSE_PROFILES=caddy`)
 
 - A DNS-ben a `WMS_DOMAIN` A rekordja mutasson a szerver nyilvános IP-címére. Ha a Cloudflare

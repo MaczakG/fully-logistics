@@ -26,6 +26,7 @@ export const ORDER_FIELDS = {
   carrier_code: { type: 'enum', values: ['gls', 'dpd', 'foxpost', 'mpl', 'dhl', 'other', ''], default: '' },
   carrier_service: { type: 'str', max: 120, default: '' },
   cod_amount: { type: 'num', min: 0, default: 0 },
+  pallets: { type: 'int', min: 0, max: 99, default: 0 },
   currency: { type: 'str', max: 3, default: 'HUF' },
   note: { type: 'text', max: 2000, default: '' },
   ordered_at: { type: 'str', max: 40, nullable: true },
@@ -87,10 +88,10 @@ export async function createOrder(ctx, input) {
   const orderRef = '(SELECT id FROM orders WHERE number = ?)';
   await batch(db, [
     stmt(db, `INSERT INTO orders (number, partner_id, source, external_id, external_number, status, priority, customer_name, company, email, phone,
-                country, zip, city, address, pickup_point_id, carrier_id, carrier_service, cod_amount, currency, note, ordered_at, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                country, zip, city, address, pickup_point_id, carrier_id, carrier_service, cod_amount, pallets, currency, note, ordered_at, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       number, o.partner_id, o.source, o.external_id, o.external_number, o.priority, o.customer_name, o.company, o.email, o.phone,
-      (o.country || 'HU').toUpperCase(), o.zip, o.city, o.address, o.pickup_point_id, carrierId, o.carrier_service, o.cod_amount, o.currency,
+      (o.country || 'HU').toUpperCase(), o.zip, o.city, o.address, o.pickup_point_id, carrierId, o.carrier_service, o.cod_amount, o.pallets, o.currency,
       o.note, o.ordered_at || null, at, at),
     ...resolved.map((l) => stmt(db, `INSERT INTO order_lines (order_id, product_id, qty, external_line_id) VALUES (${orderRef}, ?, ?, ?)`,
       number, l.product_id, l.qty, l.external_line_id)),

@@ -12,6 +12,8 @@ services:
     environment:
       SETUP_TOKEN: ${SETUP_TOKEN:?SETUP_TOKEN is missing from .env}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is missing from .env}
+      # Fuvartervező map: address search (OpenStreetMap Nominatim); GEOCODER_URL= (empty) in .env turns it off
+      GEOCODER_URL: ${GEOCODER_URL-https://nominatim.openstreetmap.org/search}
     volumes:
       - ${WMS_DATA_DIR:?WMS_DATA_DIR is missing from .env}:/data
     ports:

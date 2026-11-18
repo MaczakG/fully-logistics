@@ -467,6 +467,7 @@ const USAGE = [
   ['billing_entries', 'rögzített munka', '(SELECT COUNT(*) FROM billing_entries WHERE partner_id = ?)', 1],
   ['pickups', 'futárátadás', '(SELECT COUNT(*) FROM carrier_pickups WHERE carrier_id = ?)', 1],
   ['transports', 'fuvar', '(SELECT COUNT(*) FROM transports WHERE partner_id = ? OR carrier_id = ?)', 2],
+  ['trucks', 'teherautó', '(SELECT COUNT(*) FROM trucks WHERE carrier_id = ?)', 1],
 ];
 
 async function usageOf(db, id) {

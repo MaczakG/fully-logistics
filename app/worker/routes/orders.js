@@ -156,10 +156,10 @@ export async function orderDetail(ctx, id) {
   const db = ctx.env.DB;
   const o = await first(db,
     `SELECT o.*, pa.code AS partner_code, pa.name AS partner_name, c.name AS carrier_name, c.carrier_code,
-            w.number AS wave_number, w.status AS wave_status, d.filename AS label_filename, cp.number AS pickup_number
+            w.number AS wave_number, w.status AS wave_status, d.filename AS label_filename, cp.number AS pickup_number, tr.plate AS truck_plate
      FROM orders o JOIN partners pa ON pa.id = o.partner_id LEFT JOIN partners c ON c.id = o.carrier_id
      LEFT JOIN waves w ON w.id = o.wave_id LEFT JOIN documents d ON d.id = o.label_document_id
-     LEFT JOIN carrier_pickups cp ON cp.id = o.pickup_id WHERE o.id = ?`, id);
+     LEFT JOIN carrier_pickups cp ON cp.id = o.pickup_id LEFT JOIN trucks tr ON tr.id = o.truck_id WHERE o.id = ?`, id);
   if (!o) throw notFound('A rendelés nem található.');
   const lines = await all(db,
     `SELECT ol.id, ol.product_id, ol.qty, ol.picked_qty, ol.external_line_id, p.sku, p.name, p.ean, p.unit, p.weight_kg, p.active,
@@ -208,6 +208,7 @@ export async function orderDetail(ctx, id) {
     carrier_service: o.carrier_service, cod_amount: o.cod_amount, currency: o.currency, note: o.note,
     wave: o.wave_id ? { id: o.wave_id, number: o.wave_number, status: o.wave_status } : null,
     pickup: o.pickup_id ? { id: o.pickup_id, number: o.pickup_number } : null,
+    pallets: o.pallets, truck: o.truck_id ? { id: o.truck_id, plate: o.truck_plate, date: o.truck_date, seq: o.truck_seq } : null,
     package_count: o.package_count, weight_kg: o.weight_kg, tracking_number: o.tracking_number,
     tracking_url: o.tracking_number && code ? trackingUrl(code, o.tracking_number) : '',
     label: o.label_document_id ? { id: o.label_document_id, filename: o.label_filename } : null,
@@ -233,7 +234,7 @@ async function loadOrder(db, id) {
 const EDIT_GROUPS = {
   customer_name: 'címzett', company: 'címzett', email: 'címzett', phone: 'címzett',
   country: 'szállítási cím', zip: 'szállítási cím', city: 'szállítási cím', address: 'szállítási cím', pickup_point_id: 'átvételi pont',
-  carrier_id: 'fuvarozó', carrier_service: 'fuvarozó', cod_amount: 'utánvét', note: 'megjegyzés', priority: 'prioritás',
+  carrier_id: 'fuvarozó', carrier_service: 'fuvarozó', cod_amount: 'utánvét', pallets: 'raklap', note: 'megjegyzés', priority: 'prioritás',
   external_number: 'külső rendelésszám',
 };
 const EDIT_SPEC = Object.fromEntries(Object.keys(EDIT_GROUPS).map((k) => {

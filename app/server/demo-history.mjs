@@ -1,13 +1,16 @@
 // Half a year of demo history. First the demo data of demo-seed.mjs as it stood half a year ago,
-// with 17 more webshops, two carriers and five suppliers (30 partners), then every day since replayed through the app's own API with this process's clock set to that
-// day:
+// with 17 more webshops, three carriers and four suppliers (30 partners), then every day since replayed
+// through the app's own API with this process's clock set to that day:
 //   - webshop orders arrive every day, a few are cancelled or put on hold;
 //   - on weekdays the warehouse picks and packs everything it can and hands the parcels to GLS, DPD
 //     and Foxpost, the parcels are delivered a day or two later, and a few come back;
+//   - a few clients also send pallets to shops and companies: those orders are planned onto the
+//     trucks of Duna Cargo and Mátra Logisztika (Fuvartervező) and the trucks leave at noon;
 //   - stock is reordered when it runs low, and the delivery is received and put away;
 //   - the storage snapshot is taken every evening, hourly work is logged on Fridays, and the
 //     monthly statements are made and approved on the 1st.
-// Today ends mid-morning: new orders, a wave being picked, packed parcels waiting for the courier.
+// Today ends mid-morning: new orders, a wave being picked, packed parcels waiting for the courier,
+// today's trucks half planned.
 //
 // It is the same demo data (DEMO- partners and products), so it all goes with
 //   node server/demo-seed.mjs --remove
@@ -19,7 +22,7 @@
 
 import { existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { all, first } from '../worker/lib/db.js';
+import { all, first, run } from '../worker/lib/db.js';
 import { addDays, budapestDate } from '../worker/lib/time.js';
 import { demoSummary, ean13, formatSummary, openApi, saveDemoSetting, seedDemo } from './demo-seed.mjs';
 
@@ -104,10 +107,48 @@ const MORE_CLIENTS = [
 const MORE_PARTNERS = [
   { type: 'carrier', code: 'DEMO-DPD', name: 'DPD Hungária Kft.', carrier_code: 'dpd', notes: 'Napi futárátadás 15:00 és 16:00 között.' },
   { type: 'carrier', code: 'DEMO-DUNACARGO', name: 'Duna Cargo Szállítmányozási Kft.', zip: '2310', city: 'Szigetszentmiklós', address: 'Leshegy út 30.', notes: 'Raklapos és kamionos fuvarok.' },
+  { type: 'carrier', code: 'DEMO-MATRALOG', name: 'Mátra Logisztika Kft.', zip: '3200', city: 'Gyöngyös', address: 'Déli külhatár út 6.', notes: 'Raklapos fuvarok, főleg Észak- és Kelet-Magyarország.' },
   ...[['PANNONPACK', 'Pannon Csomagolóanyag Kft.', '9027', 'Győr'], ['AGROMAG', 'Agro-Mag Kft.', '6800', 'Hódmezővásárhely'], ['EUROKOZMETIK', 'EuroKozmetik Gyártó Kft.', '2600', 'Vác'],
-    ['DELPAPIR', 'Dél-Alföldi Papír Zrt.', '6500', 'Baja'], ['BALATONTEXTIL', 'Balaton Textil Kft.', '8360', 'Keszthely']]
+    ['DELPAPIR', 'Dél-Alföldi Papír Zrt.', '6500', 'Baja']]
     .map(([key, name, zip, city]) => ({ type: 'supplier', code: `DEMO-${key}`, name, zip, city, address: 'Ipari park 1.' })),
 ];
+
+// The trucks of the two carriers that are not couriers: [carrier, plate, name, driver, pallets, kg, in service].
+const TRUCKS = [
+  ['DEMO-DUNACARGO', 'AE DC-114', 'Iveco Eurocargo 12 t, ponyvás, emelőhátfalas', 'Kiss Gábor', 18, 6000, true],
+  ['DEMO-DUNACARGO', 'AE DC-117', 'Mercedes Atego 7,5 t, dobozos', 'Nagy Péter', 15, 3500, true],
+  ['DEMO-DUNACARGO', 'AD KL-562', 'Renault Master platós', 'Tóth Ákos', 6, 1200, true],
+  ['DEMO-MATRALOG', 'AF ML-208', 'DAF LF 12 t, ponyvás', 'Szabó László', 18, 6000, true],
+  ['DEMO-MATRALOG', 'AF ML-311', 'MAN TGL 7,5 t, hűtős', 'Varga Zoltán', 15, 3500, false],
+];
+// Who orders pallets: the shops and companies the clients deliver to, with their map positions (so
+// the planner needs no geocoder for them), and the clients that send to them.
+const STORES = [
+  ['Kisállat Centrum Kft.', '1106', 'Budapest', 'Örs vezér tere 25.', 47.5032, 19.1366],
+  ['Gazdabolt Kecskemét Kft.', '6000', 'Kecskemét', 'Kiskőrösi út 30.', 46.8964, 19.6897],
+  ['Szegedi Állateledel Nagyker Kft.', '6728', 'Szeged', 'Dorozsmai út 12.', 46.2690, 20.1080],
+  ['Debreceni Kertészet Bt.', '4030', 'Debrecen', 'Mikepércsi út 70.', 47.5100, 21.6250],
+  ['Pécsi Konyhafelszerelés Kft.', '7630', 'Pécs', 'Zsolnay Vilmos utca 52.', 46.0760, 18.2500],
+  ['Győri Irodaház Üzemeltető Kft.', '9027', 'Győr', 'Gesztenyefa út 4.', 47.6900, 17.6800],
+  ['Miskolci Sportcentrum Kft.', '3527', 'Miskolc', 'Pesti út 5.', 48.0900, 20.7700],
+  ['Fehérvári Gazdabolt Kft.', '8000', 'Székesfehérvár', 'Takarodó út 1.', 47.1900, 18.4100],
+  ['Szolnoki Állatpatika Bt.', '5000', 'Szolnok', 'Thököly út 48.', 47.1750, 20.1900],
+  ['Veszprémi Biobolt Kft.', '8200', 'Veszprém', 'Házgyári út 6.', 47.1000, 17.9300],
+  ['Egri Vendéglátó Kft.', '3300', 'Eger', 'Faiskola út 5.', 47.8900, 20.3700],
+  ['Soproni Kisállat Kft.', '9400', 'Sopron', 'Ipar körút 10.', 47.6800, 16.6100],
+  ['Nyíregyházi Gazdakör Kft.', '4400', 'Nyíregyháza', 'Debreceni út 155.', 47.9300, 21.7300],
+  ['Kaposvári Kertcentrum Bt.', '7400', 'Kaposvár', 'Füredi utca 160.', 46.3600, 17.8300],
+  ['Zalaegerszegi Irodaszer Kft.', '8900', 'Zalaegerszeg', 'Balatoni út 6.', 46.8400, 16.8600],
+  ['Tatabányai Háztartási Bolt Kft.', '2800', 'Tatabánya', 'Győri út 9.', 47.5700, 18.4000],
+  ['Szombathelyi Sportbolt Kft.', '9700', 'Szombathely', 'Zanati út 30.', 47.2500, 16.6300],
+  ['Békéscsabai Gazdabolt Kft.', '5600', 'Békéscsaba', 'Szarvasi út 82.', 46.6900, 21.0700],
+  ['Váci Kisállat Bolt Bt.', '2600', 'Vác', 'Zrínyi utca 39.', 47.7800, 19.1300],
+  ['Budaörsi Irodapark Kft.', '2040', 'Budaörs', 'Puskás Tivadar utca 12.', 47.4600, 18.9500],
+  ['Gödöllői Bioközpont Kft.', '2100', 'Gödöllő', 'Dózsa György út 69.', 47.6000, 19.3500],
+  ['Dunaújvárosi Konyha Kft.', '2400', 'Dunaújváros', 'Papírgyári út 2.', 46.9600, 18.9300],
+];
+const PALLET_CLIENTS = ['DEMO-MANCS', 'DEMO-KONYHA', 'DEMO-ZOLDKERT', 'DEMO-IRODASZER', 'DEMO-BIOKOSAR', 'DEMO-SPORTMAX'];
+const DEPOT = { lat: 47.4979, lng: 19.0402 }; // only for sorting the stops around Budapest
 
 // ---------------------------------------------------------------- one day
 
@@ -145,6 +186,13 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
       if (!codes.length) continue;
       await api.post('/api/settings/locations/bulk', body);
       await saveDemoSetting(db, (await all(db, 'SELECT id FROM locations WHERE code IN (SELECT value FROM json_each(?))', JSON.stringify(codes))).map((r) => r.id));
+    }
+    const carriers = Object.fromEntries((await all(db, "SELECT id, code FROM partners WHERE code IN ('DEMO-DUNACARGO', 'DEMO-MATRALOG')")).map((p) => [p.code, p.id]));
+    for (const [carrier, plate, name, driver, pallets, maxKg, active] of TRUCKS) {
+      await api.post('/api/transport/trucks', { carrier_id: carriers[carrier], plate, name, driver, pallets, max_kg: maxKg, active });
+    }
+    for (const [, zip, city, address, lat, lng] of STORES) {
+      await run(db, 'INSERT OR IGNORE INTO geocodes (address, lat, lng) VALUES (?, ?, ?)', ['HU', zip, city, address].join('|'), lat, lng);
     }
     const suppliers = MORE_PARTNERS.filter((p) => p.type === 'supplier').map((p) => p.code);
     let n = 400;
@@ -218,6 +266,42 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
     }
   }
 
+  // Pallets for shops and companies: no courier, the Fuvartervező puts them on a truck.
+  async function palletOrders(api, n) {
+    for (let i = 0; i < n; i++) {
+      const code = pick(PALLET_CLIENTS);
+      const [company, zip, city, address] = pick(STORES);
+      const skus = Object.keys(shops[code].skus).sort(() => rnd() - 0.5).slice(0, int(1, 3));
+      await api.post('/api/orders', {
+        partner_id: partners[code], customer_name: `${pick(LAST)} ${pick(FIRST)}`, company, phone: `+36 ${pick(['20', '30', '70'])} ${int(200, 999)} ${int(1000, 9999)}`,
+        zip, city, address, external_number: `B2B-${int(10000, 99999)}`, pallets: int(1, 4), ordered_at: hoursAgo(int(2, 30)),
+        note: pick(['', '', 'Átvétel hétköznap 8 és 15 óra között.', 'Rámpás lerakodás.', 'Előtte telefonáljon a sofőr.']),
+        lines: skus.map((sku) => ({ product_id: bySku[sku].id, qty: int(6, 20) })),
+      });
+    }
+  }
+
+  // The day's trucks: the waiting orders around Budapest in order of direction (a sweep), each truck
+  // filled up before the next one. Today only every other order is planned, the rest waits.
+  async function planTrucks(api, day, last) {
+    const plan = await api.get(`/api/transport/planner?date=${day}`);
+    const fleet = plan.trucks.filter((t) => t.active);
+    const loads = new Map(fleet.map((t) => [t.id, plan.loads.filter((o) => o.truck_id === t.id).map((o) => o.id)]));
+    const room = new Map(fleet.map((t) => [t.id, t.pallets - plan.loads.filter((o) => o.truck_id === t.id).reduce((n, o) => n + o.pallets, 0)]));
+    const angle = (o) => Math.atan2((o.lat ?? DEPOT.lat) - DEPOT.lat, (o.lng ?? DEPOT.lng) - DEPOT.lng);
+    const waiting = plan.orders.filter((o) => o.status !== 'hold').sort((a, b) => angle(a) - angle(b)).filter((_, i) => !last || i % 2 === 0);
+    let k = 0;
+    for (const o of waiting) {
+      while (k < fleet.length && room.get(fleet[k].id) < o.pallets) k++;
+      if (k === fleet.length) break;
+      loads.get(fleet[k].id).push(o.id);
+      room.set(fleet[k].id, room.get(fleet[k].id) - o.pallets);
+    }
+    const used = [...loads].filter(([, list]) => list.length);
+    if (used.length) await api.put('/api/transport/planner', { date: day, loads: used.map(([truckId, list]) => ({ truck_id: truckId, order_ids: list })) });
+    return used.map(([truckId]) => truckId);
+  }
+
   async function receive(api, day) {
     const due = await all(db, `SELECT id, status FROM inbounds WHERE partner_id IN ${demo} AND status IN ('expected', 'arrived', 'receiving') AND expected_date <= ?`, day);
     for (const inb of due) {
@@ -256,10 +340,10 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
       if (!packable.length) break;
       for (const o of packable) {
         const p = await api.get(`/api/picking/orders/${o.id}`);
-        const { carrier_code: carrier } = await first(db, 'SELECT c.carrier_code FROM orders o JOIN partners c ON c.id = o.carrier_id WHERE o.id = ?', o.id);
+        const { carrier, pallets } = await first(db, 'SELECT c.carrier_code AS carrier, o.pallets FROM orders o LEFT JOIN partners c ON c.id = o.carrier_id WHERE o.id = ?', o.id);
         await api.post(`/api/picking/orders/${o.id}/pack`, {
-          mode: 'manual', package_count: 1, weight_kg: p.suggested_weight_kg ? Math.round((p.suggested_weight_kg + 0.3) * 10) / 10 : null,
-          tracking_number: { foxpost: `CLFOX${2600000000 + o.id * 104729}`, dpd: String(1580000000000 + o.id * 7907) }[carrier] || String(50340000000 + o.id * 7919),
+          mode: 'manual', package_count: pallets || 1, weight_kg: p.suggested_weight_kg ? Math.round((p.suggested_weight_kg + (pallets ? pallets * 25 : 0.3)) * 10) / 10 : null,
+          tracking_number: !carrier ? '' : { foxpost: `CLFOX${2600000000 + o.id * 104729}`, dpd: String(1580000000000 + o.id * 7907) }[carrier] || String(50340000000 + o.id * 7919),
         });
       }
     }
@@ -287,7 +371,7 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
 
   async function returns(api, day) {
     const delivered = await all(db,
-      `SELECT id FROM orders WHERE partner_id IN ${demo} AND status = 'delivered' AND delivered_at >= ? AND delivered_at < ?`,
+      `SELECT id FROM orders WHERE partner_id IN ${demo} AND status = 'delivered' AND pallets = 0 AND delivered_at >= ? AND delivered_at < ?`,
       `${addDays(day, -5)}T00:00:00.000Z`, `${addDays(day, -4)}T00:00:00.000Z`);
     for (const o of delivered) {
       if (!chance(0.03)) continue;
@@ -350,16 +434,23 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
       if (day.endsWith('-01')) await statements(api, addDays(day, -1).slice(0, 7));
       await newOrders(api, day);
       if (workday) {
+        await palletOrders(api, int(3, 7));
         for (const o of await all(db, `SELECT id FROM orders WHERE partner_id IN ${demo} AND status = 'hold' AND updated_at < ?`, hoursAgo(48))) {
           await api.post(`/api/orders/${o.id}/release`, { reason: 'A vevő kérte a küldést.' });
         }
         await receive(api, day);
         clock(day, '08:00', 60);
         await pickAndPack(api, day, last);
+        clock(day, '10:30', 45);
+        const trucks = await planTrucks(api, day, last);
+        if (!last) {
+          clock(day, '11:45', 40);
+          for (const id of trucks) await api.post('/api/transport/planner/dispatch', { date: day, truck_id: id }).catch(() => {}); // nothing packed on it
+        }
         clock(day, '13:15', 30);
         await handOver(api, day, last);
         await reorder(api, day);
-        if (last) await newOrders(api, day); // the morning's orders, still new
+        if (last) { await newOrders(api, day); await palletOrders(api, 2); } // the morning's orders, still new
         else {
           await deliver(api, false);
           await returns(api, day);

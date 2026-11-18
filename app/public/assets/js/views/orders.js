@@ -162,6 +162,7 @@
           ${F({ name: 'carrier_service', label: 'Szolgáltatás', optional: true, hint: 'Pl. csomagautomata, házhoz' })}
           ${F({ name: 'pickup_point_id', label: 'Átvételi pont azonosító', optional: true, hint: 'Csomagautomata vagy átvevőhely' })}
           ${F({ name: 'cod_amount', label: 'Utánvét (Ft)', type: 'number', min: 0, hint: '0, ha nincs utánvét.' })}
+          ${F({ name: 'pallets', label: 'Raklap', type: 'number', int: true, min: 0, hint: 'Teherautós fuvarnál a raklapok száma.' })}
         </div>
         <h3 class="ol-form__title">Tételek</h3>
         <div class="ol-lines" data-lines>${(o.lines.length ? o.lines : [{}]).map((l) => lineRow(l))}</div>
@@ -177,7 +178,7 @@
         const v = ui.formValues(form);
         for (const k of Object.keys(v)) if (k.startsWith('lines.')) delete v[k];
         if (!order && !v.partner_id) throw new FL.ApiError(400, 'bad_request', 'Válassz ügyfelet.', { partner_id: 'Válassz ügyfelet.' });
-        const payload = { ...v, carrier_id: v.carrier_id ? Number(v.carrier_id) : null, cod_amount: v.cod_amount ?? 0, lines: form._lines.values() };
+        const payload = { ...v, carrier_id: v.carrier_id ? Number(v.carrier_id) : null, cod_amount: v.cod_amount ?? 0, pallets: v.pallets ?? 0, lines: form._lines.values() };
         if (order) {
           delete payload.partner_id;
           const res = await api.patch(`/api/orders/${order.id}`, payload);
@@ -372,7 +373,7 @@
 
   /* ------------------------------------------------------------ detail (shared with Rendeléstörténet) */
 
-  const EVENT_ICON = { created: 'plus', status: 'arrow-right', note: 'pencil-simple', label: 'tag', sync: 'arrows-left-right', return: 'arrow-u-up-left' };
+  const EVENT_ICON = { created: 'plus', status: 'arrow-right', note: 'pencil-simple', label: 'tag', sync: 'arrows-left-right', return: 'arrow-u-up-left', transport: 'truck' };
 
   function lifecycle(o) {
     if (['hold', 'cancelled', 'returned'].includes(o.status)) {
@@ -446,6 +447,8 @@
             ['Fuvarozó', o.carrier ? html`${o.carrier.name}${o.carrier_service ? ` · ${o.carrier_service}` : ''}` : html`<span class="muted">nincs megadva</span>`],
             ['Nyomkövetés', tracking],
             ['Csomag', o.packed_at ? `${fmt.int(o.package_count)} db${o.weight_kg ? `, ${fmt.kg(o.weight_kg)}` : ''}` : ''],
+            ['Raklap', o.pallets ? `${fmt.int(o.pallets)} db` : ''],
+            ['Teherautó', o.truck ? html`<span class="mono">${o.truck.plate}</span>, ${fmt.date(o.truck.date)}, ${fmt.int(o.truck.seq)}. megálló${FL.can('transport', 'view') ? html` <a href="#/fuvarszervezes/tervezo?date=${o.truck.date}">Fuvartervező</a>` : ''}` : ''],
           ])}
         </section>
         <section class="panel" aria-labelledby="ol-meta">

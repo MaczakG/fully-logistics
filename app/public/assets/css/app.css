@@ -395,6 +395,7 @@ dialog.dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   .page-actions > .btn { width: 100%; white-space: normal; }
   .page-actions > .btn--primary { order: -1; grid-column: 1 / -1; }
   .page-actions > :only-child, .page-actions > [data-selbar], .page-actions > [data-bulk] { grid-column: 1 / -1; }
+  .content > .list-page > .page-actions { margin-inline: 0; } /* a list page has no side padding to cover */
 }
 
 /* ---------- Narrow screens: a shorter top bar ---------- */
@@ -404,6 +405,10 @@ dialog.dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   .topnav { margin-left: -0.5rem; }
   .topnav__btn { padding: 0 0.5rem; }
   .user-menu__text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+@media (max-width: 767.98px) {
+  .topnav__btn { padding: 0 0.375rem; font-size: 0.875rem; }
+  .topnav__btn .icon { display: none; }
 }
 
 /* ---------- PDA: the phone works like a hand terminal ----------
