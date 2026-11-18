@@ -81,6 +81,26 @@
     </table></div>`;
   };
 
+  // exportCsv(name, columns, rows): the list as its table shows it (ui.table columns) saved as
+  // name-YYYY-MM-DD.csv; columns without a label, or with nothing in them (buttons), are left out.
+  ui.exportCsv = (name, columns, rows) => {
+    const text = (v) => {
+      if (v == null) return '';
+      if (typeof v !== 'object') return String(v).trim();
+      const t = document.createElement('template');
+      t.innerHTML = String(v);
+      // a second line (.sub) follows after a comma, other inner elements after a space
+      for (const el of t.content.querySelectorAll('*')) el.before(el.matches('.sub') ? ', ' : ' ');
+      return t.content.textContent.replace(/\s+/g, ' ').replace(/ ,/g, ',').replace(/^[ ,]+|[ ,]+$/g, '');
+    };
+    const cols = columns.filter((c) => typeof c.label === 'string' && c.label)
+      .map((c) => ({ label: c.label, values: rows.map((r) => text(c.render ? c.render(r) : r[c.key])) }))
+      .filter((c) => !rows.length || c.values.some(Boolean));
+    const cell = (s) => (/[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
+    const lines = [cols.map((c) => cell(c.label)), ...rows.map((_, i) => cols.map((c) => cell(c.values[i])))];
+    FL.downloadBlob(new Blob([`\ufeff${lines.map((l) => l.join(';')).join('\r\n')}\r\n`], { type: 'text/csv' }), `${name}-${new Date().toLocaleDateString('sv')}.csv`);
+  };
+
   // Clickable rows: Enter/click on a row with data-href navigates (unless a control was clicked).
   ui.enableRowLinks = (root) => {
     root.addEventListener('click', (e) => {

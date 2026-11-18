@@ -249,13 +249,11 @@
       ${can('create') ? html`<button class="btn btn--primary" type="button" data-action="new-loc">${FL.icon('plus')}Új raktárhely</button>` : ''}`;
     frame(root, tab, {
       lead: 'Minden raktárhelynek egy mérete van; a méret havi díját ügyfelenként a partner Tarifák fülén adod meg. Egy helyen mindig csak egy partner áruja lehet.',
-      actions: tab === 'meretek' ? '' : actions,
+      actions: tab === 'meretek' ? html`
+        <button class="btn" type="button" data-action="export-sizes">${FL.icon('download-simple')}Exportálás</button>
+        ${can('create') ? html`<button class="btn btn--primary" type="button" data-action="new-size">${FL.icon('plus')}Új méret</button>` : ''}` : actions,
       body: tab === 'meretek' ? html`
-        <section class="panel panel--flush" aria-labelledby="sizes-title">
-          <div class="panel__head">
-            <div><h2 id="sizes-title">Méretek</h2><p class="small muted">A lista bővíthető, például XXL vagy Fél raklap. Használt méret nem törölhető, csak inaktiválható.</p></div>
-            ${can('create') ? html`<button class="btn btn--sm" type="button" data-action="new-size">${FL.icon('plus')}Új méret</button>` : ''}
-          </div>
+        <section class="panel panel--flush">
           <div class="slot" data-sizes></div>
         </section>` : html`
         <section class="panel panel--flush" aria-labelledby="locs-title">
@@ -279,27 +277,29 @@
       const d = [s.width_cm, s.depth_cm, s.height_cm];
       return d.some((x) => x != null) ? `${d.map((x) => (x == null ? '?' : fmt.num(x, 1))).join(' × ')} cm` : '';
     };
+    const sizeColumns = [
+      { key: 'code', label: 'Kód', render: (s) => html`<span class="tag">${s.code}</span>` },
+      { key: 'name', label: 'Megnevezés', render: (s) => html`<b>${s.name}</b>` },
+      { key: 'dims', label: 'Szél. × mély. × mag.', render: dims },
+      { key: 'max_kg', label: 'Teherbírás', align: 'r', cls: 'num', render: (s) => (s.max_kg != null ? fmt.kg(s.max_kg) : '') },
+      { key: 'locations', label: 'Raktárhelyek', align: 'r', cls: 'num', render: (s) => html`<a href="${BASE}/raktarhelyek?size_id=${s.id}" data-action="filter-size" data-id="${s.id}">${fmt.int(s.location_count)}</a><span class="sub">${fmt.int(s.occupied_count)} foglalt</span>` },
+      { key: 'sort', label: 'Sorrend', align: 'r', cls: 'num' },
+      { key: 'active', label: 'Állapot', render: (s) => FL.status('partner', s.active ? 'active' : 'inactive') },
+      {
+        key: 'act', label: 'Műveletek', cls: 'w-actions', render: (s) => html`<span class="row-actions">
+          <button class="btn btn--sm btn--ghost btn--icon" type="button" data-action="edit-size" data-id="${s.id}" aria-label="${s.code} szerkesztése" title="Szerkesztés" ${ui.denyAttr('settings', 'edit')}>${FL.icon('pencil-simple')}</button>
+          <button class="btn btn--sm btn--ghost btn--icon" type="button" data-action="delete-size" data-id="${s.id}" aria-label="${s.code} törlése" title="${s.location_count ? 'Használt méret: csak inaktiválható' : 'Törlés'}" ${can('delete') && !s.location_count ? '' : raw('disabled')}>${FL.icon('trash')}</button>
+        </span>`,
+      },
+    ];
+
     function paintSizes() {
       if (!$('[data-sizes]')) return;
       $('[data-sizes]').innerHTML = String(ui.table({
         caption: 'Raktárhely méretek',
         empty: 'Még nincs méret. Vegyél fel legalább egyet a raktárhelyek előtt.',
         rows: state.sizes,
-        columns: [
-          { key: 'code', label: 'Kód', render: (s) => html`<span class="tag">${s.code}</span>` },
-          { key: 'name', label: 'Megnevezés', render: (s) => html`<b>${s.name}</b>` },
-          { key: 'dims', label: 'Szél. × mély. × mag.', render: dims },
-          { key: 'max_kg', label: 'Teherbírás', align: 'r', cls: 'num', render: (s) => (s.max_kg != null ? fmt.kg(s.max_kg) : '') },
-          { key: 'locations', label: 'Raktárhelyek', align: 'r', cls: 'num', render: (s) => html`<a href="${BASE}/raktarhelyek?size_id=${s.id}" data-action="filter-size" data-id="${s.id}">${fmt.int(s.location_count)}</a><span class="sub">${fmt.int(s.occupied_count)} foglalt</span>` },
-          { key: 'sort', label: 'Sorrend', align: 'r', cls: 'num' },
-          { key: 'active', label: 'Állapot', render: (s) => FL.status('partner', s.active ? 'active' : 'inactive') },
-          {
-            key: 'act', label: 'Műveletek', cls: 'w-actions', render: (s) => html`<span class="row-actions">
-              <button class="btn btn--sm btn--ghost btn--icon" type="button" data-action="edit-size" data-id="${s.id}" aria-label="${s.code} szerkesztése" title="Szerkesztés" ${ui.denyAttr('settings', 'edit')}>${FL.icon('pencil-simple')}</button>
-              <button class="btn btn--sm btn--ghost btn--icon" type="button" data-action="delete-size" data-id="${s.id}" aria-label="${s.code} törlése" title="${s.location_count ? 'Használt méret: csak inaktiválható' : 'Törlés'}" ${can('delete') && !s.location_count ? '' : raw('disabled')}>${FL.icon('trash')}</button>
-            </span>`,
-          },
-        ],
+        columns: sizeColumns,
       }));
     }
 
@@ -692,6 +692,7 @@
     ui.bind(root, {
       ...sel.handlers,
       'new-size': () => sizeDialog(null),
+      'export-sizes': () => ui.exportCsv('meretek', sizeColumns, state.sizes),
       'edit-size': (el) => sizeDialog(state.sizes.find((s) => s.id === Number(el.dataset.id))),
       'delete-size': async (el) => {
         const s = state.sizes.find((x) => x.id === Number(el.dataset.id));
@@ -1043,13 +1044,10 @@
     const keys = kind === 'audit' ? AUDIT_FILTERS : INTEG_FILTERS;
     const state = { filters: Object.fromEntries(keys.map((k) => [k, ctx.query.get(k) || ''])), offset: Math.max(parseInt(ctx.query.get('offset') || '0', 10) || 0, 0), data: { items: [], total: 0 } };
     const opts = await api.get('/api/settings/audit/filters');
-    const seg = html`<nav class="seg" aria-label="Napló fajtája">
-      <a href="${BASE}/naplo" ${kind === 'audit' ? raw('aria-current="page"') : ''}>${FL.icon('list-checks')}Műveleti napló</a>
-      <a href="${BASE}/naplo?log=integracio" ${kind === 'integration' ? raw('aria-current="page"') : ''}>${FL.icon('plugs-connected')}Integrációs napló</a></nav>`;
     frame(root, 'naplo', {
       lead: kind === 'audit' ? 'Ki, mit és mikor csinált a rendszerben. Minden létrehozás, módosítás, törlés és jóváhagyás ide kerül.' : 'A webshopok, futárok, a számlázó és a partner API hívásai, hibakereséshez.',
-      actions: kind === 'audit' ? html`<button class="btn" type="button" data-action="export-log">${FL.icon('download-simple')}Exportálás</button>` : '',
-      body: html`${seg}
+      actions: html`<button class="btn" type="button" data-action="export-log">${FL.icon('download-simple')}Exportálás</button>`,
+      body: html`
         <section class="panel panel--flush">
           <form class="toolbar log-filters" data-filters novalidate></form>
           <div class="slot" data-log></div>
@@ -1058,28 +1056,31 @@
     const $ = (s) => root.querySelector(s);
     $('[data-filters]').addEventListener('submit', (e) => {
       e.preventDefault();
-      for (const [name, value] of new FormData(e.target)) state.filters[name] = value.trim();
+      for (const [name, value] of new FormData(e.target)) if (name !== 'log') state.filters[name] = value.trim();
       state.offset = 0;
       load();
     });
     const f = state.filters;
+    const logField = ui.field({ name: 'log', label: 'Napló', type: 'select', value: kind === 'integration' ? 'integracio' : '', options: [['', 'Műveleti napló'], ['integracio', 'Integrációs napló']] });
     const dateFields = html`
       ${ui.field({ name: 'from', label: 'Dátumtól', type: 'date', value: f.from })}
       ${ui.field({ name: 'to', label: 'Dátumig', type: 'date', value: f.to })}
       ${ui.searchButtons({ href: `${BASE}/naplo${FL.qs({ log: kind === 'integration' ? 'integracio' : '' })}` })}`;
     $('[data-filters]').innerHTML = String(kind === 'audit'
-      ? html`
+      ? html`${logField}
         <div class="field field--grow"><label for="log-q">Keresés</label><input class="input" id="log-q" name="q" type="search" value="${f.q}" placeholder="Leírás vagy név" autocomplete="off"></div>
         ${ui.field({ name: 'module', label: 'Modul', type: 'select', value: f.module, placeholder: 'Mind', options: opts.modules.map((m) => ({ value: m.key, label: m.name })) })}
         ${ui.field({ name: 'user_id', label: 'Felhasználó', type: 'select', value: f.user_id, placeholder: 'Mind', options: opts.users.map((u) => ({ value: u.id, label: `${u.name}${u.active ? '' : ' (letiltva)'}` })) })}
         ${ui.field({ name: 'entity', label: 'Tétel', type: 'select', value: f.entity, placeholder: 'Mind', options: opts.entities.map((e) => ({ value: e, label: ENTITY_LABELS[e] || e })) })}
         ${dateFields}`
-      : html`
+      : html`${logField}
         <div class="field field--grow"><label for="log-q">Keresés</label><input class="input" id="log-q" name="q" type="search" value="${f.q}" placeholder="Üzenet vagy művelet" autocomplete="off"></div>
         ${ui.field({ name: 'system', label: 'Rendszer', type: 'select', value: f.system, placeholder: 'Mind', options: opts.systems.map((s) => ({ value: s, label: s })) })}
         ${ui.field({ name: 'ok', label: 'Eredmény', type: 'select', value: f.ok, placeholder: 'Mind', options: [{ value: '1', label: 'Sikeres' }, { value: '0', label: 'Hibás' }] })}
         ${ui.field({ name: 'direction', label: 'Irány', type: 'select', value: f.direction, placeholder: 'Mind', options: [{ value: 'out', label: 'Kimenő (mi hívtuk)' }, { value: 'in', label: 'Bejövő (minket hívtak)' }] })}
         ${dateFields}`);
+    // the two logs have different filters, so the choice switches the page at once
+    $('[name="log"]').addEventListener('change', (e) => FL.go(`${BASE}/naplo${FL.qs({ log: e.target.value })}`));
 
     async function load() {
       const query = { ...state.filters, offset: state.offset || '' };
@@ -1087,26 +1088,26 @@
       state.data = await api.get(kind === 'audit' ? '/api/settings/audit' : '/api/settings/integration-log', { ...state.filters, limit: LOG_PAGE, offset: state.offset });
       paint();
     }
+    const columns = kind === 'audit'
+      ? [
+        { key: 'at', label: 'Időpont', cls: 'num nowrap', render: (x) => fmt.dateTime(x.at) },
+        { key: 'actor', label: 'Felhasználó', render: (x) => x.actor },
+        { key: 'module', label: 'Modul', render: (x) => x.module_name },
+        { key: 'action', label: 'Művelet', render: (x) => ACTION_LABELS[x.action] || x.action },
+        { key: 'summary', label: 'Leírás', render: (x) => (x.details ? html`<button class="link-btn" type="button" data-action="details" data-id="${x.id}">${x.summary || 'Részletek'}</button>` : x.summary) },
+        { key: 'entity', label: 'Tétel', render: (x) => (x.entity ? html`${ENTITY_LABELS[x.entity] || x.entity}${x.entity_id ? html`<span class="sub mono">${x.entity_id}</span>` : ''}` : '') },
+      ]
+      : [
+        { key: 'at', label: 'Időpont', cls: 'num nowrap', render: (x) => fmt.dateTime(x.at) },
+        { key: 'system', label: 'Rendszer', render: (x) => html`<span class="tag">${x.system}</span>` },
+        { key: 'direction', label: 'Irány', render: (x) => (x.direction === 'in' ? 'Bejövő' : 'Kimenő') },
+        { key: 'partner', label: 'Partner', render: (x) => x.partner_name || '' },
+        { key: 'action', label: 'Művelet', cls: 'mono', render: (x) => x.action },
+        { key: 'ok', label: 'Eredmény', render: (x) => html`<span class="chip" data-tone="${x.ok ? 'ok' : 'danger'}">${x.ok ? 'Sikeres' : 'Hibás'}${x.status ? ` ${x.status}` : ''}</span>` },
+        { key: 'message', label: 'Üzenet', cls: 'log-msg', render: (x) => x.message },
+      ];
     function paint() {
       const { items, total } = state.data;
-      const columns = kind === 'audit'
-        ? [
-          { key: 'at', label: 'Időpont', cls: 'num nowrap', render: (x) => fmt.dateTime(x.at) },
-          { key: 'actor', label: 'Felhasználó', render: (x) => x.actor },
-          { key: 'module', label: 'Modul', render: (x) => x.module_name },
-          { key: 'action', label: 'Művelet', render: (x) => ACTION_LABELS[x.action] || x.action },
-          { key: 'summary', label: 'Leírás', render: (x) => (x.details ? html`<button class="link-btn" type="button" data-action="details" data-id="${x.id}">${x.summary || 'Részletek'}</button>` : x.summary) },
-          { key: 'entity', label: 'Tétel', render: (x) => (x.entity ? html`${ENTITY_LABELS[x.entity] || x.entity}${x.entity_id ? html`<span class="sub mono">${x.entity_id}</span>` : ''}` : '') },
-        ]
-        : [
-          { key: 'at', label: 'Időpont', cls: 'num nowrap', render: (x) => fmt.dateTime(x.at) },
-          { key: 'system', label: 'Rendszer', render: (x) => html`<span class="tag">${x.system}</span>` },
-          { key: 'direction', label: 'Irány', render: (x) => (x.direction === 'in' ? 'Bejövő' : 'Kimenő') },
-          { key: 'partner', label: 'Partner', render: (x) => x.partner_name || '' },
-          { key: 'action', label: 'Művelet', cls: 'mono', render: (x) => x.action },
-          { key: 'ok', label: 'Eredmény', render: (x) => html`<span class="chip" data-tone="${x.ok ? 'ok' : 'danger'}">${x.ok ? 'Sikeres' : 'Hibás'}${x.status ? ` ${x.status}` : ''}</span>` },
-          { key: 'message', label: 'Üzenet', cls: 'log-msg', render: (x) => x.message },
-        ];
       $('[data-log]').innerHTML = String(html`
         ${ui.table({ rows: items, columns, cls: 'log-table', caption: kind === 'audit' ? 'Műveleti napló' : 'Integrációs napló', empty: Object.values(state.filters).some(Boolean) ? 'Nincs a szűrésnek megfelelő bejegyzés.' : 'Még nincs bejegyzés.' })}
         ${ui.pager({ total, limit: LOG_PAGE, offset: state.offset })}`);
@@ -1137,7 +1138,9 @@
     ui.bind(root, {
       page: (el) => { state.offset = Number(el.dataset.offset) || 0; load(); },
       details: (el) => details(state.data.items.find((x) => x.id === Number(el.dataset.id))),
-      'export-log': (el) => ui.run(el, () => api.download('/api/settings/audit/export', state.filters)),
+      'export-log': (el) => ui.run(el, async () => (kind === 'audit'
+        ? api.download('/api/settings/audit/export', state.filters)
+        : ui.exportCsv('integracios-naplo', columns, await api.all('/api/settings/integration-log', state.filters)))),
     });
     await load();
   }

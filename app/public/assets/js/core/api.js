@@ -73,6 +73,15 @@
       return request('POST', path, { form });
     },
     download,
+    // Every page of a list endpoint ({ items, total }) with these filters, for exports.
+    all: async (path, query) => {
+      const items = [];
+      for (;;) {
+        const d = await request('GET', path, { query: { ...query, limit: 200, offset: items.length } });
+        items.push(...d.items);
+        if (!d.items.length || items.length >= d.total) return items;
+      }
+    },
     // URL for links that open a document directly (labels, invoices, contracts).
     documentUrl: (id, inline = false) => `/api/documents/${id}${inline ? '?inline=1' : ''}`,
   };

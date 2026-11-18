@@ -79,7 +79,8 @@
     const isAdmin = !!me().role.is_admin;
     frame(root, 'lista', {
       lead: 'A raktár és az iroda munkatársai. Mindenki egy szerepkört kap; a szerepkörök jogait a Jogosultságok fülön állítod be.',
-      actions: can('create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új felhasználó</button>` : '',
+      actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
+        ${can('create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új felhasználó</button>` : ''}`,
       body: html`
         <section class="panel panel--flush">
           <form class="toolbar user-filters" data-filters novalidate>
@@ -198,6 +199,7 @@
     const find = (id) => state.users.find((x) => x.id === Number(id));
     ui.bind(root, {
       new: () => userDialog(null),
+      export: (el) => ui.run(el, async () => ui.exportCsv('felhasznalok', columns, await api.all('/api/users', state.filters))),
       edit: (el) => userDialog(Number(el.dataset.id)),
       reset: async (el) => {
         const u = find(el.dataset.id);
@@ -263,18 +265,15 @@
       lead: 'Szerepkörönként, modulonként és műveletenként pipálod be, ki mit tehet. A változás a felhasználók következő kattintásától érvényes.',
       actions: can('create') ? html`<button class="btn" type="button" data-action="new-role">${FL.icon('plus')}Új szerepkör</button>` : '',
       body: html`
-        <div class="role-tabs" role="tablist" aria-label="Szerepkörök" data-roles></div>
-        <section class="panel panel--flush role-panel" id="role-panel" role="tabpanel" data-role-panel></section>
+        <div class="toolbar"><div class="field"><label for="role-pick">Szerepkör</label><select class="select" id="role-pick" data-roles></select></div></div>
+        <section class="panel panel--flush role-panel" data-role-panel></section>
         <section class="panel panel--flush" aria-labelledby="ovw-title" data-overview></section>`,
     });
     const $ = (s) => root.querySelector(s);
 
-    function paintRoleTabs() {
-      $('[data-roles]').innerHTML = String(html`${roles.map((r) => html`
-        <button class="role-tab" type="button" role="tab" id="role-tab-${r.id}" aria-controls="role-panel" aria-selected="${r.id === roleId}" tabindex="${r.id === roleId ? 0 : -1}" data-action="pick-role" data-id="${r.id}">
-          ${r.is_admin ? FL.icon('lock-simple') : ''}<span>${r.name}</span><span class="count">${fmt.int(r.user_count)}</span>${drafts.has(r.id) ? html`<span class="dot" title="Mentetlen változás" aria-label="mentetlen változás">*</span>` : ''}
-        </button>`)}`);
-      $('#role-panel').setAttribute('aria-labelledby', `role-tab-${roleId}`);
+    function paintRoles() {
+      // * marks a role with unsaved changes
+      $('[data-roles]').innerHTML = String(ui.options(roles.map((r) => [r.id, `${r.name} (${fmt.int(r.user_count)})${drafts.has(r.id) ? ' *' : ''}`]), roleId));
     }
 
     function cell(m, a) {
@@ -361,12 +360,7 @@
         panel.querySelector('[data-action="save"]').disabled = !n;
         panel.querySelector('[data-action="discard"]').disabled = !n;
       }
-      const tab = $(`#role-tab-${roleId}`);
-      if (tab) {
-        const dot = tab.querySelector('.dot');
-        if (n && !dot) tab.insertAdjacentHTML('beforeend', '<span class="dot" title="Mentetlen változás" aria-label="mentetlen változás">*</span>');
-        if (!n && dot) dot.remove();
-      }
+      paintRoles();
     }
 
     // Applies one change to the draft with the rule "any action needs view".
@@ -408,7 +402,7 @@
     }
 
     function paintAll() {
-      paintRoleTabs();
+      paintRoles();
       paintRolePanel();
       paintOverview();
       history.replaceState(null, '', `${BASE}/jogosultsagok?szerepkor=${roleId}`);
@@ -444,12 +438,9 @@
       if (id === roleId) return;
       roleId = id;
       paintAll();
-      const tab = $(`#role-tab-${roleId}`);
-      if (tab) tab.focus();
     }
 
     ui.bind(root, {
-      'pick-role': (el) => pickRole(Number(el.dataset.id)),
       perm: (el) => change((set) => {
         const key = `${el.dataset.m}:${el.dataset.a}`;
         if (el.checked) set.add(key);
@@ -504,14 +495,7 @@
       },
     });
 
-    // Arrow keys move between the role tabs.
-    $('[data-roles]').addEventListener('keydown', (e) => {
-      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
-      e.preventDefault();
-      const i = roles.findIndex((r) => r.id === roleId);
-      const next = e.key === 'Home' ? 0 : e.key === 'End' ? roles.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + roles.length) % roles.length;
-      pickRole(roles[next].id);
-    });
+    $('[data-roles]').addEventListener('change', (e) => pickRole(Number(e.target.value)));
 
     const onUnload = (e) => { if (drafts.size) { e.preventDefault(); e.returnValue = ''; } };
     window.addEventListener('beforeunload', onUnload);

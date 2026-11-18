@@ -24,7 +24,7 @@
     { key: 'osszesito', label: 'Összesítő', render: summaryTab },
   ];
 
-  const TYPE_TABS = [['', 'Összes', 'all'], ['client', 'Ügyfelek', 'client'], ['carrier', 'Fuvarozók', 'carrier'], ['supplier', 'Beszállítók', 'supplier']];
+  const TYPES = [['', 'Összes', 'all'], ['client', 'Ügyfelek', 'client'], ['carrier', 'Fuvarozók', 'carrier'], ['supplier', 'Beszállítók', 'supplier']];
   const TARIFF_GROUPS = { handling: 'Rendeléskezelés', inbound: 'Betárolás és visszáru', extra: 'Extrák', discount: 'Kedvezmények', vat: 'ÁFA' };
   const KIND_LABELS = { contract: 'Szerződés', other: 'Egyéb' };
   const CUSTOM_KINDS = [['per_unit', 'Mennyiség alapján'], ['monthly', 'Havi fix díj']];
@@ -85,50 +85,56 @@
       ${ui.pageHead({
         title: 'Partnerek',
         lead: 'Ügyfelek, fuvarozók és beszállítók: cégadatok, kapcsolattartók, szerződések, tarifák és integrációk.',
-        actions: can('create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új partner</button>` : '',
+        actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
+          ${can('create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új partner</button>` : ''}`,
       })}
-      <div class="pt-box" data-tabs></div>
       <form class="toolbar" data-filters role="search">
         <div class="field field--grow"><label for="pt-q">Keresés</label>
           <input class="input" id="pt-q" name="q" type="search" value="${st.q}" placeholder="Név, kód, adószám, település vagy e-mail" autocomplete="off"></div>
+        <div class="field"><label for="pt-type">Típus</label>
+          <select class="select" id="pt-type" name="type">${ui.options(TYPES, st.type)}</select></div>
         <div class="field"><label for="pt-status">Állapot</label>
           <select class="select" id="pt-status" name="status">${ui.options([['', 'Mind'], ['active', 'Aktív'], ['inactive', 'Inaktív']], st.status)}</select></div>
-        ${ui.searchButtons({ href: `${BASE}${FL.qs({ type: st.type })}` })}
+        ${ui.searchButtons({ href: BASE })}
       </form>
       <div class="pt-box" data-results>${ui.loading()}</div>`);
 
-    const tabsBox = root.querySelector('[data-tabs]');
     const results = root.querySelector('[data-results]');
-    const hrefFor = (type) => `${BASE}${FL.qs({ type, status: st.status, q: st.q })}`;
-    const syncUrl = () => history.replaceState(null, '', hrefFor(st.type));
+    const query = () => ({ type: st.type, status: st.status, q: st.q });
+    const syncUrl = () => history.replaceState(null, '', `${BASE}${FL.qs(query())}`);
+    const columns = [
+      { key: 'code', label: 'Kód', render: (r) => html`<a class="mono" href="${BASE}/${r.id}">${r.code}</a>` },
+      { key: 'name', label: 'Név', cls: 'pt-name', render: (r) => html`<b>${r.name}</b>${r.city ? html`<span class="sub">${[r.zip, r.city].filter(Boolean).join(' ')}</span>` : ''}` },
+      { key: 'type', label: 'Típus', render: (r) => html`<span class="tag">${typeLabel(r.type)}</span>${r.type === 'carrier' && r.carrier_code ? html`<span class="sub">${carrierLabel(r.carrier_code)}</span>` : ''}` },
+      { key: 'tax_number', label: 'Adószám', cls: 'num' },
+      { key: 'contact', label: 'Kapcsolattartó', render: (r) => (r.contact_name ? html`${r.contact_name}<span class="sub">${[r.contact_email, r.contact_phone].filter(Boolean).join(', ')}</span>` : html`<span class="muted">${r.billing_email || ''}</span>`) },
+      { key: 'status', label: 'Állapot', render: (r) => FL.status('partner', r.status) },
+    ];
+
     let seq = 0;
 
     async function load() {
       const my = ++seq;
       let data;
       try {
-        data = await api.get('/api/partners', { type: st.type, status: st.status, q: st.q, limit: LIMIT, offset: st.offset });
+        data = await api.get('/api/partners', { ...query(), limit: LIMIT, offset: st.offset });
       } catch (err) {
         if (my === seq) results.innerHTML = String(ui.notice(err.message, 'danger'));
         return;
       }
       if (my !== seq) return;
-      tabsBox.innerHTML = String(ui.tabs(TYPE_TABS.map(([key, label, ck]) => ({ key, label, href: hrefFor(key), count: data.counts[ck] })), st.type, 'Partnertípusok'));
-      const filtered = st.q || st.status;
+      for (const o of root.querySelector('#pt-type').options) {
+        const [, label, ck] = TYPES.find(([key]) => key === o.value);
+        o.textContent = `${label} (${fmt.int(data.counts[ck])})`;
+      }
+      const filtered = st.q || st.status || st.type;
       results.innerHTML = String(html`
         ${ui.table({
           caption: 'Partnerek',
           rows: data.items,
           rowHref: (r) => `${BASE}/${r.id}`,
           empty: filtered ? 'Nincs a szűrésnek megfelelő partner.' : 'Még nincs partner. Vedd fel az elsőt az Új partner gombbal.',
-          columns: [
-            { key: 'code', label: 'Kód', render: (r) => html`<a class="mono" href="${BASE}/${r.id}">${r.code}</a>` },
-            { key: 'name', label: 'Név', cls: 'pt-name', render: (r) => html`<b>${r.name}</b>${r.city ? html`<span class="sub">${[r.zip, r.city].filter(Boolean).join(' ')}</span>` : ''}` },
-            { key: 'type', label: 'Típus', render: (r) => html`<span class="tag">${typeLabel(r.type)}</span>${r.type === 'carrier' && r.carrier_code ? html`<span class="sub">${carrierLabel(r.carrier_code)}</span>` : ''}` },
-            { key: 'tax_number', label: 'Adószám', cls: 'num' },
-            { key: 'contact', label: 'Kapcsolattartó', render: (r) => (r.contact_name ? html`${r.contact_name}<span class="sub">${[r.contact_email, r.contact_phone].filter(Boolean).join(', ')}</span>` : html`<span class="muted">${r.billing_email || ''}</span>`) },
-            { key: 'status', label: 'Állapot', render: (r) => FL.status('partner', r.status) },
-          ],
+          columns,
         })}
         ${data.total > 0 ? ui.pager({ total: data.total, limit: LIMIT, offset: st.offset }) : ''}`);
     }
@@ -137,10 +143,12 @@
     ui.bind(root, {
       new: () => createDialog(st.type || 'client'),
       page: (el) => { st.offset = Number(el.dataset.offset) || 0; load(); },
+      export: (el) => ui.run(el, async () => ui.exportCsv('partnerek', columns, await api.all('/api/partners', query()))),
     });
     root.querySelector('[data-filters]').addEventListener('submit', (e) => {
       e.preventDefault();
       st.q = e.target.q.value.trim();
+      st.type = e.target.type.value;
       st.status = e.target.status.value;
       st.offset = 0;
       syncUrl();

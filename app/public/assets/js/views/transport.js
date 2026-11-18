@@ -93,7 +93,8 @@
       ${ui.pageHead({
         title: 'Fuvarszervezés',
         lead: 'Napi futárátvételek fuvarozónként: a feladásra kész csomagok manifesztre kerülnek, a lezárással feladjuk őket.',
-        actions: canCreate ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új futárátvétel</button>` : '',
+        actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
+          ${canCreate ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új futárátvétel</button>` : ''}`,
       })}
       <div class="toolbar tr-daybar">
         <button class="btn btn--icon" type="button" data-action="day" data-delta="-1" aria-label="Előző nap">${FL.icon('caret-left')}</button>
@@ -111,6 +112,16 @@
     ui.bind(root, {
       day: (el) => goDay(FL.addDays(date, Number(el.dataset.delta))),
       today: () => goDay(FL.today()),
+      export: () => ui.exportCsv('futaratvetelek', [
+        { label: 'Nap', render: () => date },
+        { label: 'Fuvarozó', key: 'name' },
+        { label: 'Feladásra vár (rendelés)', render: (c) => c.waiting.orders },
+        { label: 'Feladásra vár (csomag)', render: (c) => c.waiting.packages },
+        { label: 'Hozzárendelve (rendelés)', render: (c) => c.assigned.orders },
+        { label: 'Hozzárendelve (csomag)', render: (c) => c.assigned.packages },
+        { label: 'Utánvét', render: (c) => codText(c.assigned.cod) },
+        { label: 'Átvételek', render: (c) => c.pickups.map((p) => p.number).join(', ') },
+      ], b.carriers),
       new: (el) => ui.run(el, () => pickupDialog({ carrierId: el.dataset.carrier || '', date: date < b.today ? b.today : date })),
       'assign-all': (el) => ui.run(el, async () => {
         const res = await api.post(`/api/transport/pickups/${el.dataset.id}/orders`, { all: true });
@@ -398,11 +409,23 @@
     };
     const rowHref = (r) => `${ROOT}/fuvarok/${r.id}${FL.qs({ ...filters, status: filters.status === 'active' ? '' : filters.status })}`;
 
+    const columns = [
+      { key: 'date', label: 'Nap', render: (r) => html`<a class="nowrap" href="${rowHref(r)}">${fmt.date(r.date)}</a><span class="sub num">${windowText(r.time_from, r.time_to)}</span>` },
+      { key: 'number', label: 'Szám, irány', render: (r) => html`<span class="num">${r.number}</span><span class="sub tr-dir" data-dir="${r.direction}">${FL.icon(r.direction === 'in' ? 'tray-arrow-down' : 'tray-arrow-up')}${DIRECTIONS[r.direction]}</span>` },
+      { key: 'partner_name', label: 'Ügyfél', render: (r) => (r.partner_name ? html`<span title="${r.partner_name}">${r.partner_code}</span>` : html`<span class="muted">nincs</span>`) },
+      { key: 'route', label: 'Útvonal', cls: 'tr-route', render: (r) => html`${r.origin || '?'}<span class="sub">${FL.icon('arrow-right')}${r.destination || '?'}</span>` },
+      { key: 'load', label: 'Rakomány', align: 'r', cls: 'num', render: (r) => html`${fmt.int(r.pallets)} rkl<span class="sub">${fmt.kg(r.weight_kg)}</span>` },
+      { key: 'carrier_name', label: 'Fuvarozó', render: (r) => (r.carrier_name ? html`<span title="${r.carrier_name}">${r.carrier_short}</span><span class="sub">${r.carrier_ref || r.vehicle}</span>` : html`<span class="muted">nincs</span>`) },
+      { key: 'price', label: 'Díj', align: 'r', cls: 'num', render: (r) => fmt.money(r.price) },
+      { key: 'status', label: 'Állapot', render: (r) => FL.status('transport', r.status) },
+    ];
+
     root.innerHTML = String(html`
       ${ui.pageHead({
         title: 'Fuvarszervezés',
         lead: 'Raklapos és kamionos fuvarok ügyfeleinknek: ajánlatkéréstől a leszállításig.',
-        actions: FL.can('transport', 'create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új fuvar</button>` : '',
+        actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
+          ${FL.can('transport', 'create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új fuvar</button>` : ''}`,
       })}
       <form class="toolbar" data-filters role="search">
         <div class="field field--grow"><label for="tr-q">Keresés</label>
@@ -419,16 +442,7 @@
         rows: data.items,
         empty: filters.status === 'active' ? 'Nincs aktív fuvar.' : 'Nincs a szűrésnek megfelelő fuvar.',
         rowHref,
-        columns: [
-          { key: 'date', label: 'Nap', render: (r) => html`<a class="nowrap" href="${rowHref(r)}">${fmt.date(r.date)}</a><span class="sub num">${windowText(r.time_from, r.time_to)}</span>` },
-          { key: 'number', label: 'Szám, irány', render: (r) => html`<span class="num">${r.number}</span><span class="sub tr-dir" data-dir="${r.direction}">${FL.icon(r.direction === 'in' ? 'tray-arrow-down' : 'tray-arrow-up')}${DIRECTIONS[r.direction]}</span>` },
-          { key: 'partner_name', label: 'Ügyfél', render: (r) => (r.partner_name ? html`<span title="${r.partner_name}">${r.partner_code}</span>` : html`<span class="muted">nincs</span>`) },
-          { key: 'route', label: 'Útvonal', cls: 'tr-route', render: (r) => html`${r.origin || '?'}<span class="sub">${FL.icon('arrow-right')}${r.destination || '?'}</span>` },
-          { key: 'load', label: 'Rakomány', align: 'r', cls: 'num', render: (r) => html`${fmt.int(r.pallets)} rkl<span class="sub">${fmt.kg(r.weight_kg)}</span>` },
-          { key: 'carrier_name', label: 'Fuvarozó', render: (r) => (r.carrier_name ? html`<span title="${r.carrier_name}">${r.carrier_short}</span><span class="sub">${r.carrier_ref || r.vehicle}</span>` : html`<span class="muted">nincs</span>`) },
-          { key: 'price', label: 'Díj', align: 'r', cls: 'num', render: (r) => fmt.money(r.price) },
-          { key: 'status', label: 'Állapot', render: (r) => FL.status('transport', r.status) },
-        ],
+        columns,
       })}
       ${ui.pager({ total: data.total, limit, offset })}`);
 
@@ -443,6 +457,7 @@
     ui.bind(root, {
       new: () => transportDialog(null, { ...refs, onClose: (changed) => { if (changed) FL.reload(); } }),
       page: (el) => FL.go(listHash({ offset: el.dataset.offset })),
+      export: (el) => ui.run(el, async () => ui.exportCsv('fuvarok', columns, await api.all('/api/transport/transports', filters))),
     });
 
     const openId = ctx.params[1];

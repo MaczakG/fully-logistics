@@ -105,7 +105,7 @@
     const filtered = Boolean(f.q || f.partner_id || f.status);
 
     root.innerHTML = String(html`
-      ${head(html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}CSV export</button>`)}
+      ${head(html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>`)}
       <form class="toolbar" data-filters role="search" aria-label="Készlet szűrése">
         ${searchField('stk-q', f.q, 'Cikkszám, megnevezés vagy EAN')}
         ${ui.field({ name: 'partner_id', label: 'Ügyfél', type: 'select', value: f.partner_id, placeholder: 'Minden ügyfél', options: partnerOptions(clients) })}
@@ -154,25 +154,31 @@
     const bySize = new Map(summary.bySize.map((z) => [z.code, z]));
     const sum = (k) => summary.bySize.reduce((n, z) => n + z[k], 0);
     const pct = (a, b) => `${b ? Math.round((a / b) * 100) : 0}%`;
+    const columns = [
+      { key: 'name', label: 'Ügyfél', render: (p) => html`${p.name}<span class="sub">${p.code}</span>` },
+      ...codes.map((c) => ({ key: c, label: c, align: 'r', cls: 'num', render: (p) => fmt.int(p.sizes[c] || 0) })),
+      { key: 'total', label: 'Összesen', align: 'r', cls: 'num', render: (p) => fmt.int(p.total) },
+    ];
+
     const row = (label, cell, total) => html`<tr><td>${label}</td>${codes.map((c) => html`<td class="r num">${cell(bySize.get(c) || { total: 0, occupied: 0, empty: 0 })}</td>`)}<td class="r num">${total}</td></tr>`;
     root.innerHTML = String(html`
-      ${head(html`<a class="btn" href="${ROUTE}/helyek">${FL.icon('list')}Helyek listája</a>`)}
+      ${head(html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button><a class="btn" href="${ROUTE}/helyek">${FL.icon('list')}Helyek listája</a>`)}
       ${ui.table({
         caption: 'Foglalt tárolóhelyek ügyfelenként és méret szerint',
         empty: 'Egyik tárolóhelyen sincs áru.',
         rows: summary.byPartner,
         rowHref: (p) => `${ROUTE}/helyek?partner_id=${p.partner_id}&state=occupied`,
-        columns: [
-          { key: 'name', label: 'Ügyfél', render: (p) => html`${p.name}<span class="sub">${p.code}</span>` },
-          ...codes.map((c) => ({ key: c, label: c, align: 'r', cls: 'num', render: (p) => fmt.int(p.sizes[c] || 0) })),
-          { key: 'total', label: 'Összesen', align: 'r', cls: 'num', render: (p) => fmt.int(p.total) },
-        ],
+        columns,
         footer: html`${row('Foglalt', (z) => fmt.int(z.occupied), fmt.int(sum('occupied')))}
           ${row('Szabad', (z) => fmt.int(z.empty), fmt.int(sum('empty')))}
           ${row('Összes tárolóhely', (z) => fmt.int(z.total), fmt.int(sum('total')))}
           ${row('Kihasználtság', (z) => pct(z.occupied, z.total), pct(sum('occupied'), sum('total')))}`,
       })}`);
     ui.enableRowLinks(root);
+    // the footer's counts go to the end of the file as rows
+    const totals = [['Foglalt', 'occupied'], ['Szabad', 'empty'], ['Összes tárolóhely', 'total']]
+      .map(([name, k]) => ({ name, code: '', sizes: Object.fromEntries(codes.map((c) => [c, (bySize.get(c) || {})[k] || 0])), total: sum(k) }));
+    ui.bind(root, { export: () => ui.exportCsv('foglaltsag', columns, [...summary.byPartner, ...totals]) });
     return null;
   }
 
@@ -187,9 +193,20 @@
     const [data, clients] = await Promise.all([api.get('/api/stock/locations', { ...f, limit, offset }), clientList()]);
     const base = `${ROUTE}/helyek`;
     const filtered = Boolean(f.q || f.state || f.size_id || f.partner_id || f.kind !== 'storage');
+    const columns = [
+      { key: 'code', label: 'Hely', render: (l) => html`<a class="mono stk-code" href="${ROUTE}/mozgasok?location_id=${l.id}">${l.code}</a>` },
+      { key: 'zone', label: 'Zóna', render: (l) => l.zone },
+      { key: 'size_code', label: 'Méret', render: (l) => html`<span class="tag">${l.size_code}</span>` },
+      { key: 'kind', label: 'Típus', render: (l) => l.kind_label },
+      { key: 'occupant', label: 'Ügyfél', render: (l) => (l.occupant_name ? html`${l.occupant_name}<span class="sub">${l.occupant_code}</span>` : html`<span class="muted">üres</span>`) },
+      { key: 'dedicated', label: 'Fix hely', render: (l) => (l.dedicated_partner_code ? html`<span class="tag">${l.dedicated_partner_code}</span>` : '') },
+      { key: 'products', label: 'Cikkek', align: 'r', cls: 'num', render: (l) => fmt.int(l.products) },
+      { key: 'qty', label: 'Mennyiség', align: 'r', cls: 'num', render: (l) => fmt.int(l.qty) },
+    ];
+
     const kinds = Object.entries(FL.state.meta.locationKinds || {}).map(([k, v]) => ({ value: k, label: v }));
     root.innerHTML = String(html`
-      ${ui.pageHead({ crumb: { href: ROUTE, label: 'Készlet' }, title: 'Raktárhelyek', lead: 'Melyik helyen melyik ügyfél áruja van, és hol van szabad hely méret szerint.', actions: html`<a class="btn" href="${ROUTE}/terkep">${FL.icon('map-trifold')}Térkép</a>` })}
+      ${ui.pageHead({ crumb: { href: ROUTE, label: 'Készlet' }, title: 'Raktárhelyek', lead: 'Melyik helyen melyik ügyfél áruja van, és hol van szabad hely méret szerint.', actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button><a class="btn" href="${ROUTE}/terkep">${FL.icon('map-trifold')}Térkép</a>` })}
       <form class="toolbar" data-filters role="search" aria-label="Raktárhelyek szűrése">
         ${searchField('loc-q', f.q, 'pl. A-01', 'Hely kódja')}
         ${ui.field({ name: 'state', label: 'Foglaltság', type: 'select', value: f.state, placeholder: 'Mind', options: [['empty', 'Üres'], ['occupied', 'Foglalt']] })}
@@ -204,21 +221,15 @@
         empty: 'Nincs a szűrésnek megfelelő raktárhely.',
         rows: data.items,
         rowHref: (l) => `${ROUTE}/mozgasok?location_id=${l.id}`,
-        columns: [
-          { key: 'code', label: 'Hely', render: (l) => html`<a class="mono stk-code" href="${ROUTE}/mozgasok?location_id=${l.id}">${l.code}</a>` },
-          { key: 'zone', label: 'Zóna', render: (l) => l.zone },
-          { key: 'size_code', label: 'Méret', render: (l) => html`<span class="tag">${l.size_code}</span>` },
-          { key: 'kind', label: 'Típus', render: (l) => l.kind_label },
-          { key: 'occupant', label: 'Ügyfél', render: (l) => (l.occupant_name ? html`${l.occupant_name}<span class="sub">${l.occupant_code}</span>` : html`<span class="muted">üres</span>`) },
-          { key: 'dedicated', label: 'Fix hely', render: (l) => (l.dedicated_partner_code ? html`<span class="tag">${l.dedicated_partner_code}</span>` : '') },
-          { key: 'products', label: 'Cikkek', align: 'r', cls: 'num', render: (l) => fmt.int(l.products) },
-          { key: 'qty', label: 'Mennyiség', align: 'r', cls: 'num', render: (l) => fmt.int(l.qty) },
-        ],
+        columns,
       })}
       ${ui.pager({ total: data.total, limit, offset })}`);
     ui.enableRowLinks(root);
     bindFilters(root, base);
-    ui.bind(root, { page: (el) => FL.go(base + FL.qs({ ...f, offset: el.dataset.offset })) });
+    ui.bind(root, {
+      page: (el) => FL.go(base + FL.qs({ ...f, offset: el.dataset.offset })),
+      export: (el) => ui.run(el, async () => ui.exportCsv('raktarhelyek-foglaltsag', columns, await api.all('/api/stock/locations', f))),
+    });
     return null;
   }
 
@@ -705,8 +716,8 @@
     const filtered = Boolean(f.q || f.partner_id || f.active !== '1');
     root.innerHTML = String(html`
       ${head(html`
-        ${canCreate ? html`<button class="btn" type="button" data-action="import">${FL.icon('upload-simple')}CSV import</button>` : ''}
-        <button class="btn" type="button" data-action="export">${FL.icon('download-simple')}CSV export</button>
+        ${canCreate ? html`<button class="btn" type="button" data-action="import">${FL.icon('upload-simple')}Importálás</button>` : ''}
+        <button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
         ${canCreate ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új cikk</button>` : ''}`)}
       <form class="toolbar" data-filters role="search" aria-label="Cikkek szűrése">
         ${searchField('cat-q', f.q, 'Cikkszám, megnevezés vagy EAN')}
@@ -814,7 +825,7 @@
     const filtered = Object.values(f).some(Boolean);
     const without = (key) => base + FL.qs({ ...f, [key]: '' });
     root.innerHTML = String(html`
-      ${head(html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}CSV export</button>`)}
+      ${head(html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>`)}
       <form class="toolbar" data-filters role="search" aria-label="Mozgások szűrése">
         ${searchField('mov-q', f.q, 'Cikkszám, név, hely vagy sarzs')}
         ${ui.field({ name: 'partner_id', label: 'Ügyfél', type: 'select', value: f.partner_id, placeholder: 'Minden ügyfél', options: partnerOptions(clients) })}

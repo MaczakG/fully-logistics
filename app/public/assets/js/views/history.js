@@ -209,7 +209,7 @@
       ${ui.pageHead({
         title: 'Rendeléstörténet',
         lead: 'Feladott, kézbesített, visszáru és sztornózott rendelések. Kereshetsz rendelésszámra, vevőre, városra és nyomkövetési számra is.',
-        actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás (CSV)</button>`,
+        actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>`,
       })}
       <form class="toolbar hs-filters" data-filters role="search">
         <div class="field field--grow"><label for="hs-q">Keresés</label>
