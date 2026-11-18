@@ -231,8 +231,9 @@
       ${ui.pageHead({
         title: 'Ajánlatkészítő',
         lead: 'Fulfillment árajánlatok a cég alapértelmezett tarifáival vagy egy ügyfél egyedi díjaival. Az ajánlat kinyomtatható és PDF-be menthető.',
-        actions: can('create') ? html`<a class="btn btn--primary" href="${BASE}/uj">${FL.icon('plus')}Új ajánlat</a>`
-          : html`<a class="btn" href="${BASE}/uj">${FL.icon('calculator')}Kalkulátor</a>`,
+        actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
+          ${can('create') ? html`<a class="btn btn--primary" href="${BASE}/uj">${FL.icon('plus')}Új ajánlat</a>`
+          : html`<a class="btn" href="${BASE}/uj">${FL.icon('calculator')}Kalkulátor</a>`}`,
       })}
       <form class="toolbar" data-filters role="search">
         <div class="field field--grow"><label for="qt-q">Keresés</label>
@@ -244,6 +245,15 @@
       <div class="qc-box" data-results>${ui.loading()}</div>`);
     const results = root.querySelector('[data-results]');
     const syncUrl = () => history.replaceState(null, '', `${BASE}${FL.qs({ q: st.q, status: st.status })}`);
+    const columns = [
+      { key: 'number', label: 'Szám', render: (r) => html`<a class="mono" href="${BASE}/${r.id}">${r.number}</a>` },
+      { key: 'client_name', label: 'Ügyfél', render: (r) => html`<b>${r.client_name || r.partner_name || 'Névtelen ügyfél'}</b>${r.partner_id ? html`<span class="sub">Partner: ${r.partner_name} (${r.partner_code})</span>` : ''}` },
+      { key: 'status', label: 'Állapot', render: (r) => FL.status('quote', r.status) },
+      { key: 'monthly_net', label: 'Havi nettó', align: 'r', cls: 'num', render: (r) => fmt.money(r.monthly_net) },
+      { key: 'created_by_name', label: 'Készítette' },
+      { key: 'updated_at', label: 'Módosítva', cls: 'nowrap', render: (r) => fmt.dateTime(r.updated_at) },
+    ];
+
     let seq = 0;
     async function load() {
       const my = ++seq;
@@ -260,18 +270,14 @@
         rows: data.items,
         rowHref: (r) => `${BASE}/${r.id}`,
         empty: st.q || st.status ? 'Nincs a szűrésnek megfelelő ajánlat.' : 'Még nincs mentett ajánlat.',
-        columns: [
-          { key: 'number', label: 'Szám', render: (r) => html`<a class="mono" href="${BASE}/${r.id}">${r.number}</a>` },
-          { key: 'client_name', label: 'Ügyfél', render: (r) => html`<b>${r.client_name || r.partner_name || 'Névtelen ügyfél'}</b>${r.partner_id ? html`<span class="sub">Partner: ${r.partner_name} (${r.partner_code})</span>` : ''}` },
-          { key: 'status', label: 'Állapot', render: (r) => FL.status('quote', r.status) },
-          { key: 'monthly_net', label: 'Havi nettó', align: 'r', cls: 'num', render: (r) => fmt.money(r.monthly_net) },
-          { key: 'created_by_name', label: 'Készítette' },
-          { key: 'updated_at', label: 'Módosítva', cls: 'nowrap', render: (r) => fmt.dateTime(r.updated_at) },
-        ],
+        columns,
       })}${data.total > 0 ? ui.pager({ total: data.total, limit: LIMIT, offset: st.offset }) : ''}`);
     }
     ui.enableRowLinks(results);
-    ui.bind(root, { page: (el) => { st.offset = Number(el.dataset.offset) || 0; load(); } });
+    ui.bind(root, {
+      page: (el) => { st.offset = Number(el.dataset.offset) || 0; load(); },
+      export: (el) => ui.run(el, async () => ui.exportCsv('ajanlatok', columns, await api.all('/api/quotes', { q: st.q, status: st.status }))),
+    });
     root.querySelector('[data-filters]').addEventListener('submit', (e) => {
       e.preventDefault();
       st.q = e.target.q.value.trim();

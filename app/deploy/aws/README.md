@@ -75,7 +75,7 @@ node deploy/aws/release.mjs
 
 ## Mintaadatok
 
-A kipróbáláshoz mintaadatok tölthetők a szerverre: 3 ügyfél, futárok, beszállító, raktárhelyek, 12 termék készlettel, betárolások, 17 rendelés minden állapotban, komissió, futárátvétel, leltár, ajánlatok és elszámolás. Minden minta partner kódja és cikkszáma `DEMO-` kezdetű.
+A kipróbáláshoz mintaadatok tölthetők a szerverre: 3 ügyfél, futárok, beszállító, raktárhelyek, 12 termék készlettel, betárolások, 17 rendelés minden állapotban, komissió, futárátadás, leltár, ajánlatok és elszámolás. Minden minta partner kódja és cikkszáma `DEMO-` kezdetű.
 
 ```bash
 node deploy/aws/task.mjs demo-seed     # betöltés (ha már van, nem csinál semmit)

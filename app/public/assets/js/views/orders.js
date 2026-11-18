@@ -162,6 +162,7 @@
           ${F({ name: 'carrier_service', label: 'Szolgáltatás', optional: true, hint: 'Pl. csomagautomata, házhoz' })}
           ${F({ name: 'pickup_point_id', label: 'Átvételi pont azonosító', optional: true, hint: 'Csomagautomata vagy átvevőhely' })}
           ${F({ name: 'cod_amount', label: 'Utánvét (Ft)', type: 'number', min: 0, hint: '0, ha nincs utánvét.' })}
+          ${F({ name: 'pallets', label: 'Raklap', type: 'number', int: true, min: 0, hint: 'Teherautós fuvarnál a raklapok száma.' })}
         </div>
         <h3 class="ol-form__title">Tételek</h3>
         <div class="ol-lines" data-lines>${(o.lines.length ? o.lines : [{}]).map((l) => lineRow(l))}</div>
@@ -177,7 +178,7 @@
         const v = ui.formValues(form);
         for (const k of Object.keys(v)) if (k.startsWith('lines.')) delete v[k];
         if (!order && !v.partner_id) throw new FL.ApiError(400, 'bad_request', 'Válassz ügyfelet.', { partner_id: 'Válassz ügyfelet.' });
-        const payload = { ...v, carrier_id: v.carrier_id ? Number(v.carrier_id) : null, cod_amount: v.cod_amount ?? 0, lines: form._lines.values() };
+        const payload = { ...v, carrier_id: v.carrier_id ? Number(v.carrier_id) : null, cod_amount: v.cod_amount ?? 0, pallets: v.pallets ?? 0, lines: form._lines.values() };
         if (order) {
           delete payload.partner_id;
           const res = await api.patch(`/api/orders/${order.id}`, payload);
@@ -262,25 +263,37 @@
       ${ui.pageHead({
         title: 'Megrendelések',
         lead: 'Nyitott rendelések: új, felfüggesztett, komissió alatti és feladásra kész. A legrégebbi és az expressz rendelések állnak elöl.',
-        actions: canCreate ? html`
-          <button class="btn" type="button" data-action="import">${FL.icon('upload-simple')}CSV import</button>
-          <button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új rendelés</button>` : '',
+        actions: html`<div class="ol-selbar" data-selbar hidden></div>
+          ${canCreate ? html`<button class="btn" type="button" data-action="import">${FL.icon('upload-simple')}Importálás</button>` : ''}
+          <button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
+          ${canCreate ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új rendelés</button>` : ''}`,
       })}
-      <div data-tabs></div>
       <form class="toolbar" data-filters role="search">
         <div class="field field--grow"><label for="ol-q">Keresés</label>
           <input class="input" id="ol-q" name="q" type="search" value="${state.q}" placeholder="Rendelésszám, külső szám, vevő, cég, város"></div>
+        ${ui.field({ name: 'status', label: 'Állapot', type: 'select', options: STATUS_TABS, value: state.status })}
         ${ui.field({ name: 'partner_id', label: 'Ügyfél', type: 'select', options: clients, placeholder: 'Mind', value: state.partner_id })}
         ${ui.field({ name: 'carrier_id', label: 'Fuvarozó', type: 'select', options: carriers, placeholder: 'Mind', value: state.carrier_id })}
         ${ui.field({ name: 'priority', label: 'Prioritás', type: 'select', options: [['express', 'Expressz'], ['normal', 'Normál']], placeholder: 'Mind', value: state.priority })}
         ${ui.field({ name: 'availability', label: 'Készlet', type: 'select', options: [['ok', 'Teljesíthető'], ['short', 'Hiányos']], placeholder: 'Mind', value: state.availability })}
         ${ui.searchButtons({ action: 'clear' })}
       </form>
-      <div class="ol-selbar" data-selbar hidden></div>
       <div data-table>${ui.loading()}</div>`);
 
     const filtersForm = root.querySelector('[data-filters]');
     const hash = () => `${FL.routes.orders}${FL.qs({ ...state, offset: state.offset || '' })}`;
+
+    const columns = [
+      { key: 'number', label: 'Rendelés', cls: 'nowrap', render: (r) => html`<a class="mono ol-num" href="${FL.routes.orders}/${r.id}">${r.number}</a>${r.external_number ? html`<span class="sub">${r.external_number}</span>` : ''}` },
+      { key: 'partner_code', label: 'Ügyfél', render: (r) => html`<span class="tag" title="${r.partner_name}">${r.partner_code}</span>` },
+      { key: 'customer_name', label: 'Vevő', render: (r) => html`${r.customer_name}<span class="sub">${[r.zip, r.city].filter(Boolean).join(' ')}</span>` },
+      { key: 'carrier_name', label: 'Fuvarozó', render: (r) => (r.carrier_name ? html`<span title="${r.carrier_name}">${carrierShort(r.carrier_name, r.carrier_code)}</span>` : html`<span class="muted">nincs</span>`) },
+      { key: 'item_count', label: 'Tétel', align: 'r', cls: 'num', render: (r) => html`${fmt.int(r.item_count)} db<span class="sub">${fmt.int(r.line_count)} sor</span>` },
+      { key: 'cod_amount', label: 'Utánvét', align: 'r', cls: 'num', render: (r) => (r.cod_amount ? fmt.money(r.cod_amount) : html`<span class="muted">nincs</span>`) },
+      { key: 'created_at', label: 'Kor', align: 'r', render: (r) => html`<span class="num ol-age" data-tone="${['new', 'hold'].includes(r.status) ? ageTone(r.created_at) : ''}" title="${fmt.dateTime(r.created_at)}">${age(r.created_at)}</span>` },
+      { key: 'availability', label: 'Készlet', render: (r) => (r.availability ? availChip(r.availability) : r.status === 'picking' ? html`<span class="small muted">${fmt.int(r.picked_count)}/${fmt.int(r.item_count)} kiszedve</span>` : '') },
+      { key: 'status', label: 'Állapot', render: (r) => html`<span class="ol-chips">${FL.status('order', r.status)}${expressChip(r)}</span>${r.wave_number ? html`<span class="sub mono">${r.wave_number}</span>` : ''}` },
+    ];
 
     async function load() {
       history.replaceState(null, '', hash());
@@ -289,10 +302,8 @@
       sel.set.clear();
       const k = data.kpis;
       const total = k.new + k.hold + k.picking + k.packed;
-      root.querySelector('[data-tabs]').innerHTML = String(ui.tabs(STATUS_TABS.map(([key, label]) => ({
-        key, label, count: key ? k[key] : total,
-        href: `${FL.routes.orders}${FL.qs({ ...state, status: key, offset: '' })}`,
-      })), state.status, 'Állapot szerint'));
+      const label = Object.fromEntries(STATUS_TABS);
+      for (const o of filtersForm.status.options) o.textContent = `${label[o.value]} (${fmt.int(o.value ? k[o.value] : total)})`;
       root.querySelector('[data-table]').innerHTML = String(html`${ui.table({
         caption: 'Nyitott rendelések',
         selectable: canWave,
@@ -300,17 +311,7 @@
         rows,
         empty: state.q || state.partner_id || state.carrier_id || state.priority || state.availability ? 'Nincs a szűrésnek megfelelő rendelés.' : 'Nincs nyitott rendelés.',
         rowHref: (r) => `${FL.routes.orders}/${r.id}`,
-        columns: [
-          { key: 'number', label: 'Rendelés', cls: 'nowrap', render: (r) => html`<a class="mono ol-num" href="${FL.routes.orders}/${r.id}">${r.number}</a>${r.external_number ? html`<span class="sub">${r.external_number}</span>` : ''}` },
-          { key: 'partner_code', label: 'Ügyfél', render: (r) => html`<span class="tag" title="${r.partner_name}">${r.partner_code}</span>` },
-          { key: 'customer_name', label: 'Vevő', render: (r) => html`${r.customer_name}<span class="sub">${[r.zip, r.city].filter(Boolean).join(' ')}</span>` },
-          { key: 'carrier_name', label: 'Fuvarozó', render: (r) => (r.carrier_name ? html`<span title="${r.carrier_name}">${carrierShort(r.carrier_name, r.carrier_code)}</span>` : html`<span class="muted">nincs</span>`) },
-          { key: 'item_count', label: 'Tétel', align: 'r', cls: 'num', render: (r) => html`${fmt.int(r.item_count)} db<span class="sub">${fmt.int(r.line_count)} sor</span>` },
-          { key: 'cod_amount', label: 'Utánvét', align: 'r', cls: 'num', render: (r) => (r.cod_amount ? fmt.money(r.cod_amount) : html`<span class="muted">nincs</span>`) },
-          { key: 'created_at', label: 'Kor', align: 'r', render: (r) => html`<span class="num ol-age" data-tone="${['new', 'hold'].includes(r.status) ? ageTone(r.created_at) : ''}" title="${fmt.dateTime(r.created_at)}">${age(r.created_at)}</span>` },
-          { key: 'availability', label: 'Készlet', render: (r) => (r.availability ? availChip(r.availability) : r.status === 'picking' ? html`<span class="small muted">${fmt.int(r.picked_count)}/${fmt.int(r.item_count)} kiszedve</span>` : '') },
-          { key: 'status', label: 'Állapot', render: (r) => html`<span class="ol-chips">${FL.status('order', r.status)}${expressChip(r)}</span>${r.wave_number ? html`<span class="sub mono">${r.wave_number}</span>` : ''}` },
-        ],
+        columns,
       })}${ui.pager({ total: data.total, limit: 50, offset: state.offset })}`);
       paintSelection();
     }
@@ -339,13 +340,14 @@
     const apply = () => { state.offset = 0; load().catch((e) => ui.toast(e.message, 'error')); };
     filtersForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      for (const name of ['q', 'partner_id', 'carrier_id', 'priority', 'availability']) state[name] = filtersForm[name].value.trim();
+      for (const name of ['q', 'status', 'partner_id', 'carrier_id', 'priority', 'availability']) state[name] = filtersForm[name].value.trim();
       apply();
     });
     ui.enableRowLinks(root);
     ui.bind(root, {
       ...sel.handlers,
       new: async () => { const r = await orderDialog(); if (r && r.id) FL.go(`${FL.routes.orders}/${r.id}`); },
+      export: (el) => ui.run(el, async () => ui.exportCsv('megrendelesek', columns, await api.all('/api/orders', state))),
       import: async () => {
         const r = await ui.csvImport({
           title: 'Rendelések importálása CSV-ből',
@@ -358,8 +360,8 @@
         if (r) load();
       },
       clear: () => {
-        Object.assign(state, { partner_id: '', carrier_id: '', priority: '', availability: '', q: '', offset: 0 });
-        for (const name of ['q', 'partner_id', 'carrier_id', 'priority', 'availability']) filtersForm[name].value = '';
+        Object.assign(state, { status: '', partner_id: '', carrier_id: '', priority: '', availability: '', q: '', offset: 0 });
+        for (const name of ['q', 'status', 'partner_id', 'carrier_id', 'priority', 'availability']) filtersForm[name].value = '';
         load();
       },
       page: (el) => { state.offset = Number(el.dataset.offset); load().then(() => root.querySelector('[data-table]').scrollIntoView({ block: 'start' })); },
@@ -371,7 +373,7 @@
 
   /* ------------------------------------------------------------ detail (shared with Rendeléstörténet) */
 
-  const EVENT_ICON = { created: 'plus', status: 'arrow-right', note: 'pencil-simple', label: 'tag', sync: 'arrows-left-right', return: 'arrow-u-up-left' };
+  const EVENT_ICON = { created: 'plus', status: 'arrow-right', note: 'pencil-simple', label: 'tag', sync: 'arrows-left-right', return: 'arrow-u-up-left', transport: 'truck' };
 
   function lifecycle(o) {
     if (['hold', 'cancelled', 'returned'].includes(o.status)) {
@@ -445,6 +447,8 @@
             ['Fuvarozó', o.carrier ? html`${o.carrier.name}${o.carrier_service ? ` · ${o.carrier_service}` : ''}` : html`<span class="muted">nincs megadva</span>`],
             ['Nyomkövetés', tracking],
             ['Csomag', o.packed_at ? `${fmt.int(o.package_count)} db${o.weight_kg ? `, ${fmt.kg(o.weight_kg)}` : ''}` : ''],
+            ['Raklap', o.pallets ? `${fmt.int(o.pallets)} db` : ''],
+            ['Teherautó', o.truck ? html`<span class="mono">${o.truck.plate}</span>, ${fmt.date(o.truck.date)}, ${fmt.int(o.truck.seq)}. megálló${FL.can('transport', 'view') ? html` <a href="#/fuvarszervezes/tervezo?date=${o.truck.date}">Fuvartervező</a>` : ''}` : ''],
           ])}
         </section>
         <section class="panel" aria-labelledby="ol-meta">
@@ -456,7 +460,7 @@
             ['Utánvét', o.cod_amount ? fmt.money(o.cod_amount) : 'nincs'],
             ['Hullám', o.wave ? (FL.can('picking', 'view') ? html`<a class="mono" href="${FL.routes.picking}/${o.wave.id}">${o.wave.number}</a>` : html`<span class="mono">${o.wave.number}</span>`) : ''],
             ['Becsomagolva', o.packed_at ? fmt.dateTime(o.packed_at) : ''],
-            ['Futárátvétel', o.pickup ? html`<span class="mono">${o.pickup.number}</span>` : ''],
+            ['Futárátadás', o.pickup ? html`<span class="mono">${o.pickup.number}</span>` : ''],
             ['Feladva', o.shipped_at ? fmt.dateTime(o.shipped_at) : ''],
             ['Kézbesítve', o.delivered_at ? fmt.dateTime(o.delivered_at) : ''],
             ['Sztornózva', o.cancelled_at ? fmt.dateTime(o.cancelled_at) : ''],

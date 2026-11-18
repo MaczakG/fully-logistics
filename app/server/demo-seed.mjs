@@ -140,7 +140,7 @@ const OTHER_PARTNERS = [
     key: 'GLS',
     partner: {
       type: 'carrier', code: 'DEMO-GLS', name: 'GLS General Logistics Systems Hungary Kft.', carrier_code: 'gls',
-      notes: 'Napi futárátvétel 14:00 és 15:00 között, a manifesztet a sofőr írja alá.',
+      notes: 'Napi futárátadás 14:00 és 15:00 között, a manifesztet a sofőr írja alá.',
     },
   },
   {
@@ -271,7 +271,7 @@ const LOCATION_NOTE = 'Demó adat';
 // ---------------------------------------------------------------- small helpers
 
 // Valid EAN-13 (GS1 Hungary prefix 599) for item number n.
-function ean13(n) {
+export function ean13(n) {
   const body = `5999876${String(n).padStart(5, '0')}`;
   const sum = body.split('').reduce((s, d, i) => s + Number(d) * (i % 2 ? 3 : 1), 0);
   return `${body}${(10 - (sum % 10)) % 10}`;
@@ -337,7 +337,7 @@ async function freeLocationCode(db, code) {
 
 // Saves the demo_data setting (direct SQL: there is no endpoint for it). Location ids of an
 // earlier, interrupted run are kept.
-async function saveDemoSetting(db, locationIds) {
+export async function saveDemoSetting(db, locationIds) {
   const prev = await getSetting(db, DEMO_SETTING, null);
   const ids = new Set([...(prev && Array.isArray(prev.location_ids) ? prev.location_ids : []), ...locationIds]);
   await setSetting(db, DEMO_SETTING, { created_at: (prev && prev.created_at) || nowIso(), location_ids: [...ids].sort((a, b) => a - b) });
@@ -519,9 +519,9 @@ export async function seedDemo({ worker, env, adminId, log = console.log, today 
     }
 
     // Closed GLS pickup: ships the older orders.
-    log('Futárátvételek...');
+    log('Futárátadások...');
     const closed = await api.post('/api/transport/pickups', {
-      carrier_id: state.partners.GLS, date: pickupDay, window_from: '14:00', window_to: '15:00', note: 'Napi GLS átvétel',
+      carrier_id: state.partners.GLS, date: pickupDay, window_from: '14:00', window_to: '15:00', note: 'Napi GLS átadás',
     });
     await api.post(`/api/transport/pickups/${closed.id}/orders`, { order_ids: orderIds(['shipped', 'delivered', 'returned']) });
     await api.post(`/api/transport/pickups/${closed.id}/arrived`);
@@ -677,6 +677,7 @@ export async function demoSummary(db) {
     waves: await byKey(`SELECT status AS k, COUNT(*) AS n FROM waves WHERE id IN (SELECT wave_id FROM picks WHERE order_id IN (${ordersOf})) GROUP BY status`, J(P)),
     pickups: await byKey(`SELECT status AS k, COUNT(*) AS n FROM carrier_pickups WHERE carrier_id ${IN} GROUP BY status`, J(P)),
     transports: await n(`SELECT COUNT(*) AS n FROM transports WHERE partner_id ${IN}`, J(P)),
+    trucks: await n(`SELECT COUNT(*) AS n FROM trucks WHERE carrier_id ${IN}`, J(P)),
     returns: await n(`SELECT COUNT(*) AS n FROM returns WHERE partner_id ${IN}`, J(P)),
     counts: await n(`SELECT COUNT(DISTINCT c.id) AS n FROM counts c JOIN count_lines cl ON cl.count_id = c.id JOIN products p ON p.id = cl.product_id
                      WHERE p.partner_id ${IN} AND c.status IN ('open', 'counting', 'counted')`, J(P)),
@@ -700,10 +701,10 @@ export function formatSummary(s) {
     `- Betárolások: ${sumOf(s.inbounds)} (${list(s.inbounds, [['completed', 'lezárt'], ['receiving', 'átvétel alatt'], ['arrived', 'megérkezett'], ['expected', 'várható']])})`,
     `- Rendelések: ${sumOf(s.orders)} (${list(s.orders, ORDER_LABELS)}), visszáru: ${s.returns}`,
     `- Komissió: ${sumOf(s.waves)} hullám (${list(s.waves, [['completed', 'lezárt'], ['picking', 'kiszedés alatt'], ['open', 'nyitott'], ['picked', 'kiszedve']])})`,
-    `- Fuvarszervezés: ${sumOf(s.pickups)} futárátvétel (${list(s.pickups, [['closed', 'lezárt'], ['planned', 'tervezett'], ['arrived', 'futár a rámpán']])}), ${s.transports} fuvar`,
+    `- Fuvarszervezés: ${sumOf(s.pickups)} futárátadás (${list(s.pickups, [['closed', 'lezárt'], ['planned', 'tervezett'], ['arrived', 'futár a rámpán']])}), ${s.transports} fuvar${s.trucks ? `, ${s.trucks} teherautó` : ''}`,
     `- Leltár: ${s.counts} nyitott leltár`,
     `- Ajánlatok: ${sumOf(s.quotes)} (${list(s.quotes, [['draft', 'piszkozat'], ['sent', 'elküldve'], ['accepted', 'elfogadva'], ['rejected', 'elutasítva']])})`,
-    `- Elszámolás: ${s.billing_entries} rögzített tétel, ${sumOf(s.statements)} piszkozat elszámolás (${Object.keys(s.statements).join(', ')})`,
+    `- Elszámolás: ${s.billing_entries} rögzített tétel, ${sumOf(s.statements)} elszámolás (${Object.keys(s.statements).join(', ')})`,
   ].join('\n');
 }
 
@@ -809,6 +810,8 @@ export async function removeDemo({ env, log = console.log }) {
     ['webshop_connections', `DELETE FROM webshop_connections WHERE partner_id ${IN}`, J(drop)],
     ['api_rate_limits', `DELETE FROM api_rate_limits WHERE key_id IN (SELECT id FROM api_keys WHERE partner_id ${IN})`, J(drop)],
     ['api_keys', `DELETE FROM api_keys WHERE partner_id ${IN}`, J(drop)],
+    ['orders_off_demo_trucks', `UPDATE orders SET truck_id = NULL, truck_date = NULL, truck_seq = 0 WHERE truck_id IN (SELECT id FROM trucks WHERE carrier_id ${IN})`, J(drop)],
+    ['trucks', `DELETE FROM trucks WHERE carrier_id ${IN}`, J(drop)],
     ['partner_contacts', `DELETE FROM partner_contacts WHERE partner_id ${IN}`, J(drop)],
     ['partner_contracts', `DELETE FROM partner_contracts WHERE partner_id ${IN}`, J(drop)],
     ['partner_tariffs', `DELETE FROM partner_tariffs WHERE partner_id ${IN}`, J(drop)],
@@ -871,7 +874,7 @@ export async function removeDemo({ env, log = console.log }) {
   log([
     'Demó adatok törölve:',
     `- ${out.partners} partner, ${out.products} termék, ${out.orders} rendelés, ${out.inbounds} betárolás, ${out.returns} visszáru`,
-    `- ${out.waves} hullám, ${out.pickups} futárátvétel, ${out.transports} fuvar, ${out.counts} leltár, ${out.quotes} ajánlat`,
+    `- ${out.waves} hullám, ${out.pickups} futárátadás, ${out.transports} fuvar, ${out.counts} leltár, ${out.quotes} ajánlat`,
     `- ${out.statements} elszámolás, ${out.billing_entries} rögzített tétel, ${out.movements} készletmozgás, ${out.documents} dokumentum (${out.files} fájl)`,
     `- Raktárhelyek: ${out.locations_deleted} törölve, ${out.locations_inactivated} inaktiválva${out.locations_kept.length ? `, valódi készlet miatt maradt: ${out.locations_kept.join(', ')}` : ''}`,
     ...(kept.length ? [`- Inaktiválva, mert valódi adat hivatkozik rá: ${kept.join(', ')}`] : []),

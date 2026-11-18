@@ -704,7 +704,7 @@ async function unpackOrder(ctx, id, body) {
   const o = await first(db, 'SELECT o.id, o.number, o.status, o.pickup_id, cp.number AS pickup_number FROM orders o LEFT JOIN carrier_pickups cp ON cp.id = o.pickup_id WHERE o.id = ?', id);
   if (!o) throw notFound('A rendelés nem található.');
   if (o.status !== 'packed') throw conflict(`Csak becsomagolt rendelés csomagolása vonható vissza (most: ${orderLabel(o.status)}).`);
-  if (o.pickup_id) throw conflict(`A(z) ${o.number} rendelés már egy futárátvételhez tartozik (${o.pickup_number}). Előbb vedd ki onnan.`);
+  if (o.pickup_id) throw conflict(`A(z) ${o.number} rendelés már egy futárátadáshoz tartozik (${o.pickup_number}). Előbb vedd ki onnan.`);
   await setOrderStatus(ctx, id, 'picking', `Csomagolás visszavonva: ${reason}`, { tracking_number: '', label_document_id: null, packed_at: null });
   await audit(ctx, { module: 'picking', action: 'edit', entity: 'order', entityId: id, summary: `${o.number}: csomagolás visszavonva (${reason})` });
   return packingOrder(ctx, id);
@@ -728,8 +728,16 @@ export function register(r) {
     if (!statuses.every((s) => STATUSES.wave[s])) throw badRequest('Ismeretlen állapot.');
     const limit = Math.min(Math.max(parseInt(ctx.query.get('limit') || '50', 10) || 50, 1), 200);
     const offset = Math.max(parseInt(ctx.query.get('offset') || '0', 10) || 0, 0);
-    const where = `w.status IN (${marks(statuses.length)})`;
-    const total = (await first(db, `SELECT COUNT(*) AS n FROM waves w WHERE ${where}`, ...statuses)).n;
+    let where = `w.status IN (${marks(statuses.length)})`;
+    const args = [...statuses];
+    // q: wave number, note, picker or the number of an order in the wave
+    const q = (ctx.query.get('q') || '').trim().slice(0, 100);
+    if (q) {
+      where += ` AND (w.number LIKE ? ESCAPE '\\' OR w.note LIKE ? ESCAPE '\\' OR u.name LIKE ? ESCAPE '\\' OR EXISTS (SELECT 1 FROM orders o
+        WHERE o.wave_id = w.id AND (o.number LIKE ? ESCAPE '\\' OR o.external_number LIKE ? ESCAPE '\\')))`;
+      args.push(...Array(5).fill(`%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`));
+    }
+    const total = (await first(db, `SELECT COUNT(*) AS n FROM waves w LEFT JOIN users u ON u.id = w.picker_id WHERE ${where}`, ...args)).n;
     const items = await all(db,
       `SELECT w.id, w.number, w.status, w.note, w.created_at, w.started_at, w.completed_at, u.name AS picker_name,
               (SELECT COUNT(DISTINCT order_id) FROM picks WHERE wave_id = w.id)
@@ -740,7 +748,7 @@ export function register(r) {
               (SELECT COALESCE(SUM(short_qty), 0) FROM picks WHERE wave_id = w.id) AS short
        FROM waves w LEFT JOIN users u ON u.id = w.picker_id WHERE ${where}
        ORDER BY CASE w.status WHEN 'picking' THEN 0 WHEN 'open' THEN 1 WHEN 'picked' THEN 2 ELSE 3 END, w.created_at DESC, w.id DESC
-       LIMIT ? OFFSET ?`, ...statuses, limit, offset);
+       LIMIT ? OFFSET ?`, ...args, limit, offset);
     const counts = Object.fromEntries((await all(db, 'SELECT status, COUNT(*) AS n FROM waves GROUP BY status')).map((x) => [x.status, x.n]));
     const ready = (await first(db, `SELECT COUNT(*) AS n FROM (${READY_SQL})`)).n;
     return { items, total, counts, ready_to_pack: ready };

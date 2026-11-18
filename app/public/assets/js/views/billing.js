@@ -32,11 +32,6 @@
     return money(l.price);
   };
 
-  const tabs = (active, period) => ui.tabs([
-    { key: 'statements', label: 'Havi elszámolások', href: `#/elszamolas?period=${period}` },
-    { key: 'entries', label: 'Egyedi tételek és munkaórák', href: `#/elszamolas/tetelek?period=${period}` },
-  ], active, 'Elszámolás nézetek');
-
   // Month picker: previous / select / next. onChange(period).
   function periodPicker(period) {
     const now = FL.thisMonth();
@@ -80,11 +75,10 @@
         title: 'Elszámolás',
         lead: 'Havi elszámolás ügyfelenként: rendeléskezelés a feladott rendelésekből, tárolás a napi pillanatképekből, áruátvétel, visszáru és a rögzített tételek.',
         actions: html`
-          <button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Export</button>
+          <button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
           ${canCreate ? html`<button class="btn" type="button" data-action="snapshot">${FL.icon('database')}Pillanatkép rögzítése most</button>
             <button class="btn btn--primary" type="button" data-action="generate">${FL.icon('calculator')}<span data-generate-label>Elszámolások készítése</span></button>` : ''}`,
       })}
-      ${tabs('statements', period)}
       ${invoicingNotice(data.invoicing)}
       ${snap.missing.length ? ui.notice(html`A tárolási díj a napi pillanatképekből számolódik. ${label(period)} ${fmt.int(snap.expected)} napjából
         ${fmt.int(snap.missing.length)} napra nincs pillanatkép, ezekre nem számolunk tárolást:
@@ -324,7 +318,7 @@
         crumb: { href: `#/elszamolas?period=${period}`, label: `Elszámolás, ${label(period)}` },
         title: `${st.partner_name}, ${label(period)}`,
         lead: `${st.number} elszámolás`,
-        actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}CSV</button>${actions}`,
+        actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>${actions}`,
       })}
       ${st.status === 'void' ? ui.notice(html`Érvénytelenítve ${fmt.dateTime(st.voided_at)} (${st.voided_by_name || 'ismeretlen'}): ${st.void_reason}`, 'info') : ''}
       ${st.stale ? ui.notice(html`A piszkozat készítése óta változtak az adatok vagy a tarifák. Friss nettó összeg: <b>${fmt.money(st.fresh.net)}</b>.
@@ -478,15 +472,33 @@
     ]);
     const options = clients.items.map((c) => ({ value: c.id, label: `${c.name} (${c.code})` }));
     const can = (a) => FL.can('billing', a);
+    const columns = [
+      { key: 'date', label: 'Dátum', cls: 'nowrap', render: (r) => fmt.date(r.date) },
+      { key: 'partner_name', label: 'Ügyfél', render: (r) => html`${r.partner_name}<span class="sub">${r.partner_code}</span>` },
+      { key: 'kind', label: 'Tétel', render: (r) => html`${r.kind === 'hourly_work' ? 'Óradíjas munka' : r.item_name || 'Törölt tétel'}${r.note ? html`<span class="sub">${r.note}</span>` : ''}` },
+      { key: 'qty', label: 'Mennyiség', align: 'r', cls: 'num', render: (r) => qty(r.qty, r.unit) },
+      { key: 'price', label: 'Egységár', align: 'r', cls: 'num', render: (r) => money(r.price) },
+      { key: 'amount', label: 'Összeg', align: 'r', cls: 'num', render: (r) => money(r.amount) },
+      { key: 'created_by_name', label: 'Rögzítette', render: (r) => html`${r.created_by_name || ''}<span class="sub">${fmt.dateTime(r.created_at)}</span>` },
+      {
+        key: 'actions', label: 'Műveletek', render: (r) => (r.locked
+          ? html`<span class="chip" title="${`A(z) ${r.statement_number} elszámolás már ${r.statement_status === 'invoiced' ? 'számlázva' : 'jóváhagyva'}`}">Lezárt hónap</span>`
+          : html`<span class="actions bl-row-actions">
+            ${can('edit') ? html`<button class="btn btn--ghost btn--icon btn--sm" type="button" data-action="edit" data-id="${r.id}" aria-label="Szerkesztés">${FL.icon('pencil-simple')}</button>` : ''}
+            ${can('delete') ? html`<button class="btn btn--ghost btn--icon btn--sm" type="button" data-action="remove" data-id="${r.id}" aria-label="Törlés">${FL.icon('trash')}</button>` : ''}
+          </span>`),
+      },
+    ];
+
     const link = (p) => `#/elszamolas/tetelek${FL.qs({ period: p.period ?? period, partner: p.partner ?? partner, offset: p.offset || '' })}`;
 
     root.innerHTML = String(html`
       ${ui.pageHead({
         title: 'Elszámolás',
         lead: 'Óradíjas munka (szettképzés, átcímkézés) és darabonként számlázott egyedi tételek ügyfelenként és naponta. A havi elszámolás ezekből számol.',
-        actions: can('create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új tétel</button>` : '',
+        actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
+          ${can('create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új tétel</button>` : ''}`,
       })}
-      ${tabs('entries', period)}
       <form class="toolbar" data-filters role="search">
         ${periodPicker(period)}
         ${ui.field({ name: 'partner', id: 'bl-partner', label: 'Ügyfél', type: 'select', value: partner, options, placeholder: 'Minden ügyfél' })}
@@ -496,23 +508,7 @@
         caption: `Rögzített tételek, ${label(period)}`,
         rows: data.items,
         empty: 'Ebben a hónapban nincs rögzített tétel.',
-        columns: [
-          { key: 'date', label: 'Dátum', cls: 'nowrap', render: (r) => fmt.date(r.date) },
-          { key: 'partner_name', label: 'Ügyfél', render: (r) => html`${r.partner_name}<span class="sub">${r.partner_code}</span>` },
-          { key: 'kind', label: 'Tétel', render: (r) => html`${r.kind === 'hourly_work' ? 'Óradíjas munka' : r.item_name || 'Törölt tétel'}${r.note ? html`<span class="sub">${r.note}</span>` : ''}` },
-          { key: 'qty', label: 'Mennyiség', align: 'r', cls: 'num', render: (r) => qty(r.qty, r.unit) },
-          { key: 'price', label: 'Egységár', align: 'r', cls: 'num', render: (r) => money(r.price) },
-          { key: 'amount', label: 'Összeg', align: 'r', cls: 'num', render: (r) => money(r.amount) },
-          { key: 'created_by_name', label: 'Rögzítette', render: (r) => html`${r.created_by_name || ''}<span class="sub">${fmt.dateTime(r.created_at)}</span>` },
-          {
-            key: 'actions', label: 'Műveletek', render: (r) => (r.locked
-              ? html`<span class="chip" title="${`A(z) ${r.statement_number} elszámolás már ${r.statement_status === 'invoiced' ? 'számlázva' : 'jóváhagyva'}`}">Lezárt hónap</span>`
-              : html`<span class="actions bl-row-actions">
-                ${can('edit') ? html`<button class="btn btn--ghost btn--icon btn--sm" type="button" data-action="edit" data-id="${r.id}" aria-label="Szerkesztés">${FL.icon('pencil-simple')}</button>` : ''}
-                ${can('delete') ? html`<button class="btn btn--ghost btn--icon btn--sm" type="button" data-action="remove" data-id="${r.id}" aria-label="Törlés">${FL.icon('trash')}</button>` : ''}
-              </span>`),
-          },
-        ],
+        columns,
       })}
       ${ui.pager({ total: data.total, limit: data.limit, offset: data.offset })}</div>`);
 
@@ -522,6 +518,7 @@
       ...periodHandlers((p) => FL.go(link({ period: p, offset: 0 })), period),
       page: (el) => FL.go(link({ offset: Number(el.dataset.offset) })),
       new: () => entryDialog({ clients: options, partner }),
+      export: (el) => ui.run(el, async () => ui.exportCsv('egyedi-tetelek', columns, await api.all('/api/billing/entries', { period, partner_id: partner }))),
       edit: (el) => entryDialog({ clients: options, entry: byId.get(Number(el.dataset.id)) }),
       remove: async (el) => {
         const e = byId.get(Number(el.dataset.id));

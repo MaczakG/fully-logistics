@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { startServer } from './helpers.mjs';
 
 let srv;
+let admin;
 let fx;
 let manager;
 let operator;
@@ -15,7 +16,7 @@ const orders = {};
 
 before(async () => {
   srv = await startServer();
-  await srv.admin();
+  admin = await srv.admin();
   fx = await srv.seedBasics();
   manager = await srv.userWithRole('warehouse_manager', 'vezeto-transport@example.com');
   operator = await srv.userWithRole('warehouse_operator', 'raktaros-transport@example.com');
@@ -68,6 +69,16 @@ test('board: waiting packed orders per carrier', async () => {
   assert.equal(b.no_carrier.orders, 1);
   assert.equal(b.totals.waiting.orders, 4);
   assert.equal((await operator.get('/api/transport/board?date=2026-13-01')).status, 400);
+});
+
+test('futárátadás: couriers only, any other carrier does egyedi fuvarok', async () => {
+  const truck = ok(await admin.post('/api/partners', { type: 'carrier', code: 'TEHER', name: 'Teher Trans Kft.' }));
+  const b = ok(await operator.get('/api/transport/board'));
+  assert.ok(b.carriers.every((c) => c.carrier_code), 'the board lists couriers only');
+  assert.ok(!b.carriers.some((c) => c.id === truck.id));
+  const refused = await service.post('/api/transport/pickups', { carrier_id: truck.id, date: today });
+  assert.equal(refused.status, 400);
+  assert.match(refused.data.error.message, /csak futárszolgálattal/);
 });
 
 test('pickup: create, assign, scan, remove, arrived, close', async () => {

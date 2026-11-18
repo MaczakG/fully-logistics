@@ -41,11 +41,11 @@ before(async () => {
 });
 after(async () => { await srv.stop(); });
 
-test('list: closed orders only, filters and KPIs', async () => {
+test('list: every order in every status, filters and KPIs', async () => {
   const all = await admin.get('/api/history');
   assert.equal(all.status, 200);
-  assert.deepEqual(all.data.items.map((i) => i.id).sort(), [S.one.id, S.two.id, S.cancelled.id].sort());
-  assert.deepEqual(all.data.kpis, { shipped: 2, delivered: 0, returned: 0, cancelled: 1 });
+  assert.deepEqual(all.data.items.map((i) => i.id).sort(), [S.one.id, S.two.id, S.cancelled.id, S.open.id].sort());
+  assert.deepEqual(all.data.kpis, { new: 1, hold: 0, picking: 0, packed: 0, shipped: 2, delivered: 0, returned: 0, cancelled: 1 });
   const first = all.data.items.find((i) => i.id === S.one.id);
   assert.equal(first.item_count, 5);
   assert.equal(first.tracking_number, 'GLS-00112233');
@@ -57,7 +57,7 @@ test('list: closed orders only, filters and KPIs', async () => {
   assert.deepEqual(byCity.data.items.map((i) => i.id), [S.one.id]);
   const byClient = await admin.get(`/api/history?partner_id=${fx.clients.konyha}`);
   assert.deepEqual(byClient.data.items.map((i) => i.id), [S.two.id]);
-  assert.deepEqual(byClient.data.kpis, { shipped: 1, delivered: 0, returned: 0, cancelled: 0 });
+  assert.deepEqual(byClient.data.kpis, { new: 0, hold: 0, picking: 0, packed: 0, shipped: 1, delivered: 0, returned: 0, cancelled: 0 });
   const byCarrier = await admin.get(`/api/history?carrier_id=${fx.carriers.foxpost}`);
   assert.deepEqual(byCarrier.data.items.map((i) => i.id), [S.two.id]);
   const cancelled = await admin.get('/api/history?status=cancelled');
@@ -67,11 +67,12 @@ test('list: closed orders only, filters and KPIs', async () => {
   const shippedToday = await admin.get(`/api/history?date_field=shipped&from=${today}&to=${today}`);
   assert.equal(shippedToday.data.total, 2, 'cancelled orders have no shipping date');
   const createdToday = await admin.get(`/api/history?date_field=created&from=${today}&to=${today}`);
-  assert.equal(createdToday.data.total, 3);
+  assert.equal(createdToday.data.total, 4);
   const future = await admin.get('/api/history?date_field=created&from=2099-01-01');
   assert.equal(future.data.total, 0);
   assert.equal((await admin.get('/api/history?from=2026-13-01')).status, 400);
-  assert.equal((await admin.get('/api/history?status=new')).status, 400);
+  assert.deepEqual((await admin.get('/api/history?status=new')).data.items.map((i) => i.id), [S.open.id]);
+  assert.equal((await admin.get('/api/history?status=xyz')).status, 400);
   assert.equal((await admin.get('/api/history?limit=1')).data.items.length, 1);
 
   const sales = await srv.userWithRole('sales');
@@ -92,7 +93,7 @@ test('export: semicolon CSV with BOM and the same filters', async () => {
   const text = new TextDecoder().decode(buf).replace(/^﻿/, '');
   const lines = text.trim().split('\r\n');
   assert.match(lines[0], /^Rendelésszám;Külső rendelésszám;Ügyfélkód;Ügyfél;Állapot;Vevő/);
-  assert.equal(lines.length, 3);
+  assert.equal(lines.length, 4, 'header, shipped, cancelled and the open order');
   assert.ok(lines.some((l) => l.startsWith(`${S.one.number};`) && l.includes(';Feladva;') && l.includes('GLS-00112233')));
   assert.ok(!text.includes(S.two.number));
 });

@@ -172,7 +172,8 @@ test('orders and history: every status', async () => {
   assert.equal(open.kpis.express, 1);
 
   const history = await api.get('/api/history?limit=200');
-  assert.deepEqual(history.kpis, { shipped: 2, delivered: 2, returned: 1, cancelled: 1 });
+  // every status, open ones too; new: the five demo orders and the real one
+  assert.deepEqual(history.kpis, { new: 6, hold: 1, picking: 2, packed: 3, shipped: 2, delivered: 2, returned: 1, cancelled: 1 });
   const returned = history.items.find((o) => o.status === 'returned');
   assert.equal(returned.return_count, 1);
   const detail = await api.get(`/api/orders/${returned.id}`);

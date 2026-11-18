@@ -1,4 +1,5 @@
-/* Rendeléstörténet: shipped, delivered, returned and cancelled orders.
+/* Rendeléstörténet: every order in every status, the latest activity first; an open order opens in
+   Megrendelések, a closed one here.
      #/rendelestortenet          search and filters (date range on shipping or creation, client, carrier,
                                  status, text incl. tracking number), CSV export
      #/rendelestortenet/<id>     order detail (FL.orders.renderDetail) with return and delivered actions
@@ -6,7 +7,8 @@
 (() => {
   'use strict';
   const { html, ui, api, fmt } = FL;
-  const CLOSED = ['shipped', 'delivered', 'returned', 'cancelled'];
+  const OPEN = ['new', 'hold', 'picking', 'packed'];
+  const statuses = () => Object.keys(FL.state.meta.statuses.order);
   const REASONS = ['Nem vette át a címzett', 'Elállás (14 napon belül)', 'Sérült csomag', 'Téves termék', 'Hibás termék', 'Címzett ismeretlen', 'Csere'];
 
   /* ------------------------------------------------------------ return dialog */
@@ -198,7 +200,7 @@
     root.classList.add('list-page');
     const q = ctx.query;
     const state = {
-      status: CLOSED.includes(q.get('status')) ? q.get('status') : '',
+      status: statuses().includes(q.get('status')) ? q.get('status') : '',
       date_field: q.get('date_field') === 'created' ? 'created' : 'shipped',
       from: q.get('from') || '', to: q.get('to') || '',
       partner_id: q.get('partner_id') || '', carrier_id: q.get('carrier_id') || '', q: q.get('q') || '',
@@ -208,8 +210,8 @@
     root.innerHTML = String(html`
       ${ui.pageHead({
         title: 'Rendeléstörténet',
-        lead: 'Feladott, kézbesített, visszáru és sztornózott rendelések. Kereshetsz rendelésszámra, vevőre, városra és nyomkövetési számra is.',
-        actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás (CSV)</button>`,
+        lead: 'Minden rendelés minden állapotban, a legutóbbi mozgás elöl. Kereshetsz rendelésszámra, vevőre, városra és nyomkövetési számra is.',
+        actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>`,
       })}
       <form class="toolbar hs-filters" data-filters role="search">
         <div class="field field--grow"><label for="hs-q">Keresés</label>
@@ -219,7 +221,7 @@
         ${ui.field({ name: 'to', label: 'Eddig', type: 'date', value: state.to })}
         ${ui.field({ name: 'partner_id', label: 'Ügyfél', type: 'select', options: clients, placeholder: 'Mind', value: state.partner_id })}
         ${ui.field({ name: 'carrier_id', label: 'Fuvarozó', type: 'select', options: carriers, placeholder: 'Mind', value: state.carrier_id })}
-        ${ui.field({ name: 'status', label: 'Állapot', type: 'select', options: CLOSED.map((s) => [s, FL.statusLabel('order', s)]), placeholder: 'Mind', value: state.status })}
+        ${ui.field({ name: 'status', label: 'Állapot', type: 'select', options: statuses().map((s) => [s, FL.statusLabel('order', s)]), placeholder: 'Mind', value: state.status })}
         <div class="hs-quick" role="group" aria-label="Gyors időszak">
           <button class="btn btn--sm btn--ghost" type="button" data-action="range" data-days="0">Ma</button>
           <button class="btn btn--sm btn--ghost" type="button" data-action="range" data-days="7">7 nap</button>
@@ -231,23 +233,26 @@
 
     const form = root.querySelector('[data-filters]');
     const query = () => ({ ...state, offset: undefined });
+    // an open order has its actions (hold, picking, packing) in Megrendelések
+    const href = (r) => `${OPEN.includes(r.status) ? FL.routes.orders : FL.routes.history}/${r.id}`;
 
     async function load() {
       history.replaceState(null, '', `${FL.routes.history}${FL.qs({ ...state, date_field: state.date_field === 'shipped' ? '' : state.date_field, offset: state.offset || '' })}`);
       const data = await api.get('/api/history', { ...query(), offset: state.offset, limit: 50 });
       const filtered = state.q || state.from || state.to || state.partner_id || state.carrier_id || state.status;
       root.querySelector('[data-table]').innerHTML = String(html`${ui.table({
-        caption: 'Lezárt rendelések',
+        caption: 'Rendelések',
         rows: data.items,
-        empty: filtered ? 'Nincs a szűrésnek megfelelő rendelés.' : 'Még nincs lezárt rendelés.',
-        rowHref: (r) => `${FL.routes.history}/${r.id}`,
+        empty: filtered ? 'Nincs a szűrésnek megfelelő rendelés.' : 'Még nincs rendelés.',
+        rowHref: href,
         columns: [
-          { key: 'number', label: 'Rendelés', cls: 'nowrap', render: (r) => html`<a class="mono" href="${FL.routes.history}/${r.id}">${r.number}</a>${r.external_number ? html`<span class="sub">${r.external_number}</span>` : ''}` },
+          { key: 'number', label: 'Rendelés', cls: 'nowrap', render: (r) => html`<a class="mono" href="${href(r)}">${r.number}</a>${r.external_number ? html`<span class="sub">${r.external_number}</span>` : ''}` },
           { key: 'partner_code', label: 'Ügyfél', render: (r) => html`<span class="tag" title="${r.partner_name}">${r.partner_code}</span>` },
           { key: 'customer_name', label: 'Vevő', render: (r) => html`${r.customer_name}<span class="sub">${[r.zip, r.city].filter(Boolean).join(' ')}</span>` },
           { key: 'carrier_name', label: 'Fuvarozó', render: (r) => html`<span title="${r.carrier_name || ''}">${FL.orders.carrierShort(r.carrier_name, r.carrier_code)}</span>${r.tracking_number ? html`<span class="sub mono">${r.tracking_number}</span>` : ''}` },
           { key: 'item_count', label: 'Db', align: 'r', cls: 'num' },
           { key: 'cod_amount', label: 'Utánvét', align: 'r', cls: 'num', render: (r) => (r.cod_amount ? fmt.money(r.cod_amount) : '') },
+          { key: 'created_at', label: 'Beérkezett', cls: 'nowrap', render: (r) => fmt.dateTime(r.created_at) },
           { key: 'shipped_date', label: 'Feladva', render: (r) => html`${r.shipped_date ? fmt.date(r.shipped_date) : html`<span class="muted">nem</span>`}${r.delivered_at ? html`<span class="sub">Kézbesítve ${fmt.date(r.delivered_at)}</span>` : r.cancelled_at ? html`<span class="sub">Sztornó ${fmt.date(r.cancelled_at)}</span>` : ''}` },
           { key: 'status', label: 'Állapot', render: (r) => html`${FL.status('order', r.status)}${r.return_count ? html`<span class="sub">${fmt.int(r.return_count)} visszáru</span>` : ''}` },
         ],

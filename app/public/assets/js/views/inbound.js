@@ -67,25 +67,41 @@
     ]);
     const today = FL.today();
     const filtersOnly = { partner_id: f.partner_id, supplier_id: f.supplier_id, q: f.q, from: f.from, to: f.to, discrepancy: f.discrepancy, closed_from: f.closed_from };
-    const filtered = Object.values(filtersOnly).some(Boolean);
-    const actions = FL.can('inbound', 'create') ? html`
-      <button class="btn" type="button" data-action="import">${FL.icon('upload-simple')}CSV import</button>
-      <button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új betárolás</button>` : '';
+    const filtered = Object.values(filtersOnly).some(Boolean) || f.status !== 'open';
+    const columns = [
+      { key: 'number', label: 'Szám', render: (r) => html`<a class="mono inb-code" href="${ROUTE}/${r.id}">${r.number}</a>${r.external_ref ? html`<span class="sub">${r.external_ref}</span>` : ''}` },
+      { key: 'partner', label: 'Ügyfél', render: (r) => html`${r.partner_name}<span class="sub">${r.partner_code}</span>` },
+      { key: 'supplier', label: 'Beszállító', render: (r) => r.supplier_name || html`<span class="muted">nincs megadva</span>` },
+      { key: 'expected_date', label: 'Várható', cls: 'nowrap', render: (r) => {
+        const late = r.status === 'expected' && r.expected_date && r.expected_date < today;
+        return r.expected_date ? html`<span class="${late ? 'inb-late' : ''}">${fmt.date(r.expected_date)}</span>${late ? html`<span class="sub">késésben</span>` : ''}` : html`<span class="muted">nincs</span>`;
+      } },
+      { key: 'status', label: 'Állapot', render: (r) => html`<span class="inb-chips">${FL.status('inbound', r.status)}${r.has_discrepancy ? chip('Eltérés', 'danger') : ''}</span>` },
+      { key: 'line_count', label: 'Tételek', align: 'r', cls: 'num' , render: (r) => fmt.int(r.line_count) },
+      { key: 'received', label: 'Átvett / várt', render: (r) => html`<span class="num">${fmt.int(r.received_qty)} / ${fmt.int(r.expected_qty)}</span>${bar(r.received_qty, Math.max(r.expected_qty, r.received_qty))}` },
+      { key: 'putaway_qty', label: 'Polcon', align: 'r', cls: 'num', render: (r) => fmt.int(r.putaway_qty) },
+      { key: 'source', label: 'Forrás', render: (r) => html`<span class="tag">${SOURCES[r.source] || r.source}</span>` },
+    ];
+
+    const canCreate = FL.can('inbound', 'create');
+    const actions = html`
+      ${canCreate ? html`<button class="btn" type="button" data-action="import">${FL.icon('upload-simple')}Importálás</button>` : ''}
+      <button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
+      ${canCreate ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új betárolás</button>` : ''}`;
 
     root.innerHTML = String(html`
       ${ui.pageHead({ title: 'Betárolás', lead: 'Várható szállítások, áruátvétel kézi szkennerrel és polcra helyezés.', actions })}
-      ${ui.tabs(TABS.map(([key, label]) => ({ key, label, count: data.counts[key] ?? 0, href: link({ ...filtersOnly, status: key }) })), f.status, 'Betárolások állapot szerint')}
       <form class="toolbar inb-filters" data-filters role="search" aria-label="Betárolások szűrése">
-        <input type="hidden" name="status" value="${f.status}">
         <div class="field field--grow"><label for="inb-q">Keresés</label>
           <input class="input" id="inb-q" name="q" type="search" value="${f.q}" placeholder="Betárolás száma vagy külső hivatkozás" autocomplete="off"></div>
+        ${ui.field({ name: 'status', label: 'Állapot', type: 'select', value: f.status, options: TABS.map(([key, label]) => [key, `${label} (${fmt.int(data.counts[key] ?? 0)})`]) })}
         ${ui.field({ name: 'partner_id', label: 'Ügyfél', type: 'select', value: f.partner_id, placeholder: 'Minden ügyfél', options: clients.items.map((p) => ({ value: p.id, label: `${p.name} (${p.code})` })) })}
         ${ui.field({ name: 'supplier_id', label: 'Beszállító', type: 'select', value: f.supplier_id, placeholder: 'Minden beszállító', options: suppliers.items.map((p) => ({ value: p.id, label: p.name })) })}
         ${ui.field({ name: 'from', label: 'Várható ettől', type: 'date', value: f.from })}
         ${ui.field({ name: 'to', label: 'Várható eddig', type: 'date', value: f.to })}
         <input type="hidden" name="discrepancy" value="${f.discrepancy}">
         <input type="hidden" name="closed_from" value="${f.closed_from}">
-        ${ui.searchButtons(filtered ? { href: link({ status: f.status }) } : {})}
+        ${ui.searchButtons(filtered ? { href: link({}) } : {})}
       </form>
       ${f.discrepancy === '1' ? ui.notice(html`Csak az eltéréssel lezárt betárolások${f.closed_from ? html` ${fmt.date(f.closed_from)} óta` : ''}.`, 'info') : ''}
       ${ui.table({
@@ -94,20 +110,7 @@
         empty: filtered ? 'Nincs a szűrésnek megfelelő betárolás.' : 'Nincs betárolás ebben az állapotban.',
         rows: data.items,
         rowHref: (r) => `${ROUTE}/${r.id}`,
-        columns: [
-          { key: 'number', label: 'Szám', render: (r) => html`<a class="mono inb-code" href="${ROUTE}/${r.id}">${r.number}</a>${r.external_ref ? html`<span class="sub">${r.external_ref}</span>` : ''}` },
-          { key: 'partner', label: 'Ügyfél', render: (r) => html`${r.partner_name}<span class="sub">${r.partner_code}</span>` },
-          { key: 'supplier', label: 'Beszállító', render: (r) => r.supplier_name || html`<span class="muted">nincs megadva</span>` },
-          { key: 'expected_date', label: 'Várható', cls: 'nowrap', render: (r) => {
-            const late = r.status === 'expected' && r.expected_date && r.expected_date < today;
-            return r.expected_date ? html`<span class="${late ? 'inb-late' : ''}">${fmt.date(r.expected_date)}</span>${late ? html`<span class="sub">késésben</span>` : ''}` : html`<span class="muted">nincs</span>`;
-          } },
-          { key: 'status', label: 'Állapot', render: (r) => html`<span class="inb-chips">${FL.status('inbound', r.status)}${r.has_discrepancy ? chip('Eltérés', 'danger') : ''}</span>` },
-          { key: 'line_count', label: 'Tételek', align: 'r', cls: 'num' , render: (r) => fmt.int(r.line_count) },
-          { key: 'received', label: 'Átvett / várt', render: (r) => html`<span class="num">${fmt.int(r.received_qty)} / ${fmt.int(r.expected_qty)}</span>${bar(r.received_qty, Math.max(r.expected_qty, r.received_qty))}` },
-          { key: 'putaway_qty', label: 'Polcon', align: 'r', cls: 'num', render: (r) => fmt.int(r.putaway_qty) },
-          { key: 'source', label: 'Forrás', render: (r) => html`<span class="tag">${SOURCES[r.source] || r.source}</span>` },
-        ],
+        columns,
       })}
       ${ui.pager({ total: data.total, limit, offset })}`);
 
@@ -119,6 +122,7 @@
     });
     ui.bind(root, {
       new: () => inboundForm(null),
+      export: (el) => ui.run(el, async () => ui.exportCsv('betarolasok', columns, await api.all('/api/inbound', { ...f, status: f.status === 'all' ? '' : f.status }))),
       import: async () => {
         const res = await ui.csvImport({
           title: 'Betárolások importálása CSV-ből',

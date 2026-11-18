@@ -47,11 +47,21 @@
       FL.go(`#/leltar${FL.qs(next)}`);
     };
 
+    const columns = [
+      { key: 'number', label: 'Szám', render: (r) => html`<a class="num" href="${base(r.id)}">${r.number}</a>${r.blind ? html` <span class="tag" title="Vak leltár: a raktárosok nem látják a nyilvántartott mennyiséget">vak</span>` : ''}` },
+      { key: 'type', label: 'Típus', render: (r) => html`${TYPES[r.type] || r.type}<span class="sub cnt-scope">${r.scope}</span>` },
+      { key: 'status', label: 'Állapot', render: (r) => FL.status('count', r.status) },
+      { key: 'progress', label: 'Haladás', cls: 'cnt-col-progress', render: (r) => progressBar(r.done_locations, r.locations, 'hely') },
+      { key: 'diff_lines', label: 'Eltérő tétel', align: 'r', cls: 'num', render: (r) => (r.diff_lines == null ? html`<span class="muted" title="Vak leltár: könyvelés előtt csak jóváhagyó látja">rejtett</span>` : r.counted_lines ? fmt.int(r.diff_lines) : '') },
+      { key: 'created_at', label: 'Indította', render: (r) => html`${r.created_by_name || ''}<span class="sub">${fmt.dateTime(r.created_at)}</span>` },
+    ];
+
     root.innerHTML = String(html`
       ${ui.pageHead({
         title: 'Leltár',
         lead: 'Ciklikus, zóna, termék és teljes leltárak. Számlálás helyenként, kézi szkennerrel; az eltéréseket jóváhagyással könyveljük.',
-        actions: FL.can('counts', 'create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új leltár</button>` : '',
+        actions: html`<button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
+          ${FL.can('counts', 'create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új leltár</button>` : ''}`,
       })}
       <form class="toolbar" data-filters role="search">
         <div class="field field--grow"><label for="cnt-q">Keresés</label>
@@ -65,14 +75,7 @@
         empty: filters.status === 'active' ? 'Nincs folyamatban lévő leltár.' : 'Nincs a szűrésnek megfelelő leltár.',
         rows: data.items,
         rowHref: (r) => base(r.id),
-        columns: [
-          { key: 'number', label: 'Szám', render: (r) => html`<a class="num" href="${base(r.id)}">${r.number}</a>${r.blind ? html` <span class="tag" title="Vak leltár: a raktárosok nem látják a nyilvántartott mennyiséget">vak</span>` : ''}` },
-          { key: 'type', label: 'Típus', render: (r) => html`${TYPES[r.type] || r.type}<span class="sub cnt-scope">${r.scope}</span>` },
-          { key: 'status', label: 'Állapot', render: (r) => FL.status('count', r.status) },
-          { key: 'progress', label: 'Haladás', cls: 'cnt-col-progress', render: (r) => progressBar(r.done_locations, r.locations, 'hely') },
-          { key: 'diff_lines', label: 'Eltérő tétel', align: 'r', cls: 'num', render: (r) => (r.diff_lines == null ? html`<span class="muted" title="Vak leltár: könyvelés előtt csak jóváhagyó látja">rejtett</span>` : r.counted_lines ? fmt.int(r.diff_lines) : '') },
-          { key: 'created_at', label: 'Indította', render: (r) => html`${r.created_by_name || ''}<span class="sub">${fmt.dateTime(r.created_at)}</span>` },
-        ],
+        columns,
       })}
       ${ui.pager({ total: data.total, limit, offset })}`);
 
@@ -82,6 +85,7 @@
     ui.bind(root, {
       new: (el) => ui.run(el, openCreate),
       page: (el) => go({ offset: el.dataset.offset }),
+      export: (el) => ui.run(el, async () => ui.exportCsv('leltar', columns, await api.all('/api/counts', filters))),
     });
   }
 

@@ -1,4 +1,4 @@
-// Rendeléstörténet: shipped, delivered, returned and cancelled orders, export, returns. Prefix /api/history
+// Rendeléstörténet: every order in every status (the latest activity first), export, returns. Prefix /api/history
 //
 //   GET  /api/history                       list with filters and KPIs [history view]
 //   GET  /api/history/export                CSV export of the same filters [history view]
@@ -27,7 +27,7 @@ import { addDays, budapestDate, budapestTime, isDate, nowIso } from '../lib/time
 import { allIn, budapestDayStartIso, idParam } from './picking.js';
 import { likeArg } from './orders.js';
 
-const CLOSED = ['shipped', 'delivered', 'returned', 'cancelled'];
+const ALL = Object.keys(STATUSES.order);
 const RETURNABLE = ['shipped', 'delivered', 'returned'];
 const label = (s) => (STATUSES.order[s] ? STATUSES.order[s].label : s);
 const PHOTO_TYPES = /^image\/(jpeg|png|webp|heic|heif|gif)$/;
@@ -36,7 +36,7 @@ const PHOTO_EXT = /\.(jpe?g|png|webp|heic|heif|gif)$/i;
 // Filters shared by the list and the export.
 function filters(query) {
   const status = query.get('status') || '';
-  if (status && !CLOSED.includes(status)) throw badRequest('Ismeretlen állapot.');
+  if (status && !ALL.includes(status)) throw badRequest('Ismeretlen állapot.');
   const dateField = query.get('date_field') || 'shipped';
   if (!['shipped', 'created'].includes(dateField)) throw badRequest('Ismeretlen dátummező.');
   const from = query.get('from') || '';
@@ -277,14 +277,14 @@ export function register(r) {
     const db = ctx.env.DB;
     const { status, where, args } = filters(ctx.query);
     const { limit, offset } = page(ctx.query, 50, 500);
-    const statuses = status ? [status] : CLOSED;
+    const statuses = status ? [status] : ALL;
     const w = [`o.status IN (${marks(statuses.length)})`, ...where].join(' AND ');
     const total = (await first(db, `SELECT COUNT(*) AS n FROM orders o WHERE ${w}`, ...statuses, ...args)).n;
     const items = await all(db, `${SELECT} WHERE ${w} ${ORDER} LIMIT ? OFFSET ?`, ...statuses, ...args, limit, offset);
     // KPIs: the same filters without the status.
-    const kw = [`o.status IN (${marks(CLOSED.length)})`, ...where].join(' AND ');
-    const counts = await all(db, `SELECT o.status, COUNT(*) AS n FROM orders o WHERE ${kw} GROUP BY o.status`, ...CLOSED, ...args);
-    const kpis = Object.fromEntries(CLOSED.map((s) => [s, 0]));
+    const kw = [`o.status IN (${marks(ALL.length)})`, ...where].join(' AND ');
+    const counts = await all(db, `SELECT o.status, COUNT(*) AS n FROM orders o WHERE ${kw} GROUP BY o.status`, ...ALL, ...args);
+    const kpis = Object.fromEntries(ALL.map((s) => [s, 0]));
     for (const c of counts) kpis[c.status] = c.n;
     return { items, total, kpis };
   }, { perm: ['history', 'view'] });
@@ -292,7 +292,7 @@ export function register(r) {
   r.get('/api/history/export', async (ctx) => {
     const db = ctx.env.DB;
     const { status, where, args } = filters(ctx.query);
-    const statuses = status ? [status] : CLOSED;
+    const statuses = status ? [status] : ALL;
     const w = [`o.status IN (${marks(statuses.length)})`, ...where].join(' AND ');
     const rows = await all(db, `${SELECT} WHERE ${w} ${ORDER} LIMIT 50000`, ...statuses, ...args);
     const dt = (v) => (v ? `${budapestDate(new Date(v))} ${budapestTime(new Date(v))}` : '');

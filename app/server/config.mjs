@@ -39,7 +39,8 @@ export function loadConfig(env = process.env) {
     worker: resolve(env.WORKER || resolve(APP, 'worker/index.js')),
     assetsDir: resolve(env.ASSETS_DIR || resolve(APP, 'dist')),
     // Values the worker reads from env (secrets and plain variables).
-    vars: { SETUP_TOKEN: env.SETUP_TOKEN || '', ENCRYPTION_KEY: env.ENCRYPTION_KEY || '' },
+    // GEOCODER_URL: the address search of the Fuvartervező map (default: OpenStreetMap Nominatim; empty: off).
+    vars: { SETUP_TOKEN: env.SETUP_TOKEN || '', ENCRYPTION_KEY: env.ENCRYPTION_KEY || '', ...(env.GEOCODER_URL !== undefined ? { GEOCODER_URL: env.GEOCODER_URL } : {}) },
   };
   if (c.filesDriver === 's3' && (!c.s3.bucket || !c.s3.credentials.accessKeyId || !c.s3.credentials.secretAccessKey)) {
     throw new Error('FILES_DRIVER=s3 needs S3_BUCKET, S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY');

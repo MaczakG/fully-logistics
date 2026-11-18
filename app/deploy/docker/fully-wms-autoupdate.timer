@@ -1,0 +1,11 @@
+# Every minute; systemd never starts a second run while one is still going.
+[Unit]
+Description=Check for a new Fully Logistics WMS version every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target

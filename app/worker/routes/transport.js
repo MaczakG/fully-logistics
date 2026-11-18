@@ -71,13 +71,13 @@ const ORDER_SQL = `SELECT o.id, o.number, o.external_number, o.status, o.partner
 
 async function loadPickup(db, id) {
   const p = await first(db, `${PICKUP_SQL} WHERE cp.id = ?`, id);
-  if (!p) throw notFound('A futárátvétel nem található.');
+  if (!p) throw notFound('A futárátadás nem található.');
   return p;
 }
 
 function assertOpen(p) {
   if (!OPEN_PICKUP.includes(p.status)) {
-    throw conflict(`A(z) ${p.number} futárátvétel állapota „${STATUSES.pickup[p.status].label}”, már nem módosítható.`);
+    throw conflict(`A(z) ${p.number} futárátadás állapota „${STATUSES.pickup[p.status].label}”, már nem módosítható.`);
   }
 }
 
@@ -124,7 +124,7 @@ async function assignOrders(ctx, p, ids) {
   const problems = [];
   for (const o of rows) {
     if (o.pickup_id === p.id) continue;
-    if (o.pickup_id) problems.push(`${o.number}: már a(z) ${o.pickup_number} átvételen van`);
+    if (o.pickup_id) problems.push(`${o.number}: már a(z) ${o.pickup_number} futárátadáson van`);
     else if (o.status !== 'packed') problems.push(`${o.number}: ${STATUSES.order[o.status].label}`);
     else if (!o.carrier_id) problems.push(`${o.number}: nincs fuvarozója`);
     else if (o.carrier_id !== p.carrier_id) problems.push(`${o.number}: más fuvarozóval megy`);
@@ -199,7 +199,8 @@ export function register(r) {
     const today = budapestDate();
     const date = ctx.query.get('date') || today;
     if (!isDate(date)) throw badRequest('Hibás dátum.', { date: 'ÉÉÉÉ-HH-NN formában add meg.' });
-    const carriers = await all(db, "SELECT id, code, name, status, carrier_code FROM partners WHERE type = 'carrier' ORDER BY name");
+    // couriers only: every other carrier does egyedi fuvarok (transports), not parcel pickups
+    const carriers = await all(db, "SELECT id, code, name, status, carrier_code FROM partners WHERE type = 'carrier' AND carrier_code <> '' ORDER BY name");
     const waiting = await all(db,
       `SELECT carrier_id, currency, COUNT(*) AS n, SUM(cod_amount) AS cod, SUM(CASE WHEN cod_amount > 0 THEN 1 ELSE 0 END) AS cod_orders,
               SUM(package_count) AS packages, COALESCE(SUM(weight_kg), 0) AS weight
@@ -276,7 +277,8 @@ export function register(r) {
     const d = validate(await ctx.body(), PICKUP_FIELDS);
     const carrier = await carrierPartner(db, d.carrier_id);
     if (carrier.status !== 'active') throw badRequest('A fuvarozó inaktív.', { carrier_id: 'Inaktív fuvarozó.' });
-    if (d.date < budapestDate()) throw badRequest('Múltbeli napra nem vehetsz fel futárátvételt.', { date: 'Mai vagy későbbi napot adj meg.' });
+    if (!carrier.carrier_code) throw badRequest('Futárátadás csak futárszolgálattal vehető fel; a többi fuvarozóval egyedi fuvar szervezhető.', { carrier_id: 'Nem futárszolgálat.' });
+    if (d.date < budapestDate()) throw badRequest('Múltbeli napra nem vehetsz fel futárátadást.', { date: 'Mai vagy későbbi napot adj meg.' });
     checkWindow(d.window_from, d.window_to);
     const number = await nextNumber(db, 'FA');
     const at = nowIso();
@@ -285,33 +287,33 @@ export function register(r) {
        VALUES (?, ?, ?, ?, ?, 'planned', ?, ?, ?, ?)`,
       number, carrier.id, d.date, d.window_from, d.window_to, d.note, userId(ctx), at, at);
     const id = res.meta.last_row_id;
-    await audit(ctx, { module: 'transport', action: 'create', entity: 'pickup', entityId: id, summary: `${number} futárátvétel felvéve (${carrier.name}, ${d.date} ${windowText(d.window_from, d.window_to)})`.trim() });
+    await audit(ctx, { module: 'transport', action: 'create', entity: 'pickup', entityId: id, summary: `${number} futárátadás felvéve (${carrier.name}, ${d.date} ${windowText(d.window_from, d.window_to)})`.trim() });
     return { id, number };
   }, { perm: ['transport', 'create'] });
 
-  r.get('/api/transport/pickups/:id', (ctx) => pickupDetail(ctx, intId(ctx.params.id, 'A futárátvétel')), { perm: ['transport', 'view'] });
+  r.get('/api/transport/pickups/:id', (ctx) => pickupDetail(ctx, intId(ctx.params.id, 'A futárátadás')), { perm: ['transport', 'view'] });
 
   r.patch('/api/transport/pickups/:id', async (ctx) => {
     const db = ctx.env.DB;
-    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátvétel'));
+    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátadás'));
     assertOpen(p);
     const d = validate(await ctx.body(), {
       date: PICKUP_FIELDS.date, window_from: PICKUP_FIELDS.window_from, window_to: PICKUP_FIELDS.window_to, note: PICKUP_FIELDS.note,
     }, { partial: true });
     if (d.date === null) throw badRequest('Ellenőrizd a megjelölt mezőket.', { date: 'Kötelező mező.' });
-    if (d.date && d.date !== p.date && d.date < budapestDate()) throw badRequest('Múltbeli napra nem teheted át az átvételt.', { date: 'Mai vagy későbbi napot adj meg.' });
+    if (d.date && d.date !== p.date && d.date < budapestDate()) throw badRequest('Múltbeli napra nem teheted át a futárátadást.', { date: 'Mai vagy későbbi napot adj meg.' });
     checkWindow(d.window_from ?? p.window_from, d.window_to ?? p.window_to);
     const keys = Object.keys(d);
     if (!keys.length) return pickupDetail(ctx, p.id);
     await run(db, `UPDATE carrier_pickups SET ${keys.map((k) => `${k} = ?`).join(', ')}, updated_at = ? WHERE id = ?`, ...keys.map((k) => d[k]), nowIso(), p.id);
-    await audit(ctx, { module: 'transport', action: 'edit', entity: 'pickup', entityId: p.id, summary: `${p.number} futárátvétel módosítva`, details: d });
+    await audit(ctx, { module: 'transport', action: 'edit', entity: 'pickup', entityId: p.id, summary: `${p.number} futárátadás módosítva`, details: d });
     return pickupDetail(ctx, p.id);
   }, { perm: ['transport', 'edit'] });
 
   // Assign orders: { order_ids: [...] } or { all: true } for every waiting packed order of the carrier.
   r.post('/api/transport/pickups/:id/orders', async (ctx) => {
     const db = ctx.env.DB;
-    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátvétel'));
+    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátadás'));
     assertOpen(p);
     const body = await ctx.body();
     let assigned;
@@ -333,7 +335,7 @@ export function register(r) {
   // Scanning a parcel at the ramp: tracking number, order number or webshop order number.
   r.post('/api/transport/pickups/:id/scan', async (ctx) => {
     const db = ctx.env.DB;
-    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátvétel'));
+    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátadás'));
     assertOpen(p);
     const { code } = validate(await ctx.body(), { code: { type: 'str', required: true, max: 120 } });
     const hits = await all(db,
@@ -346,7 +348,7 @@ export function register(r) {
     if (!hits.length) throw notFound(`Nincs ilyen rendelés vagy nyomkövetési szám: ${code}`);
     const o = hits[0];
     if (o.pickup_id === p.id) return { order: o, already: true, message: `${o.number} már a manifeszten van.`, pickup: await pickupDetail(ctx, p.id) };
-    if (o.pickup_id) throw conflict(`A(z) ${o.number} rendelés már a(z) ${o.pickup_number} átvételhez tartozik.`);
+    if (o.pickup_id) throw conflict(`A(z) ${o.number} rendelés már a(z) ${o.pickup_number} futárátadáshoz tartozik.`);
     if (o.status !== 'packed') throw conflict(`A(z) ${o.number} rendelés állapota: ${STATUSES.order[o.status].label}. Csak feladásra kész rendelés adható át.`);
     if (o.carrier_id !== p.carrier_id) throw conflict(`A(z) ${o.number} rendelés fuvarozója ${o.carrier_name || 'nincs megadva'}, nem ${p.carrier_name}.`);
     await assignOrders(ctx, p, [o.id]);
@@ -356,11 +358,11 @@ export function register(r) {
 
   r.delete('/api/transport/pickups/:id/orders/:orderId', async (ctx) => {
     const db = ctx.env.DB;
-    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátvétel'));
+    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátadás'));
     assertOpen(p);
     const orderId = intId(ctx.params.orderId, 'A rendelés');
     const o = await first(db, 'SELECT id, number, status FROM orders WHERE id = ? AND pickup_id = ?', orderId, p.id);
-    if (!o) throw notFound('A rendelés nincs ezen a futárátvételen.');
+    if (!o) throw notFound('A rendelés nincs ezen a futárátadáson.');
     if (o.status === 'shipped') throw conflict(`A(z) ${o.number} rendelés már feladva, nem vehető le a manifesztről.`);
     await run(db, "UPDATE orders SET pickup_id = NULL, updated_at = ? WHERE id = ? AND pickup_id = ? AND status <> 'shipped'", nowIso(), o.id, p.id);
     await audit(ctx, { module: 'transport', action: 'edit', entity: 'pickup', entityId: p.id, summary: `${p.number}: ${o.number} levéve a manifesztről` });
@@ -369,7 +371,7 @@ export function register(r) {
 
   r.post('/api/transport/pickups/:id/arrived', async (ctx) => {
     const db = ctx.env.DB;
-    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátvétel'));
+    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátadás'));
     if (p.status !== 'planned') assertOpen(p);
     if (p.status === 'arrived') return pickupDetail(ctx, p.id);
     const at = nowIso();
@@ -382,7 +384,7 @@ export function register(r) {
   // answer is { done: false, remaining } and the client calls again with the same body.
   r.post('/api/transport/pickups/:id/close', async (ctx) => {
     const db = ctx.env.DB;
-    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátvétel'));
+    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátadás'));
     assertOpen(p);
     const d = validate(await ctx.body(), { manifest_number: { type: 'str', max: 120, default: '' } });
     const orders = await all(db, 'SELECT id, number, status FROM orders WHERE pickup_id = ? ORDER BY id', p.id);
@@ -404,14 +406,14 @@ export function register(r) {
     if (manifest !== p.manifest_number) await run(db, 'UPDATE carrier_pickups SET manifest_number = ?, updated_at = ? WHERE id = ?', manifest, nowIso(), p.id);
     const todo = orders.filter((o) => o.status === 'packed');
     const now = todo.slice(0, CLOSE_CHUNK);
-    const text = `Feladva: ${p.number} futárátvétel (${p.carrier_name}), manifeszt: ${manifest}`;
+    const text = `Feladva: ${p.number} futárátadás (${p.carrier_name}), manifeszt: ${manifest}`;
     for (const o of now) await setOrderStatus(ctx, o.id, 'shipped', text);
     if (todo.length > now.length) return { done: false, shipped: now.length, remaining: todo.length - now.length, manifest_number: manifest };
 
     const at = nowIso();
     const res = await run(db, `UPDATE carrier_pickups SET status = 'closed', closed_by = ?, closed_at = ?, updated_at = ?
                                WHERE id = ? AND status IN ('planned', 'arrived')`, userId(ctx), at, at, p.id);
-    if (res.meta.changes !== 1) throw conflict('A futárátvétel állapota közben megváltozott. Töltsd újra az oldalt.');
+    if (res.meta.changes !== 1) throw conflict('A futárátadás állapota közben megváltozott. Töltsd újra az oldalt.');
     await audit(ctx, {
       module: 'transport', action: 'approve', entity: 'pickup', entityId: p.id,
       summary: `${p.number} manifeszt lezárva (${p.carrier_name}, ${manifest}): ${orders.length} rendelés feladva`,
@@ -426,20 +428,20 @@ export function register(r) {
   // Cancel (transport delete): only a planned pickup; its orders wait for the carrier again.
   r.delete('/api/transport/pickups/:id', async (ctx) => {
     const db = ctx.env.DB;
-    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátvétel'));
-    if (p.status !== 'planned') throw conflict(`Csak tervezett futárátvétel törölhető, ez „${STATUSES.pickup[p.status].label}”.`);
+    const p = await loadPickup(db, intId(ctx.params.id, 'A futárátadás'));
+    if (p.status !== 'planned') throw conflict(`Csak tervezett futárátadás törölhető, ez „${STATUSES.pickup[p.status].label}”.`);
     const at = nowIso();
     const res = await batch(db, [
       stmt(db, "UPDATE carrier_pickups SET status = 'cancelled', cancelled_at = ?, updated_at = ? WHERE id = ? AND status = 'planned'", at, at, p.id),
       stmt(db, "UPDATE orders SET pickup_id = NULL, updated_at = ? WHERE pickup_id = ? AND status <> 'shipped'", at, p.id),
     ]);
-    if (res[0].meta.changes !== 1) throw conflict('A futárátvétel állapota közben megváltozott. Töltsd újra az oldalt.');
-    await audit(ctx, { module: 'transport', action: 'delete', entity: 'pickup', entityId: p.id, summary: `${p.number} futárátvétel törölve, ${res[1].meta.changes} rendelés felszabadítva` });
+    if (res[0].meta.changes !== 1) throw conflict('A futárátadás állapota közben megváltozott. Töltsd újra az oldalt.');
+    await audit(ctx, { module: 'transport', action: 'delete', entity: 'pickup', entityId: p.id, summary: `${p.number} futárátadás törölve, ${res[1].meta.changes} rendelés felszabadítva` });
     return { ok: true, released: res[1].meta.changes };
   }, { perm: ['transport', 'delete'] });
 
   r.get('/api/transport/pickups/:id/manifest.csv', async (ctx) => {
-    const p = await pickupDetail(ctx, intId(ctx.params.id, 'A futárátvétel'));
+    const p = await pickupDetail(ctx, intId(ctx.params.id, 'A futárátadás'));
     const csv = toCsv([
       { key: 'number', label: 'Rendelésszám' },
       { key: 'external_number', label: 'Webshop rendelésszám' },

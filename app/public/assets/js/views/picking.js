@@ -81,8 +81,18 @@
   async function renderList(root, ctx) {
     root.classList.add('list-page');
     const status = TABS.some(([k]) => k === ctx.query.get('status')) ? ctx.query.get('status') : 'active';
+    const q = ctx.query.get('q') || '';
     const offset = Number(ctx.query.get('offset')) || 0;
-    const data = await api.get('/api/picking/waves', { status, limit: 50, offset });
+    const data = await api.get('/api/picking/waves', { status, q, limit: 50, offset });
+    const columns = [
+      { key: 'number', label: 'Hullám', render: (w) => html`<a class="mono" href="${FL.routes.picking}/${w.id}">${w.number}</a>${w.note ? html`<span class="sub">${w.note}</span>` : ''}` },
+      { key: 'status', label: 'Állapot', render: (w) => FL.status('wave', w.status) },
+      { key: 'picker_name', label: 'Komissiós', render: (w) => w.picker_name || html`<span class="muted">nincs</span>` },
+      { key: 'order_count', label: 'Rendelés', align: 'r', cls: 'num' },
+      { key: 'picked', label: 'Haladás', render: (w) => html`<div class="pk-listprogress">${progressBar(w.picked, w.qty, `${w.number} haladás`)}<span class="num small">${fmt.int(w.picked)} / ${fmt.int(w.qty)} db</span></div>` },
+      { key: 'short', label: 'Hiány', align: 'r', cls: 'num', render: (w) => (w.short ? html`<span class="diff-neg">${fmt.int(w.short)} db</span>` : '') },
+      { key: 'created_at', label: 'Indítva', render: (w) => html`${fmt.dateTime(w.started_at || w.created_at)}${w.completed_at ? html`<span class="sub">Lezárva ${fmt.dateTime(w.completed_at)}</span>` : ''}` },
+    ];
     const c = data.counts;
     const activeCount = (c.open || 0) + (c.picking || 0) + (c.picked || 0);
     root.innerHTML = String(html`
@@ -90,30 +100,33 @@
         title: 'Komissió',
         lead: 'Hullámok kiszedése és csomagolása. Hullámot itt vagy a Megrendelések listából indíthatsz.',
         actions: html`
+          <button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
           <a class="btn" href="${FL.routes.picking}/csomagolas">${FL.icon('package')}Csomagolóállomás${data.ready_to_pack ? html` <span class="pk-count">${fmt.int(data.ready_to_pack)}</span>` : ''}</a>
           ${FL.can('picking', 'create') ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új hullám</button>` : ''}`,
       })}
-      ${ui.tabs(TABS.map(([key, label]) => ({ key, label, href: `${FL.routes.picking}${FL.qs({ status: key === 'active' ? '' : key })}`, count: key === 'active' ? activeCount : key === 'all' ? null : c[key] || 0 })), status, 'Hullámok állapot szerint')}
+      <form class="toolbar" data-filters role="search">
+        <div class="field field--grow"><label for="pk-q">Keresés</label><input class="input" id="pk-q" name="q" type="search" value="${q}" placeholder="Hullám, megjegyzés, komissiós vagy rendelésszám" autocomplete="off"></div>
+        ${ui.field({ name: 'status', label: 'Állapot', type: 'select', value: status, options: TABS.map(([key, label]) => [key, key === 'all' ? label : `${label} (${fmt.int(key === 'active' ? activeCount : c[key] || 0)})`]) })}
+        ${ui.searchButtons(status !== 'active' || q ? { href: FL.routes.picking } : {})}
+      </form>
       ${ui.table({
         caption: 'Komissiós hullámok',
         rows: data.items,
-        empty: status === 'active' ? 'Nincs aktív hullám. Indíts egyet az Új hullám gombbal.' : 'Nincs ilyen hullám.',
+        empty: status === 'active' && !q ? 'Nincs aktív hullám. Indíts egyet az Új hullám gombbal.' : 'Nincs ilyen hullám.',
         rowHref: (w) => `${FL.routes.picking}/${w.id}`,
-        columns: [
-          { key: 'number', label: 'Hullám', render: (w) => html`<a class="mono" href="${FL.routes.picking}/${w.id}">${w.number}</a>${w.note ? html`<span class="sub">${w.note}</span>` : ''}` },
-          { key: 'status', label: 'Állapot', render: (w) => FL.status('wave', w.status) },
-          { key: 'picker_name', label: 'Komissiós', render: (w) => w.picker_name || html`<span class="muted">nincs</span>` },
-          { key: 'order_count', label: 'Rendelés', align: 'r', cls: 'num' },
-          { key: 'picked', label: 'Haladás', render: (w) => html`<div class="pk-listprogress">${progressBar(w.picked, w.qty, `${w.number} haladás`)}<span class="num small">${fmt.int(w.picked)} / ${fmt.int(w.qty)} db</span></div>` },
-          { key: 'short', label: 'Hiány', align: 'r', cls: 'num', render: (w) => (w.short ? html`<span class="diff-neg">${fmt.int(w.short)} db</span>` : '') },
-          { key: 'created_at', label: 'Indítva', render: (w) => html`${fmt.dateTime(w.started_at || w.created_at)}${w.completed_at ? html`<span class="sub">Lezárva ${fmt.dateTime(w.completed_at)}</span>` : ''}` },
-        ],
+        columns,
       })}
       ${ui.pager({ total: data.total, limit: 50, offset })}`);
     ui.enableRowLinks(root);
+    root.querySelector('[data-filters]').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const s = e.target.status.value;
+      FL.go(`${FL.routes.picking}${FL.qs({ status: s === 'active' ? '' : s, q: e.target.q.value.trim() })}`);
+    });
     ui.bind(root, {
       new: () => newWaveDialog(),
-      page: (el) => FL.go(`${FL.routes.picking}${FL.qs({ status: status === 'active' ? '' : status, offset: el.dataset.offset })}`),
+      page: (el) => FL.go(`${FL.routes.picking}${FL.qs({ status: status === 'active' ? '' : status, q, offset: el.dataset.offset })}`),
+      export: (el) => ui.run(el, async () => ui.exportCsv('komissio', columns, await api.all('/api/picking/waves', { status, q }))),
     });
   }
 

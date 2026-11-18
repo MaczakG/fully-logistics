@@ -18,7 +18,8 @@ migrációk, a beállító kóddal létrejön az első admin, a belépés műkö
   és a szerveren lévő `.env` fájlban maradnak. Ha a felhasználónak kell beírnia valamit
   (pl. a Cloudflare tunnel tokenjét), azt a szerver termináljába írja (`sudo nano .env`), ne a
   chatbe.
-- **Ne futtasd a `server/demo-seed.mjs` szkriptet.** Az kitalált demóadatokat tesz az éles
+- **Demóadatot csak a tulajdonos kérésére tegyél fel**, a [DEMOADATOK.md](DEMOADATOK.md)
+  szerint. A `server/demo-seed.mjs` és a `server/demo-history.mjs` kitalált adatokat tesz az éles
   adatbázisba.
 - Az `ENCRYPTION_KEY` értékét telepítés után **soha ne generáld újra**. Ha elveszik, a mentett
   futár-, webshop- és számlázó-jelszavakat mindenkinek újra meg kell adnia.
@@ -106,6 +107,13 @@ sudo nano .env   # COMPOSE_PROFILES és WMS_DOMAIN a válaszok szerint
 ```
 
 A `.env` szerepel a `.gitignore`-ban, nem kerül a gitbe.
+
+**Fuvartervező térkép.** A térkép az OpenStreetMap csempéit tölti be a böngészőben
+(`tile.openstreetmap.org`), a címek helyét pedig a szerver keresi ki egyszer az OpenStreetMap
+Nominatim szolgáltatásától (másodpercenként legfeljebb egy cím, utána az adatbázisban marad). Ehhez a
+szerver a teherautóra váró rendelések szállítási címét (irányítószám, város, utca) és a raktár címét
+küldi el, nevet és telefonszámot nem. Ha ez nem kívánatos, a `.env` fájlba írd: `GEOCODER_URL=`
+(üresen); ekkor a térképen csak a már ismert címek látszanak.
 
 ### 4/A. Link Caddyvel (`COMPOSE_PROFILES=caddy`)
 

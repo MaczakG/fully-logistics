@@ -16,9 +16,6 @@
 .facts { display: grid; gap: 0.375rem; }
 .facts li { display: grid; gap: 0.0625rem; overflow-wrap: anywhere; }
 /* role tabs */
-.role-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.role-tab { display: inline-flex; align-items: center; gap: 0.375rem; }
-.role-tab[aria-selected="true"] { font-weight: bold; }
 .role-head { display: grid; gap: 0.25rem; min-width: 0; }
 /* permission matrix */
 /* position: the visually hidden texts in the cells are absolutely positioned; without a

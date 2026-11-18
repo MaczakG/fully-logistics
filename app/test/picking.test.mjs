@@ -71,6 +71,13 @@ test('wave: only new orders that can be allocated completely, FEFO plan', async 
   assert.equal(list.data.total, 3);
 });
 
+test('wave list search: wave number or the number of an order in it', async () => {
+  const find = async (q) => (await admin.get(`/api/picking/waves?status=all&q=${encodeURIComponent(q)}`)).data.items.map((w) => w.id);
+  assert.deepEqual(await find(S.b.number), [S.w1]);
+  assert.deepEqual(await find('nincs-ilyen'), []);
+  assert.deepEqual(await find('%'), []);
+});
+
 test('wave detail: tasks in walking order, grouped by location and product', async () => {
   const w = await wave(S.w1);
   assert.equal(w.status, 'open');

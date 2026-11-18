@@ -24,6 +24,8 @@ Minden `docker compose` parancsot a Docker-mappából kell futtatni: `cd /opt/fu
 
 Az új verzió akkor kerül a szerverre, ha a kód már fent van a GitHubon a követett ágon, és a szerveren lefut a `sudo fully-wms-update`. A leállás általában fél percnél rövidebb.
 
+**Automatikus frissítés:** ha be van állítva ([AUTOFRISSITES.md](AUTOFRISSITES.md)), a szerver percenként megnézi a `main` ágat, és az új verziót magától telepíti. Ilyenkor az 1. lépés után nincs teendő, a többi lépés csak kézi frissítéskor kell. Hogy fut-e: `systemctl list-timers fully-wms-autoupdate.timer`.
+
 1. A változás kerüljön be a `main` ágba (PR-rel, beolvasztva). A szerver csak a GitHubra már feltöltött kódot látja.
 2. Lépj be a laptopról: `ssh mag_user@192.168.0.132`
 3. Nézd meg, mi jön (nem kötelező): `sudo git -C /opt/fully-wms/repo fetch && sudo git -C /opt/fully-wms/repo log --oneline HEAD..@{u}`
@@ -61,7 +63,7 @@ Ha az új verzió hibás, állj vissza az előző commitra. Ha az új verzió mi
 4. Építsd újra: `sudo docker compose up -d --build wms`
 5. Ellenőrizd az előző rész szerint.
 
-Ezután a tároló nincs ágon, ezért a következő `fully-wms-update` előtt állj vissza az ágra: `sudo git -C /opt/fully-wms/repo checkout main`.
+Ezután a tároló nincs ágon, ezért a következő `fully-wms-update` előtt állj vissza az ágra: `sudo git -C /opt/fully-wms/repo checkout main`. Amíg nincs ágon, az automatikus frissítés szünetel. Csak akkor állj vissza a `main`-re, ha a javítás már be van olvasztva, különben a hibás verzió egy percen belül újra feltelepül.
 
 ### Az adatbázis visszaállítása mentésből
 
@@ -120,6 +122,7 @@ A legtöbb hibát a napló megmutatja: `sudo docker compose logs --tail 50 wms` 
 | A böngészőben Cloudflare 1033-as hiba | A tunnel konténer áll, vagy nem kapcsolódik | `sudo docker compose logs --tail 20 tunnel`, majd `sudo docker compose up -d tunnel` |
 | A böngészőben 502-es hiba | A tunnel él, de a WMS nem válaszol | `sudo docker compose ps`, a `wms` naplója |
 | A mentés hibás (`systemctl status fully-wms-backup`: failed) | Lejárt a Google Drive engedély | A laptopról: `ssh -t -L 53682:127.0.0.1:53682 mag_user@192.168.0.132 sudo rclone --config /root/.config/rclone/rclone.conf config reconnect gdrive:`, és a kiírt linket nyisd meg a laptop böngészőjében |
+| Az automatikus frissítés nem telepít egy új verziót | Ennek a verziónak a frissítése egyszer már nem sikerült, ezért nem próbálja újra | `journalctl -u fully-wms-autoupdate -n 50 --no-pager`; ha megvan az ok, `sudo rm /var/lib/fully-wms-autoupdate/failed`, vagy olvassz be egy javítást |
 | Betelt a lemez | Régi Docker-képek és build-gyorsítótár | `df -h /`, `sudo docker system df`, `sudo docker image prune -f`, `sudo docker builder prune -f` |
 | Másik gépről „Permission denied (publickey)” | Csak a laptop kulcsa engedélyezett | A mini PC-n monitorral belépve vedd fel az új nyilvános kulcsot a `~/.ssh/authorized_keys` fájlba |
 
@@ -130,7 +133,7 @@ Ezek megszegése adatvesztést vagy leállást okoz, ezért frissítéskor is é
 - Az `ENCRYPTION_KEY` értékét a `.env`-ben soha ne generáld újra és ne írd felül. Ha elveszik, a mentett futár-, webshop- és számlázó-jelszavakat mindenkinek újra meg kell adnia.
 - A `.env` csak a szerveren létezik (root, 600). Ne másold ki, ne tedd gitbe, ne küldd el chatben.
 - Titkot (jelszó, token, kulcs) soha ne írj chatbe. Ha valamit a `.env`-be kell írni, a szerver termináljában tedd: `sudo nano .env`.
-- Ne futtasd a `server/demo-seed.mjs` szkriptet: kitalált demóadatokat tesz az éles adatbázisba.
+- Demóadatot (`server/demo-seed.mjs`, `server/demo-history.mjs`) csak a tulajdonos kérésére tegyél fel, a [DEMOADATOK.md](DEMOADATOK.md) szerint: kitalált adatokat tesz az éles adatbázisba.
 - Frissítés előtt mindig legyen mentés. A `fully-wms-update` ezt magától megcsinálja, kézzel: `sudo fully-wms-backup`.
 - A Cloudflare DNS-ben a `fully.hu`, `www`, `mail` és `ftp` rekord maradjon „DNS only” (szürke felhő), különben leáll az e-mail. Csak az `app` legyen narancs.
 - A deploy kulcs csak olvasni tud: a szerverről nem lehet a GitHubra írni, és ez így is maradjon.
