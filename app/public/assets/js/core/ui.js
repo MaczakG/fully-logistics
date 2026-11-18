@@ -38,11 +38,10 @@
 
   // { title, lead, crumb: { href, label }, actions: html }. No heading or lead: the top bar names the
   // module, a detail page shows its back link and the record's name in one line.
+  // The page's buttons go to the bar at the bottom (app.css .page-actions); on top only the back link.
   ui.pageHead = ({ title, crumb, actions }) => html`
-    <header class="page-head">
-      ${crumb ? html`<p class="page-head__text"><a class="crumb" href="${crumb.href}">${FL.icon('arrow-left')}${crumb.label}</a> / ${title}</p>` : ''}
-      ${actions ? html`<div class="actions">${actions}</div>` : ''}
-    </header>`;
+    ${actions ? html`<div class="page-actions" role="toolbar" aria-label="Műveletek">${actions}</div>` : ''}
+    ${crumb ? html`<header class="page-head"><p class="page-head__text"><a class="crumb" href="${crumb.href}">${FL.icon('arrow-left')}${crumb.label}</a> / ${title}</p></header>` : ''}`;
 
   // Figures as a plain label: value list. [{ label, value, hint }]
   ui.facts = (items) => html`<dl class="dl">${items.map((k) => html`<dt>${k.label}</dt><dd>${k.value}${k.hint ? html` (${k.hint})` : ''}</dd>`)}</dl>`;

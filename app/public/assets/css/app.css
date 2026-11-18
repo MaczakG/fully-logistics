@@ -220,10 +220,8 @@ dialog.dialog--narrow { width: min(28rem, calc(100vw - 1.5rem)); }
 .topbar .user-menu__role { color: #d1e8ff; }
 .cutoff[data-state="soon"] { color: #ffc847; }
 
-/* Header band: the page's buttons (and on a record its back link and name), the tabs, the filters
-   sit on white above the content. */
-.page-head { justify-content: flex-end; }
-.page-head:has(.page-head__text) { justify-content: space-between; }
+/* Header band: on a record its back link and name, the tabs, the filters sit on white above the
+   content. */
 .page-head__text { font-size: 1rem; font-weight: bold; }
 .crumb { color: var(--sap-brand); font-weight: normal; }
 .content > section:not(.list-page) > .page-head,
@@ -365,6 +363,40 @@ dialog.dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   .list-page .table tr > :last-child { padding-right: var(--pad); }
 }
 
+/* ---------- Page actions: one bar at the bottom ----------
+   The page's buttons, main one on the right, and on a list the selection's buttons on the left.
+   A list ends with the bar (it is the last row of the page); elsewhere the bar is fixed to the
+   bottom of the window and the content keeps room for it. Phones: the bar sticks to the bottom. */
+:root { --foot: 2.75rem; }
+.page-actions {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.5rem;
+  min-height: var(--foot); padding: 0.375rem var(--pad); background: #fff; box-shadow: 0 -0.0625rem 0.25rem rgba(0, 0, 0, 0.15);
+}
+.page-actions > [data-selbar], .page-actions > [data-bulk] { margin-right: auto; min-width: 0; padding: 0; border: 0; }
+.page-actions .bulkbar { padding: 0; border: 0; }
+/* A form on a page (Mentés) and the permission matrix's save row stay in view the same way: they
+   stick to the bottom of the window, above the page's bar. */
+.content form:not(dialog *) > .form-actions, .content .savebar {
+  position: sticky; z-index: 10; bottom: 0; padding-block: 0.375rem; background: #fff; box-shadow: 0 -0.0625rem 0 var(--line);
+}
+@media (min-width: 641px) {
+  .page-actions { position: fixed; z-index: 20; left: 0; right: 0; bottom: 0; flex-wrap: nowrap; overflow-x: auto; }
+  .page-actions > * { flex: none; }
+  .content:has(.page-actions) { padding-bottom: calc(var(--pad) + var(--foot)); }
+  /* sticky keeps clear of the content's bottom padding, which holds the bar and the gap above it */
+  .content:has(.page-actions) form:not(dialog *) > .form-actions, .content:has(.page-actions) .savebar { bottom: calc(-1 * var(--pad)); }
+  .content > .list-page > .page-actions { position: static; order: 1; flex-wrap: wrap; overflow: visible; }
+  .content:has(> .list-page > .page-actions) { padding-bottom: 0; }
+  body:has(.page-actions) .toasts { bottom: calc(var(--foot) + 0.5rem); }
+}
+@media (max-width: 640px) {
+  /* the buttons two by two, the main one first */
+  .page-actions { position: sticky; z-index: 20; bottom: 0; order: 1; margin-inline: calc(-1 * var(--pad)); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .page-actions > .btn { width: 100%; white-space: normal; }
+  .page-actions > .btn--primary { order: -1; grid-column: 1 / -1; }
+  .page-actions > :only-child, .page-actions > [data-selbar], .page-actions > [data-bulk] { grid-column: 1 / -1; }
+}
+
 /* ---------- Narrow screens: a shorter top bar ---------- */
 @media (max-width: 899.98px) {
   .topbar { flex-wrap: nowrap; }
@@ -402,12 +434,6 @@ dialog.dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   .pda-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
   .pda-tile { display: flex; align-items: center; height: 100%; min-height: 3rem; padding: 0.5rem 0.75rem; background: #fff; border: 1px solid var(--line); border-radius: 0.25rem; }
 
-  /* Page head: no crumb (the top bar has Back), the action buttons two by two, the main one first */
-  .page-head { flex-direction: column; align-items: stretch; }
-  .page-head .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .page-head .actions > .btn { width: 100%; white-space: normal; }
-  .page-head .actions > .btn--primary { order: -1; grid-column: 1 / -1; }
-  .page-head .actions > :only-child { grid-column: 1 / -1; }
 
   /* Touch targets */
   .btn, .input, .select { min-height: 2.75rem; }
@@ -475,7 +501,7 @@ dialog.camscan::backdrop { background: #000; }
 /* ---------- Print: only the content, no app chrome ---------- */
 @media print {
   @page { size: A4; margin: 12mm; }
-  .topbar, .toasts, .no-print, .page-head .actions, .toolbar { display: none !important; }
+  .topbar, .toasts, .no-print, .page-actions, .toolbar { display: none !important; }
   .shell { display: block; height: auto; }
   .content, .list-page, .list-page .table-wrap { padding: 0; overflow: visible !important; }
   .table tr { break-inside: avoid; }

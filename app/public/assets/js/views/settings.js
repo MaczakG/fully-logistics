@@ -242,7 +242,7 @@
     const sel = ui.selection(() => state.list.items, () => paintSelection());
     state.clients = await clientOptions();
 
-    const actions = html`
+    const actions = html`<div class="slot" data-bulk></div>
       ${can('create') ? html`<button class="btn" type="button" data-action="import">${FL.icon('upload-simple')}Importálás</button>` : ''}
       <button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
       ${can('create') ? html`<button class="btn" type="button" data-action="bulk-new">${FL.icon('squares-four')}Tömeges létrehozás</button>` : ''}
@@ -256,10 +256,8 @@
         <section class="panel panel--flush">
           <div class="slot" data-sizes></div>
         </section>` : html`
-        <section class="panel panel--flush" aria-labelledby="locs-title">
-          <div class="panel__head"><h2 id="locs-title">Raktárhelyek</h2><span class="small muted" data-count></span></div>
+        <section class="panel panel--flush" aria-label="Raktárhelyek">
           <form class="toolbar loc-filters" data-filters novalidate></form>
-          <div class="slot" data-bulk></div>
           <div class="slot" data-locs></div>
         </section>`,
     });
@@ -399,7 +397,6 @@
 
     function paintLocations() {
       const { items, total } = state.list;
-      $('[data-count]').textContent = `${fmt.int(total)} találat`;
       $('[data-locs]').innerHTML = String(html`
         ${ui.table({
           caption: 'Raktárhelyek',
@@ -712,7 +709,7 @@
         sel.set.clear();
         paintFilters();
         loadLocations();
-        $('#locs-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        root.scrollIntoView({ behavior: 'smooth', block: 'start' });
       },
       'clear-filters': () => {
         state.filters = Object.fromEntries(LOC_FILTERS.map((k) => [k, '']));
@@ -721,7 +718,7 @@
         paintFilters();
         loadLocations();
       },
-      page: (el) => { state.offset = Number(el.dataset.offset) || 0; loadLocations(); $('#locs-title').scrollIntoView({ block: 'start' }); },
+      page: (el) => { state.offset = Number(el.dataset.offset) || 0; loadLocations(); root.scrollIntoView({ block: 'start' }); },
       'new-loc': () => locationDialog(null),
       'edit-loc': (el) => locationDialog(Number(el.dataset.id)),
       'bulk-new': () => bulkCreateDialog(),

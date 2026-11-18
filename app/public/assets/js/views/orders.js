@@ -262,7 +262,7 @@
       ${ui.pageHead({
         title: 'Megrendelések',
         lead: 'Nyitott rendelések: új, felfüggesztett, komissió alatti és feladásra kész. A legrégebbi és az expressz rendelések állnak elöl.',
-        actions: html`
+        actions: html`<div class="ol-selbar" data-selbar hidden></div>
           ${canCreate ? html`<button class="btn" type="button" data-action="import">${FL.icon('upload-simple')}Importálás</button>` : ''}
           <button class="btn" type="button" data-action="export">${FL.icon('download-simple')}Exportálás</button>
           ${canCreate ? html`<button class="btn btn--primary" type="button" data-action="new">${FL.icon('plus')}Új rendelés</button>` : ''}`,
@@ -277,7 +277,6 @@
         ${ui.field({ name: 'availability', label: 'Készlet', type: 'select', options: [['ok', 'Teljesíthető'], ['short', 'Hiányos']], placeholder: 'Mind', value: state.availability })}
         ${ui.searchButtons({ action: 'clear' })}
       </form>
-      <div class="ol-selbar" data-selbar hidden></div>
       <div data-table>${ui.loading()}</div>`);
 
     const filtersForm = root.querySelector('[data-filters]');
