@@ -44,6 +44,47 @@
     ${crumb ? html`<header class="page-head"><p class="page-head__text"><a class="crumb" href="${crumb.href}">${FL.icon('arrow-left')}${crumb.label}</a> / ${title}</p></header>` : ''}`;
 
   // Figures as a plain label: value list. [{ label, value, hint }]
+  /* formActionsToBar(root): the buttons of the page's form rows (.form-actions, not in dialogs) go
+     to the page's bottom bar, after its own buttons; the bar is made when the page has none. A
+     button in the bar stands in for the one in the form: a click clicks that one, so its form and
+     its handlers work as before, and its label, disabled and busy state follow it. Text in the row
+     (for example when the record was saved) stays in the form. Call it again after a part of the
+     page is drawn anew: buttons whose form is gone leave the bar. */
+  ui.formActionsToBar = (root) => {
+    const section = root.closest('.content > section') || root;
+    let bar = section.querySelector(':scope > .page-actions');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.className = 'page-actions';
+      bar.setAttribute('role', 'toolbar');
+      bar.setAttribute('aria-label', 'Műveletek');
+      section.prepend(bar);
+    }
+    for (const b of bar.querySelectorAll('[data-stands-in]')) if (!b.standsFor.isConnected) b.remove();
+    for (const row of root.querySelectorAll('.form-actions:not(dialog *)')) {
+      for (const orig of row.querySelectorAll(':scope > .btn:not(.is-in-bar)')) {
+        const copy = orig.cloneNode(true);
+        copy.removeAttribute('id');
+        delete copy.dataset.action;
+        if (copy.tagName === 'BUTTON') copy.type = 'button';
+        copy.dataset.standsIn = '';
+        copy.standsFor = orig;
+        copy.addEventListener('click', (e) => { e.preventDefault(); orig.click(); });
+        const sync = () => {
+          copy.disabled = orig.disabled;
+          if (orig.hasAttribute('aria-busy')) copy.setAttribute('aria-busy', orig.getAttribute('aria-busy'));
+          else copy.removeAttribute('aria-busy');
+          copy.innerHTML = orig.innerHTML;
+        };
+        new MutationObserver(sync).observe(orig, { attributes: true, attributeFilter: ['disabled', 'aria-busy'], childList: true, subtree: true, characterData: true });
+        orig.classList.add('is-in-bar');
+        bar.append(copy);
+      }
+      row.classList.add('form-actions--moved');
+      row.hidden = !row.querySelector(':scope > :not(.is-in-bar)');
+    }
+  };
+
   ui.facts = (items) => html`<dl class="dl">${items.map((k) => html`<dt>${k.label}</dt><dd>${k.value}${k.hint ? html` (${k.hint})` : ''}</dd>`)}</dl>`;
 
   ui.empty = (text = 'Nincs megjeleníthető adat.', icon = 'info') => html`<div class="empty">${FL.icon(icon)}<p>${text}</p></div>`;

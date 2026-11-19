@@ -417,10 +417,13 @@ dialog.dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
 .page-actions > [data-selbar], .page-actions > [data-bulk] { margin-right: auto; min-width: 0; padding: 0; border: 0; }
 .page-actions .bulkbar { padding: 0; border: 0; }
 /* A form on a page (Mentés) and the permission matrix's save row stay in view the same way: they
-   stick to the bottom of the window, above the page's bar. */
+   stick to the bottom of the window, above the page's bar. FL.ui.formActionsToBar moves a form's
+   buttons into the bar instead; what text the row has stays where it is. */
 .content form:not(dialog *) > .form-actions, .content .savebar {
   position: sticky; z-index: 10; bottom: 0; padding-block: 0.375rem; background: #fff; box-shadow: 0 -0.0625rem 0 var(--line);
 }
+.content .form-actions.form-actions--moved { position: static; padding-block: 0; background: none; box-shadow: none; justify-content: flex-start; }
+.form-actions > .btn.is-in-bar { display: none; }
 @media (min-width: 641px) {
   .page-actions { position: fixed; z-index: 20; left: 0; right: 0; bottom: 0; flex-wrap: nowrap; overflow-x: auto; }
   .page-actions > * { flex: none; }
