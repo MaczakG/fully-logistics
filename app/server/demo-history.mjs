@@ -1,7 +1,10 @@
 // Half a year of demo history. First the demo data of demo-seed.mjs as it stood half a year ago,
-// with 17 more webshops, three carriers and four suppliers (30 partners), then every day since replayed
+// with 47 more webshops (50 clients), three carriers and four suppliers, then every day since replayed
 // through the app's own API with this process's clock set to that day:
-//   - webshop orders arrive every day, a few are cancelled or put on hold;
+//   - every client has its own tariff, and the fees of one order (handling, packaging, cash on
+//     delivery) are at most 800 Ft net even for the biggest order the script makes;
+//   - each client sends 850 to 930 orders a calendar month (a weekend day counts two thirds of a
+//     weekday), so every full month ends between 800 and 1000; a few are cancelled or put on hold;
 //   - on weekdays the warehouse picks and packs everything it can and hands the parcels to GLS, DPD
 //     and Foxpost, the parcels are delivered a day or two later, and a few come back;
 //   - a few clients also send pallets to shops and companies: those orders are planned onto the
@@ -17,7 +20,8 @@
 // Nothing leaves the server: parcels get made-up tracking numbers by hand (no courier API), the
 // statements are not invoiced (no invoicing API), the demo clients have no webshop or API key.
 //
-//   node server/demo-history.mjs [--months 6]
+//   node server/demo-history.mjs [--months 6] [--volume 1]
+// --volume scales the number of orders (the tests run a small one).
 // The environment is read like server/demo-seed.mjs reads it (DB_PATH and the rest).
 
 import { existsSync, realpathSync } from 'node:fs';
@@ -65,12 +69,42 @@ const chance = (p) => rnd() < p;
 
 // ---------------------------------------------------------------- what the shops sell
 
-// perDay: orders on a weekday (weekends: about two thirds); qty: pieces of one line.
+// The three clients of demo-seed.mjs; the others come from MORE_CLIENTS. An order has 1 to 3 of the
+// client's products, 1 or 2 pieces each (at most MAX_PIECES pieces).
 const SHOPS = {
-  'DEMO-MANCS': { perDay: [5, 12], ref: '#MB-', next: 10500, cod: 0.4, lines: [1, 3], skus: { 'DEMO-MB-001': [1, 1], 'DEMO-MB-002': [1, 2], 'DEMO-MB-003': [1, 2], 'DEMO-MB-004': [1, 3], 'DEMO-MB-005': [1, 4] } },
-  'DEMO-BARSONY': { perDay: [3, 9], ref: 'BB-', next: 56000, cod: 0.25, lines: [1, 3], skus: { 'DEMO-BB-01': [1, 2], 'DEMO-BB-02': [1, 2], 'DEMO-BB-03': [1, 2] } },
-  'DEMO-KONYHA': { perDay: [1, 4], ref: 'KM-2026-', next: 3400, cod: 0.2, lines: [1, 2], skus: { 'DEMO-KM-100': [1, 1], 'DEMO-KM-210': [1, 2], 'DEMO-KM-320': [1, 2], 'DEMO-KM-450': [1, 1] } },
+  'DEMO-MANCS': { ref: '#MB-', next: 10500, cod: 0.4, skus: ['DEMO-MB-001', 'DEMO-MB-002', 'DEMO-MB-003', 'DEMO-MB-004', 'DEMO-MB-005'] },
+  'DEMO-BARSONY': { ref: 'BB-', next: 56000, cod: 0.25, skus: ['DEMO-BB-01', 'DEMO-BB-02', 'DEMO-BB-03'] },
+  'DEMO-KONYHA': { ref: 'KM-2026-', next: 3400, cod: 0.2, skus: ['DEMO-KM-100', 'DEMO-KM-210', 'DEMO-KM-320', 'DEMO-KM-450'] },
 };
+const MAX_PIECES = 6;
+const MAX_ORDER_FEE = 800; // Ft net: handling, packaging and cash on delivery of one order
+
+// A client's own tariff: random within realistic bounds, the order fee capped at MAX_ORDER_FEE for an
+// order of MAX_PIECES pieces with cash on delivery. Pallet clients pay nothing from the 4th piece on.
+function tariffFor(pallet) {
+  const step = (a, b, s = 5) => a + s * int(0, Math.floor((b - a) / s));
+  const t = {
+    order_base: step(280, 420), item_2: step(30, 90), item_3: step(20, 70), item_extra: pallet ? 0 : step(10, 35),
+    packaging: step(60, 140), cod_fixed: step(0, 80), cod_pct: 0, inbound_unit: step(25, 60), return_unit: step(250, 450, 10),
+    hourly_work: step(5000, 7500, 250), discount_handling_pct: chance(0.3) ? int(2, 10) : 0, discount_storage_pct: chance(0.2) ? int(2, 8) : 0, vat_pct: 27,
+  };
+  const over = orderFee(t, MAX_PIECES, true) - MAX_ORDER_FEE;
+  if (over > 0) t.order_base -= over;
+  return t;
+}
+// The fees of one order as the statement counts them (worker/jobs/billing-calc.js), before discounts.
+export function orderFee(t, pieces, cod) {
+  return t.order_base + (pieces >= 2 ? t.item_2 : 0) + (pieces >= 3 ? t.item_3 : 0) + Math.max(0, pieces - 3) * t.item_extra
+    + t.packaging + (cod ? t.cod_fixed : 0);
+}
+// Weekday orders per day for a monthly volume, in this calendar month (a weekend day counts 0.65).
+function weekdayRate(monthly, day) {
+  const [y, m] = day.split('-').map(Number);
+  const days = new RealDate(Date.UTC(y, m, 0)).getUTCDate();
+  let units = 0;
+  for (let d = 1; d <= days; d++) units += [0, 6].includes(new RealDate(Date.UTC(y, m - 1, d)).getUTCDay()) ? 0.65 : 1;
+  return monthly / units;
+}
 const LAST = ['Nagy', 'Kovács', 'Tóth', 'Szabó', 'Horváth', 'Varga', 'Kiss', 'Molnár', 'Németh', 'Farkas', 'Balogh', 'Papp', 'Takács', 'Juhász', 'Lakatos', 'Mészáros', 'Oláh', 'Simon', 'Rácz', 'Fekete'];
 const FIRST = ['Anna', 'Eszter', 'Réka', 'Zsófia', 'Katalin', 'Judit', 'Nóra', 'Petra', 'Bence', 'Gábor', 'László', 'Zoltán', 'Péter', 'Máté', 'Dániel', 'Ákos', 'Tamás', 'Krisztina', 'Lilla', 'Márk'];
 const PLACES = [
@@ -103,6 +137,36 @@ const MORE_CLIENTS = [
   ['BIOKOSAR', 'Biokosár Kft.', '2100', 'Gödöllő', 'Szabadság tér 3.', [['Bio zabpehely, 1 kg', 1.0, true], ['Chia mag, 500 g', 0.5, true], ['Kókuszolaj, 500 ml', 0.5, true]]],
   ['SZEPSEG', 'Szépségsziget Kft.', '4024', 'Debrecen', 'Piac utca 45.', [['Hajsampon, 500 ml', 0.55, true], ['Testápoló, 400 ml', 0.45, true], ['Körömlakk', 0.05]]],
   ['PECABOLT', 'Pecabolt Horgászcikk Kft.', '2890', 'Tata', 'Ady Endre út 7.', [['Pergető horgászbot, 3 m', 0.4], ['Monofil damil, 0,25 mm', 0.1], ['Csalis doboz', 0.3]]],
+  ['BORPINCE', 'Borpince Online Kft.', '8230', 'Balatonfüred', 'Petőfi Sándor utca 12.', [['Olaszrizling, 0,75 l', 1.3, true], ['Kékfrankos, 0,75 l', 1.3, true], ['Ajándék borosdoboz', 0.4]]],
+  ['MEZESKERT', 'Mézeskert Méhészet Bt.', '6100', 'Kiskunfélegyháza', 'Kossuth utca 30.', [['Akácméz, 500 g', 0.6, true], ['Hársméz, 500 g', 0.6, true], ['Propoliszos krém', 0.1, true]]],
+  ['GYERTYAMUHELY', 'Gyertyaműhely Kft.', '2500', 'Esztergom', 'Széchenyi tér 9.', [['Illatgyertya, levendula', 0.35], ['Illatgyertya, vanília', 0.35], ['Gyertyatartó, üveg', 0.5]]],
+  ['KERTIBUTOR', 'KertiBútor Webáruház Kft.', '7100', 'Szekszárd', 'Rákóczi utca 40.', [['Kerti párna', 0.8], ['Napernyő talp', 9.5], ['Kerti lámpa, napelemes', 0.4]]],
+  ['BICAJ', 'Bicaj Kerékpár Alkatrész Kft.', '9022', 'Győr', 'Árpád út 18.', [['Belső gumi, 28"', 0.2], ['Kerékpár lámpa szett', 0.3], ['Lakat, spirál', 0.6]]],
+  ['HAZIPATIKA', 'Házipatika Gyógynövény Kft.', '5600', 'Békéscsaba', 'Andrássy út 21.', [['Kamillatea, 50 g', 0.07, true], ['Csipkebogyó tea, 100 g', 0.12, true], ['Gyógynövényes balzsam', 0.1, true]]],
+  ['PAPIRSARKANY', 'Papírsárkány Írószer Bt.', '4400', 'Nyíregyháza', 'Dózsa György utca 5.', [['Füzet A5, vonalas', 0.2], ['Színes ceruza, 24 db', 0.35], ['Iskolatáska', 0.9]]],
+  ['MANCSAPOLAS', 'Mancsápolás Kft.', '1138', 'Budapest', 'Váci út 152.', [['Kutyasampon, 250 ml', 0.3, true], ['Szőrkefe', 0.15], ['Karomvágó', 0.1]]],
+  ['TERMESZETESEN', 'Természetesen Bio Kft.', '8900', 'Zalaegerszeg', 'Kossuth Lajos utca 15.', [['Bio müzli, 750 g', 0.8, true], ['Bio almalé, 1 l', 1.1, true], ['Bio olívaolaj, 0,5 l', 0.55, true]]],
+  ['FUSZERKERT', 'Fűszerkert Kft.', '6720', 'Szeged', 'Dugonics tér 2.', [['Szegedi paprika, 100 g', 0.12, true], ['Fűszerkeverék grillhez', 0.1, true], ['Fűszertartó készlet', 0.9]]],
+  ['BABAKUCKO', 'Babakuckó Webáruház Kft.', '7400', 'Kaposvár', 'Fő utca 12.', [['Body, 3 db-os', 0.25], ['Babatakaró', 0.5], ['Rágóka', 0.05]]],
+  ['ONTOZES', 'Öntözéstechnika Kft.', '6800', 'Hódmezővásárhely', 'Andrássy út 9.', [['Csepegtető szett', 0.9], ['Öntözőidőzítő', 0.4], ['Tömlőcsatlakozó', 0.1]]],
+  ['KEMPING', 'Kempingvilág Kft.', '8360', 'Keszthely', 'Kossuth utca 50.', [['Kempingszék', 2.8], ['Hálózsák', 1.6], ['Fejlámpa', 0.15]]],
+  ['TECHSAROK', 'TechSarok Kft.', '1117', 'Budapest', 'Október huszonharmadika utca 8.', [['USB-C töltőkábel', 0.05], ['Vezeték nélküli egér', 0.1], ['Powerbank, 10000 mAh', 0.25]]],
+  ['MOBILTOK', 'Mobiltok Webshop Bt.', '2800', 'Tatabánya', 'Fő tér 4.', [['Telefontok, szilikon', 0.05], ['Kijelzővédő üveg', 0.03], ['Autós töltő', 0.08]]],
+  ['EKSZERDOBOZ', 'Ékszerdoboz Kft.', '1061', 'Budapest', 'Andrássy út 10.', [['Ezüst nyaklánc', 0.05], ['Fülbevaló, acél', 0.02], ['Ékszertartó doboz', 0.3]]],
+  ['ORAVILAG', 'Óravilág Kft.', '9021', 'Győr', 'Baross Gábor út 3.', [['Karóra, férfi', 0.2], ['Karóra, női', 0.15], ['Óraszíj, bőr', 0.05]]],
+  ['PARFUMERIA', 'Parfüméria Online Kft.', '4025', 'Debrecen', 'Hatvan utca 2.', [['Eau de parfum, 50 ml', 0.3, true], ['Testpermet, 100 ml', 0.2, true], ['Ajándékszett', 0.6, true]]],
+  ['SPORTTAPLALEK', 'Sporttáplálék Kft.', '3300', 'Eger', 'Törvényház utca 4.', [['Fehérjepor, 1 kg', 1.1, true], ['Energiaszelet, 12 db', 0.7, true], ['Shaker, 600 ml', 0.15]]],
+  ['KONYVMOLY', 'Könyvmoly Antikvárium Bt.', '7621', 'Pécs', 'Ferencesek utcája 20.', [['Regény, keménytáblás', 0.6], ['Krimi, puhatáblás', 0.35], ['Könyvjelző szett', 0.02]]],
+  ['JATEKMESTER', 'Játékmester Kft.', '2000', 'Szentendre', 'Bükkös part 20.', [['Kirakós, 1000 db', 0.8], ['Kártyajáték', 0.2], ['Logikai játék', 0.4]]],
+  ['KREATIVKUCKO', 'Kreatív Kuckó Kft.', '8000', 'Székesfehérvár', 'Fő utca 7.', [['Gyöngyfűző készlet', 0.3], ['Gyurmakészlet', 0.6], ['Ragasztópisztoly', 0.25]]],
+  ['AKVARIUM', 'Akvárium Centrum Kft.', '1095', 'Budapest', 'Soroksári út 60.', [['Haltáp, 250 ml', 0.12, true], ['Akváriumszűrő', 0.7], ['Vízelőkészítő, 500 ml', 0.55, true]]],
+  ['MADARETETO', 'Madáretető Kft.', '2700', 'Cegléd', 'Kossuth tér 1.', [['Madáreleség, 2 kg', 2.1, true], ['Madáretető, fa', 1.2], ['Cinkegolyó, 6 db', 0.55, true]]],
+  ['FURDOSZOBA', 'Fürdőszoba Kellék Kft.', '6000', 'Kecskemét', 'Izsáki út 4.', [['Zuhanyfej', 0.4], ['Fürdőszobai szőnyeg', 0.8], ['Fogkefetartó', 0.2]]],
+  ['TEXTILHAZ', 'Textilház Lakástextil Kft.', '5000', 'Szolnok', 'Baross út 18.', [['Ágyneműhuzat garnitúra', 1.2], ['Törölköző, 70 × 140 cm', 0.5], ['Konyharuha, 3 db', 0.2]]],
+  ['LAMPABOLT', 'Lámpabolt Online Kft.', '2600', 'Vác', 'Széchenyi utca 30.', [['Asztali lámpa', 1.4], ['LED szalag, 5 m', 0.3], ['Éjjeli fény', 0.2]]],
+  ['SZERSZAMKAMRA', 'Szerszámkamra Kft.', '3534', 'Miskolc', 'Kiss Ernő utca 19.', [['Csavarhúzó készlet', 0.7], ['Mérőszalag, 5 m', 0.25], ['Munkavédelmi kesztyű', 0.1]]],
+  ['KAVEFOZO', 'Kávéfőző Szerviz Bt.', '8200', 'Veszprém', 'Kossuth utca 6.', [['Vízkőoldó, 500 ml', 0.55, true], ['Kávégép szűrő', 0.05], ['Tejhabosító kancsó', 0.3]]],
+  ['NOVENYHAZ', 'Növényház Kft.', '2310', 'Szigetszentmiklós', 'Gyári út 9.', [['Szobanövény táp, 1 l', 1.05, true], ['Kaspó, kerámia', 1.5], ['Virágcserép alátét', 0.2]]],
 ];
 const MORE_PARTNERS = [
   { type: 'carrier', code: 'DEMO-DPD', name: 'DPD Hungária Kft.', carrier_code: 'dpd', notes: 'Napi futárátadás 15:00 és 16:00 között.' },
@@ -152,7 +216,7 @@ const DEPOT = { lat: 47.4979, lng: 19.0402 }; // only for sorting the stops arou
 
 // ---------------------------------------------------------------- one day
 
-export async function seedHistory({ worker, env, adminId, months = 6, log = console.log }) {
+export async function seedHistory({ worker, env, adminId, months = 6, volume = 1, log = console.log }) {
   const db = env.DB;
   if (await first(db, "SELECT id FROM partners WHERE code LIKE 'DEMO-%' LIMIT 1")) {
     log('A demó adatok már megvannak, nem változtattam semmit. Előbb töröld őket: node server/demo-seed.mjs --remove');
@@ -172,7 +236,12 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
     }
   };
   const shops = structuredClone(SHOPS);
+  for (const [code, shop] of Object.entries(shops)) Object.assign(shop, { monthly: int(850, 930), pallet: PALLET_CLIENTS.includes(code) });
+  // Pieces a day of one of the shop's products, on average (webshop orders, and pallets for pallet clients).
+  const perSkuDay = (shop) => volume * ((shop.monthly / 30) * ((1 + Math.min(3, shop.skus.length)) / 2) * 1.5
+    + (shop.pallet ? (5 / PALLET_CLIENTS.length) * 2 * 13 : 0)) / shop.skus.length;
   await withApi((api) => morePartners(api, day0));
+  await withApi((api) => setTariffs(api));
 
   // The other partners, the webshops with their products, and a zone for their goods; each shop's
   // opening stock arrives the next morning.
@@ -180,7 +249,7 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
     for (const p of MORE_PARTNERS) await api.post('/api/partners', p);
     const sizes = (await api.get('/api/settings/sizes')).items.filter((z) => z.active);
     const sizeId = (code) => (sizes.find((z) => z.code === code) || sizes[0]).id;
-    for (const [size, from, to, pickStart] of [['M', 5, 12, 940], ['L', 13, 16, 970]]) {
+    for (const [size, from, to, pickStart] of [['M', 5, 44, 940], ['L', 45, 54, 1200]]) {
       const body = { prefixes: 'DEMO', separator: '-', pad: 2, rack_from: from, rack_to: to, level_from: 1, level_to: 4, size_id: sizeId(size), kind: 'storage', pick_start: pickStart, note: 'Demó adat' };
       const { codes } = await api.post('/api/settings/locations/bulk', { ...body, preview: true });
       if (!codes.length) continue;
@@ -210,18 +279,35 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
       await api.post(`/api/partners/${id}/contracts`, {
         number: `FL-SZ-2026-${String(30 + i).padStart(3, '0')}`, title: 'Fulfillment szolgáltatási szerződés', notice_days: 30, start_date: addDays(start, -int(5, 200)), status: 'active',
       });
+      const shop = {
+        ref: `${key.slice(0, 2)}-`, next: int(1000, 5000), cod: 0.3, supplier: pick(suppliers), monthly: int(850, 930),
+        pallet: PALLET_CLIENTS.includes(code), skus: items.map((_, j) => `${code}-${j + 1}`),
+      };
       const lines = [];
       for (const [j, [pname, kg, expiry]] of items.entries()) {
         const p = await api.post('/api/products', { partner_id: id, sku: `${code}-${j + 1}`, name: pname, ean: ean13(++n), weight_kg: kg, min_stock: 10, track_lot: !!expiry, track_expiry: !!expiry });
-        lines.push({ product_id: p.id, expected_qty: int(6, 20) * 10, lot: expiry ? 'NYITO' : '', expiry: expiry ? addDays(start, 400) : null });
+        // 40 days of sales to start with
+        lines.push({ product_id: p.id, expected_qty: Math.max(60, Math.ceil((perSkuDay(shop) * 40) / 10) * 10), lot: expiry ? 'NYITO' : '', expiry: expiry ? addDays(start, 400) : null });
       }
       await api.post('/api/inbound', {
         partner_id: id, external_ref: `${key.slice(0, 2)}-NYITO`, expected_date: start, pallets: 1, cartons: int(4, 20), note: 'Nyitókészlet beszállítása.', lines,
       });
-      shops[code] = {
-        perDay: [0, 3], ref: `${key.slice(0, 2)}-`, next: int(1000, 5000), cod: 0.3, lines: [1, 2], supplier: pick(suppliers),
-        skus: Object.fromEntries(items.map((_, j) => [`${code}-${j + 1}`, [1, 2]])),
-      };
+      shops[code] = shop;
+    }
+  }
+
+  // Every client its own tariff (tariffFor), and storage prices around the default ones.
+  async function setTariffs(api) {
+    const seen = new Set();
+    for (const [code, shop] of Object.entries(shops)) {
+      const id = (await first(db, 'SELECT id FROM partners WHERE code = ?', code)).id;
+      let t;
+      do t = tariffFor(shop.pallet); while (seen.has(JSON.stringify(t)));
+      seen.add(JSON.stringify(t));
+      const { storage } = await api.get(`/api/partners/${id}/tariffs`);
+      await api.put(`/api/partners/${id}/tariffs`, {
+        tariffs: t, storage: Object.fromEntries(storage.map((z) => [z.size_id, Math.round((z.default * (0.85 + rnd() * 0.3)) / 10) * 10])),
+      });
     }
   }
 
@@ -245,20 +331,21 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
   async function newOrders(api, day) {
     const weekend = [0, 6].includes(weekday(day));
     for (const [code, shop] of Object.entries(shops)) {
-      const n = Math.round(int(...shop.perDay) * (weekend ? 0.65 : 1));
+      const rate = volume * weekdayRate(shop.monthly, day) * (weekend ? 0.65 : 1) * (0.92 + rnd() * 0.16);
+      const n = Math.floor(rate) + (chance(rate % 1) ? 1 : 0);
       for (let i = 0; i < n; i++) {
         const carrier = pick(['GLS', 'GLS', 'GLS', 'GLS', 'FOXPOST', 'FOXPOST', 'FOXPOST', 'DPD']);
         const foxpost = carrier === 'FOXPOST';
         const [zip, city, street] = pick(PLACES);
         const [last, firstName] = [pick(LAST), pick(FIRST)];
-        const skus = Object.keys(shop.skus).sort(() => rnd() - 0.5).slice(0, int(...shop.lines));
+        const skus = [...shop.skus].sort(() => rnd() - 0.5).slice(0, int(1, Math.min(3, shop.skus.length)));
         const o = await api.post('/api/orders', {
           partner_id: partners[code], carrier_id: partners[`DEMO-${carrier}`], ordered_at: hoursAgo(int(1, 20)),
           customer_name: `${last} ${firstName}`, email: `${plain(last)}.${plain(firstName)}@example.com`, phone: `+36 ${pick(['20', '30', '70'])} ${int(200, 999)} ${int(1000, 9999)}`,
           zip, city, address: `${street} ${int(1, 120)}.`, external_number: `${shop.ref}${shop.next++}`,
           cod_amount: chance(shop.cod) ? int(4, 40) * 990 : 0, priority: chance(0.05) ? 'express' : 'normal',
           ...(foxpost ? { pickup_point_id: String(int(1000, 1999)), carrier_service: 'Csomagautomata' } : {}),
-          lines: skus.map((sku) => ({ product_id: bySku[sku].id, qty: int(...shop.skus[sku]) })),
+          lines: skus.map((sku) => ({ product_id: bySku[sku].id, qty: int(1, 2) })),
         });
         if (chance(0.012)) await api.post(`/api/orders/${o.id}/cancel`, { reason: 'A vevő lemondta, a webshop visszautalta a vételárat.' });
         else if (chance(0.012)) await api.post(`/api/orders/${o.id}/hold`, { reason: 'A vevő kérésére később küldjük.' });
@@ -271,7 +358,7 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
     for (let i = 0; i < n; i++) {
       const code = pick(PALLET_CLIENTS);
       const [company, zip, city, address] = pick(STORES);
-      const skus = Object.keys(shops[code].skus).sort(() => rnd() - 0.5).slice(0, int(1, 3));
+      const skus = [...shops[code].skus].sort(() => rnd() - 0.5).slice(0, int(1, 3));
       await api.post('/api/orders', {
         partner_id: partners[code], customer_name: `${pick(LAST)} ${pick(FIRST)}`, company, phone: `+36 ${pick(['20', '30', '70'])} ${int(200, 999)} ${int(1000, 9999)}`,
         zip, city, address, external_number: `B2B-${int(10000, 99999)}`, pallets: int(1, 4), ordered_at: hoursAgo(int(2, 30)),
@@ -325,8 +412,12 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
 
   // Everything that can be picked goes into one wave; on the last day only half of it is picked.
   async function pickAndPack(api, day, last) {
-    const ready = (await api.get('/api/orders?status=new&availability=ok&limit=500')).items.filter((o) => o.availability === 'ok').map((o) => o.id);
-    if (ready.length) await api.post('/api/picking/waves', { order_ids: ready, note: weekday(day) === 1 ? 'Hétfői hullám' : 'Reggeli hullám' });
+    for (;;) { // a wave holds at most 200 orders
+      const page = (await api.get('/api/orders?status=new&availability=ok&limit=200')).items;
+      const ready = page.filter((o) => o.availability === 'ok').map((o) => o.id);
+      if (ready.length) await api.post('/api/picking/waves', { order_ids: ready, note: weekday(day) === 1 ? 'Hétfői hullám' : 'Reggeli hullám' });
+      if (page.length < 200 || !ready.length) break;
+    }
     const waves = (await api.get('/api/picking/waves?status=active&limit=200')).items;
     for (const w of waves) {
       if (w.status === 'open') await api.post(`/api/picking/waves/${w.id}/start`);
@@ -360,7 +451,8 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
       if (waiting.n) await api.post(`/api/transport/pickups/${pickupId}/orders`, { all: true });
       if (last) continue;
       await api.post(`/api/transport/pickups/${pickupId}/arrived`);
-      await api.post(`/api/transport/pickups/${pickupId}/close`, { manifest_number: `${code.slice(5)}-${day.replace(/-/g, '')}` });
+      // a big manifest closes in parts: the call answers done: false until every parcel is shipped
+      while (!(await api.post(`/api/transport/pickups/${pickupId}/close`, { manifest_number: `${code.slice(5)}-${day.replace(/-/g, '')}` })).done);
     }
   }
 
@@ -374,7 +466,7 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
       `SELECT id FROM orders WHERE partner_id IN ${demo} AND status = 'delivered' AND pallets = 0 AND delivered_at >= ? AND delivered_at < ?`,
       `${addDays(day, -5)}T00:00:00.000Z`, `${addDays(day, -4)}T00:00:00.000Z`);
     for (const o of delivered) {
-      if (!chance(0.03)) continue;
+      if (!chance(0.01)) continue;
       const line = await first(db, 'SELECT product_id FROM order_lines WHERE order_id = ? ORDER BY id LIMIT 1', o.id);
       await api.post(`/api/history/${o.id}/returns`, {
         reason: pick(RETURN_REASONS), note: '',
@@ -388,10 +480,10 @@ export async function seedHistory({ worker, env, adminId, months = 6, log = cons
     const since = hoursAgo(21 * 24);
     for (const [code, shop] of Object.entries(shops)) {
       const lines = [];
-      for (const sku of Object.keys(shop.skus)) {
+      for (const sku of shop.skus) {
         const p = bySku[sku];
         const sold = (await first(db, 'SELECT COALESCE(SUM(ol.qty), 0) AS n FROM order_lines ol JOIN orders o ON o.id = ol.order_id WHERE ol.product_id = ? AND o.created_at >= ?', p.id, since)).n;
-        const perDay = Math.max(sold / 21, 1);
+        const perDay = Math.max(sold / 21, perSkuDay(shop), 1);
         const onHand = (await first(db, 'SELECT COALESCE(SUM(qty), 0) AS n FROM stock WHERE product_id = ?', p.id)).n;
         const coming = (await first(db,
           `SELECT COALESCE(SUM(l.expected_qty - l.putaway_qty), 0) AS n FROM inbound_lines l JOIN inbounds i ON i.id = l.inbound_id
@@ -485,6 +577,9 @@ async function main() {
   const i = process.argv.indexOf('--months');
   const months = i > 0 ? Number(process.argv[i + 1]) : 6;
   if (!(months > 0 && months <= 24)) throw new Error('A --months 1 és 24 közötti szám legyen.');
+  const v = process.argv.indexOf('--volume');
+  const volume = v > 0 ? Number(process.argv[v + 1]) : 1;
+  if (!(volume > 0 && volume <= 1)) throw new Error('A --volume 0 és 1 közötti szám legyen.');
   const DB = new D1Database(config.dbPath);
   try {
     const env = { ...config.vars, DB, FILES: filesBucket(config), ASSETS: createAssets(config.assetsDir) };
@@ -498,7 +593,7 @@ async function main() {
     }
     useSimulatedClock(DB);
     const started = RealDate.now();
-    const res = await seedHistory({ worker, env, adminId: admin.id, months });
+    const res = await seedHistory({ worker, env, adminId: admin.id, months, volume });
     if (res.created) console.log(`Kész ${Math.round((RealDate.now() - started) / 1000)} másodperc alatt. Törlés: node server/demo-seed.mjs --remove`);
     return 0;
   } finally {
