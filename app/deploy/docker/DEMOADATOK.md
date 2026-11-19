@@ -27,9 +27,11 @@ végigjátssza:
   hullám, futárra váró csomagok és félig megtervezett teherautók.
 
 Eredmény: 60 partner (50 webshop-ügyfél 155 termékkel, 5 fuvarozó, 5 beszállító), 5 teherautó,
-körülbelül 270 000 rendelés és 300 jóváhagyott elszámolás. **Futásidő: fél óra körül (lassabb gépen
-akár egy óra), az adatbázis körülbelül 1 GB lesz**, ezért előtte nézd meg, van-e elég hely
-(`df -h /var/lib/fully-wms`). Rövidebb időszakhoz: `--months 3` (fele annyi rendelés és idő).
+225 raktárhely, körülbelül 266 000 rendelés (ügyfelenként minden teljes hónapban 837 és 955 között;
+egy rendelés díja legfeljebb nettó 770 Ft, átlagosan 540 Ft) és 300 jóváhagyott elszámolás.
+**Futásidő: 23 perc a fejlesztői gépen, lassabb gépen akár egy óra; az adatbázis kb. 700 MB-tal
+nő**, ezért előtte nézd meg, van-e elég hely (`df -h /var/lib/fully-wms`). Rövidebb időszakhoz:
+`--months 3` (fele annyi rendelés és idő). A törlés (`--remove`) ennyi adatnál is pár másodperc.
 
 **Biztonság:**
 - Minden demóadat `DEMO-` kezdetű partnerkódot és cikkszámot kap. A valódi adatokhoz nem nyúl.
