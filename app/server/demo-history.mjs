@@ -468,9 +468,13 @@ export async function seedHistory({ worker, env, adminId, months = 6, volume = 1
     for (const o of delivered) {
       if (!chance(0.01)) continue;
       const line = await first(db, 'SELECT product_id FROM order_lines WHERE order_id = ? ORDER BY id LIMIT 1', o.id);
+      // A lot-tracked product can go out from several lots, and then the return has to name one.
+      const lot = await first(db,
+        'SELECT lot, expiry FROM picks WHERE order_id = ? AND product_id = ? AND picked_qty > restocked_qty ORDER BY expiry, lot LIMIT 1',
+        o.id, line.product_id);
       await api.post(`/api/history/${o.id}/returns`, {
         reason: pick(RETURN_REASONS), note: '',
-        lines: [{ product_id: line.product_id, qty: 1, condition: 'sellable', location_id: (await locationFor(line.product_id)).id }],
+        lines: [{ product_id: line.product_id, qty: 1, ...(lot && { lot: lot.lot, expiry: lot.expiry }), condition: 'sellable', location_id: (await locationFor(line.product_id)).id }],
       });
     }
   }
