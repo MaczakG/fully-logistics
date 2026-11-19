@@ -11,11 +11,12 @@
 /* ---------- Order form ---------- */
 .ol-form__title { padding-top: 0.5rem; }
 .ol-static { min-height: 2rem; display: flex; align-items: center; }
-.ol-lines { display: grid; gap: 0.625rem; }
-.ol-line { display: grid; grid-template-columns: minmax(0, 1fr) 7.5rem 2.5rem; gap: 0.5rem; align-items: start; }
-.ol-line__remove { margin-top: 1.4rem; }
-@media (max-width: 479.98px) {
-  .ol-line { grid-template-columns: minmax(0, 1fr) 5.5rem 2.5rem; }
+/* lines: a .lines-table (app.css) */
+@media (min-width: 720px) {
+  .ol-ltable th:nth-child(2) { width: 13rem; }
+  .ol-ltable th:nth-child(4) { width: 7rem; }
+  .ol-ltable th:nth-child(5) { width: 7.5rem; }
+  .ol-ltable th:last-child { width: 2.5rem; }
 }
 
 /* ---------- Detail ---------- */

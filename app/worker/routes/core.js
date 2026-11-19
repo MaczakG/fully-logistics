@@ -11,6 +11,7 @@ import {
   CARRIERS, LOCATION_KINDS, MOVEMENT_TYPES, PARTNER_TYPES, STATUSES, TARIFFS, WEBSHOP_PLATFORMS,
 } from '../lib/constants.js';
 import { audit } from '../lib/audit.js';
+import { availability } from '../lib/stock.js';
 import { sendDocument } from '../lib/files.js';
 import { budapestDate, nowIso } from '../lib/time.js';
 
@@ -160,15 +161,27 @@ export function register(r) {
     return { items: rows };
   });
 
+  // limit: up to 500 (default 30, the autocomplete); stock=1 adds on_hand, available (on hand minus
+  // quarantine and open orders) and the earliest expiry in stock.
   r.get('/api/lookup/products', async (ctx) => {
+    const db = ctx.env.DB;
     const q = `%${(ctx.query.get('q') || '').trim()}%`;
     const partnerId = ctx.query.get('partner_id') ? Number(ctx.query.get('partner_id')) : null;
-    const rows = await all(ctx.env.DB,
-      `SELECT p.id, p.partner_id, p.sku, p.name, p.ean, p.unit, pa.code AS partner_code
+    const limit = Math.min(Math.max(parseInt(ctx.query.get('limit'), 10) || 30, 1), 500);
+    const rows = await all(db,
+      `SELECT p.id, p.partner_id, p.sku, p.name, p.ean, p.unit, p.track_lot, p.track_expiry, pa.code AS partner_code
        FROM products p JOIN partners pa ON pa.id = p.partner_id
        WHERE p.active = 1 AND (? IS NULL OR p.partner_id = ?) AND (p.sku LIKE ? OR p.name LIKE ? OR p.ean LIKE ?)
-       ORDER BY p.sku LIMIT 30`,
-      partnerId, partnerId, q, q, q);
+       ORDER BY p.sku LIMIT ?`,
+      partnerId, partnerId, q, q, q, limit);
+    if (ctx.query.get('stock') === '1' && rows.length) {
+      const a = await availability(db, rows.map((p) => p.id));
+      const exp = await all(db,
+        `SELECT product_id, MIN(expiry) AS next_expiry FROM stock WHERE qty > 0 AND expiry <> '' AND product_id IN (${rows.map(() => '?').join(', ')})
+         GROUP BY product_id`, ...rows.map((p) => p.id));
+      const next = new Map(exp.map((e) => [e.product_id, e.next_expiry]));
+      for (const p of rows) Object.assign(p, { on_hand: a[p.id].onHand, available: a[p.id].available, next_expiry: next.get(p.id) || null });
+    }
     return { items: rows };
   });
 

@@ -144,34 +144,24 @@
   /* ================================================================ new and edit form */
 
   let rowSeq = 0;
+  // One line of the form's table: Cikkszám and Megnevezés (typing searches, the magnifier lists the
+  // client's products), expected quantity, lot, expiry.
   function lineRow(l = {}) {
     const k = ++rowSeq;
-    const label = l.sku ? `${l.sku} ${l.name || ''}`.trim() : '';
-    return html`<div class="inb-fline" data-row>
-      <input type="hidden" data-f="id" value="${l.id || ''}">
-      <input type="hidden" data-f="product_id" value="${l.product_id || ''}">
-      <div class="field inb-fline__product">
-        <label class="inb-fline__label" for="fl-p-${k}">Termék</label>
-        <input class="input" id="fl-p-${k}" data-f="sku" data-product value="${label}" placeholder="Cikkszám, név vagy EAN" autocomplete="off" aria-describedby="fl-p-${k}-err">
-        <p class="field__error" id="fl-p-${k}-err" hidden></p>
-      </div>
-      <div class="field">
-        <label class="inb-fline__label" for="fl-q-${k}">Várt mennyiség</label>
-        <input class="input input--num" id="fl-q-${k}" type="number" min="1" step="1" inputmode="numeric" data-f="expected_qty" value="${l.expected_qty ?? ''}" aria-describedby="fl-q-${k}-err">
-        <p class="field__error" id="fl-q-${k}-err" hidden></p>
-      </div>
-      <div class="field">
-        <label class="inb-fline__label" for="fl-l-${k}">Sarzs</label>
-        <input class="input input--code" id="fl-l-${k}" data-f="lot" value="${l.lot || ''}" autocomplete="off" aria-describedby="fl-l-${k}-err">
-        <p class="field__error" id="fl-l-${k}-err" hidden></p>
-      </div>
-      <div class="field">
-        <label class="inb-fline__label" for="fl-e-${k}">Lejárat</label>
-        <input class="input" id="fl-e-${k}" type="date" data-f="expiry" value="${l.expiry || ''}" aria-describedby="fl-e-${k}-err">
-        <p class="field__error" id="fl-e-${k}-err" hidden></p>
-      </div>
-      <button class="btn btn--ghost btn--icon btn--sm inb-fline__remove" type="button" data-remove-line aria-label="Sor törlése">${FL.icon('trash')}</button>
-    </div>`;
+    const cell = (f, label, control, cls = '') => html`<td class="${cls}"><div class="field"><label class="lines-table__label" for="fl-${f}-${k}">${label}</label>
+      ${control}<p class="field__error" id="fl-${f}-${k}-err" hidden></p></div></td>`;
+    return html`<tr data-row>
+      <td class="r lines-table__no" data-no></td>
+      <td class="lines-table__wide">${ui.productCell({ kind: 'sku', id: `fl-s-${k}`, value: l.sku || '' })}</td>
+      <td class="lines-table__wide">${ui.productCell({ kind: 'name', id: `fl-n-${k}`, value: l.name || '' })}</td>
+      ${cell('q', 'Várt mennyiség', html`<input class="input input--num" id="fl-q-${k}" type="number" min="1" step="1" inputmode="numeric" data-f="expected_qty" value="${l.expected_qty ?? ''}" aria-describedby="fl-q-${k}-err">`)}
+      ${cell('l', 'Sarzs', html`<input class="input input--code" id="fl-l-${k}" data-f="lot" value="${l.lot || ''}" autocomplete="off" aria-describedby="fl-l-${k}-err">`)}
+      ${cell('e', 'Lejárat', html`<input class="input" id="fl-e-${k}" type="date" data-f="expiry" value="${l.expiry || ''}" aria-describedby="fl-e-${k}-err">`)}
+      <td class="w-actions">
+        <input type="hidden" data-f="id" value="${l.id || ''}"><input type="hidden" data-f="product_id" value="${l.product_id || ''}">
+        <button class="btn btn--ghost btn--icon btn--sm" type="button" data-remove-line aria-label="Sor törlése" title="Sor törlése">${FL.icon('trash')}</button>
+      </td>
+    </tr>`;
   }
 
   // New inbound (existing = null) or edit of an expected / arrived one.
@@ -198,8 +188,10 @@
         </div>
         <fieldset class="inb-flines">
           <legend class="field__label">Tételek</legend>
-          <div class="inb-fline inb-fline--head" aria-hidden="true"><span>Termék</span><span>Várt mennyiség</span><span>Sarzs</span><span>Lejárat</span><span></span></div>
-          <div data-lines>${lines.map((l) => lineRow(l))}</div>
+          <table class="lines-table inb-ftable">
+            <thead><tr><th class="r">#</th><th>Cikkszám</th><th>Megnevezés</th><th>Várt mennyiség</th><th>Sarzs</th><th>Lejárat</th><th><span class="visually-hidden">Törlés</span></th></tr></thead>
+            <tbody data-lines>${lines.map((l) => lineRow(l))}</tbody>
+          </table>
           <div class="field"><input type="hidden" name="lines"><p class="field__error" hidden></p></div>
           <div><button class="btn btn--sm" type="button" data-add-line>${FL.icon('plus')}Tétel hozzáadása</button></div>
         </fieldset>`,
@@ -207,26 +199,26 @@
         const box = form.querySelector('[data-lines]');
         const partner = form.querySelector('[name="partner_id"]');
         const renumber = () => box.querySelectorAll('[data-row]').forEach((row, i) => {
+          row.querySelector('[data-no]').textContent = `${i + 1}.`;
           row.querySelectorAll('[data-f]').forEach((el) => { el.name = `lines.${i}.${el.dataset.f}`; });
+          row.querySelector('[data-sku]').name = `lines.${i}.sku`;
         });
+        const cells = new Map();
         const setupRow = (row) => {
-          const input = row.querySelector('[data-product]');
           const hidden = row.querySelector('[data-f="product_id"]');
-          input.disabled = !partner.value;
-          if (!partner.value) input.placeholder = 'Előbb válassz ügyfelet';
-          input.addEventListener('input', () => { hidden.value = ''; });
-          ui.autocomplete(input, {
-            source: async (q) => (partner.value ? ui.sources.products(partner.value)(q) : []),
-            label: ui.productLabel,
-            sub: (p) => (p.ean ? `EAN ${p.ean}` : p.unit),
+          const c = ui.productCells(row, {
+            partner: () => partner.value,
+            picked: !!hidden.value,
+            onClear: () => { hidden.value = ''; },
             onSelect: (p) => {
-              input.value = ui.productLabel(p);
               hidden.value = p.id;
               const qty = row.querySelector('[data-f="expected_qty"]');
               qty.focus();
               qty.select();
             },
           });
+          c.enable(!!partner.value);
+          cells.set(row, c);
         };
         box.querySelectorAll('[data-row]').forEach(setupRow);
         renumber();
@@ -234,10 +226,9 @@
         partner.addEventListener('change', () => {
           const had = [...box.querySelectorAll('[data-f="product_id"]')].some((h) => h.value);
           box.querySelectorAll('[data-row]').forEach((row) => {
-            const input = row.querySelector('[data-product]');
-            input.disabled = !partner.value;
-            input.placeholder = partner.value ? 'Cikkszám, név vagy EAN' : 'Előbb válassz ügyfelet';
-            if (partner.value !== current) { input.value = ''; row.querySelector('[data-f="product_id"]').value = ''; }
+            const c = cells.get(row);
+            c.enable(!!partner.value);
+            if (partner.value !== current) { c.clear(); row.querySelector('[data-f="product_id"]').value = ''; }
           });
           if (had && partner.value !== current) ui.toast('Másik ügyfelet választottál: a termékeket válaszd ki újra.', 'info');
           current = partner.value;
@@ -248,7 +239,7 @@
             const row = box.lastElementChild;
             setupRow(row);
             renumber();
-            row.querySelector('[data-product]').focus();
+            row.querySelector('[data-sku]').focus();
           }
           const rm = ev.target.closest('[data-remove-line]');
           if (rm) {
@@ -256,9 +247,10 @@
             if (rows.length === 1) { ui.toast('Legalább egy tétel kell.', 'error'); return; }
             const row = rm.closest('[data-row]');
             const next = row.nextElementSibling || row.previousElementSibling;
+            cells.delete(row);
             row.remove();
             renumber();
-            if (next) next.querySelector('[data-product]').focus();
+            if (next) next.querySelector('[data-sku]').focus();
           }
         });
       },
@@ -269,7 +261,7 @@
           const out = { expected_qty: val('expected_qty') === '' ? null : Number(val('expected_qty')), lot: val('lot'), expiry: val('expiry') || null };
           if (val('id')) out.id = Number(val('id'));
           if (val('product_id')) out.product_id = Number(val('product_id'));
-          else out.sku = val('sku').split(/\s+/)[0] || '';
+          else out.sku = row.querySelector('[data-sku]').value.trim();
           return out;
         });
         const body = {

@@ -82,6 +82,13 @@ test('fixture data and a limited role', async () => {
   assert.equal(partners.data.items.length, 2);
   const products = await admin.get(`/api/lookup/products?partner_id=${fx.clients.kutya}&q=KB`);
   assert.equal(products.data.items.length, 3);
+  // the picker: a longer list, and with stock=1 the stock of each product
+  const one = await admin.get(`/api/lookup/products?partner_id=${fx.clients.kutya}&q=KB&limit=1`);
+  assert.equal(one.data.items.length, 1);
+  const withStock = await admin.get(`/api/lookup/products?partner_id=${fx.clients.kutya}&q=KB&stock=1&limit=500`);
+  assert.equal(withStock.data.items.length, 3);
+  for (const p of withStock.data.items) assert.ok(typeof p.on_hand === 'number' && typeof p.available === 'number' && 'next_expiry' in p, JSON.stringify(p));
+  assert.ok(!('available' in products.data.items[0]), 'no stock unless asked');
   const locs = await admin.get('/api/lookup/locations?q=A-01');
   assert.equal(locs.data.items.length, 8);
   const op = await srv.userWithRole('warehouse_operator');

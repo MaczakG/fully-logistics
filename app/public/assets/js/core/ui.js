@@ -287,14 +287,25 @@
     const form = d.querySelector('form');
     const submit = form.querySelector('[type="submit"]');
     let resolveDone;
+    let closing = false;
     const api = {
       el: d,
       form,
       done: new Promise((r) => (resolveDone = r)),
       result: undefined,
-      close: (result) => { api.result = result; d.close(); },
+      // slides out to the right first (app.css), unless the user asked for less motion
+      close: (result) => {
+        if (closing) return;
+        closing = true;
+        api.result = result;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { d.close(); return; }
+        d.classList.add('is-closing');
+        d.addEventListener('animationend', (e) => { if (e.target === d) d.close(); });
+        setTimeout(() => d.close(), 300);
+      },
       setBusy: (busy) => { if (submit) { submit.disabled = busy; submit.toggleAttribute('aria-busy', busy); } },
     };
+    d.addEventListener('cancel', (e) => { e.preventDefault(); api.close(); }); // Escape
     d.addEventListener('close', () => { resolveDone(api.result); d.remove(); });
     form.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) api.close(); });
     form.addEventListener('submit', async (e) => {
@@ -380,6 +391,121 @@
     locations: async (q) => (await FL.api.get('/api/lookup/locations', { q })).items,
   };
   ui.productLabel = (p) => `${p.sku} ${p.name}`;
+
+  /* Line tables of forms (Betárolás, Megrendelés). productCell(...) renders a Cikkszám or Megnevezés
+     cell: the input and a magnifier button. productCells(row, opts) wires a row's two cells: typing
+     searches the client's products, the magnifier opens pickProduct, a choice fills both inputs.
+       opts: { partner: () => id, stock, picked: a product is set already, onSelect(p), onClear() } */
+  ui.productCell = ({ kind, value = '', id, readonly = false }) => {
+    const sku = kind === 'sku';
+    const label = sku ? 'Cikkszám' : 'Megnevezés';
+    return html`<div class="field"><label class="lines-table__label" for="${id}">${label}</label>
+      <div class="lines-table__combo">
+        <input class="input ${sku ? 'input--code' : ''}" id="${id}" ${raw(sku ? 'data-sku' : 'data-name')} value="${value}" placeholder="${sku ? 'Cikkszám vagy EAN' : 'Megnevezés'}" autocomplete="off" aria-describedby="${id}-err" ${readonly ? raw('readonly') : ''}>
+        ${readonly ? '' : html`<button class="btn btn--icon btn--sm" type="button" data-pick aria-label="${label}: keresés a cikkek között" title="Keresés a cikkek között">${FL.icon('magnifying-glass')}</button>`}
+      </div><p class="field__error" id="${id}-err" hidden></p></div>`;
+  };
+  ui.productCells = (row, { partner, stock = false, picked = false, onSelect, onClear }) => {
+    const sku = row.querySelector('[data-sku]');
+    const name = row.querySelector('[data-name]');
+    const buttons = [...row.querySelectorAll('[data-pick]')];
+    let has = picked;
+    const set = (p) => { sku.value = p.sku; name.value = p.name; has = true; onSelect(p); };
+    if (!sku.readOnly) {
+      for (const input of [sku, name]) {
+        input.addEventListener('input', () => { has = false; onClear(); });
+        ui.autocomplete(input, {
+          source: async (q) => (partner() ? (await FL.api.get('/api/lookup/products', { q, partner_id: partner(), stock: stock ? 1 : '' })).items : []),
+          label: ui.productLabel,
+          sub: (p) => [p.ean ? `EAN ${p.ean}` : '', stock ? `elérhető ${FL.fmt.int(p.available)} ${p.unit}` : ''].filter(Boolean).join(', ') || p.unit,
+          onSelect: set,
+        });
+      }
+      for (const btn of buttons) {
+        btn.addEventListener('click', async () => {
+          if (!partner()) { ui.toast('Előbb válassz ügyfelet.', 'error'); return; }
+          const p = await ui.pickProduct({ partnerId: partner(), q: has ? '' : btn.parentElement.querySelector('input').value.trim(), stock });
+          if (p) set(p);
+        });
+      }
+    }
+    return {
+      // no client chosen: the cells wait for one
+      enable(on) {
+        if (sku.readOnly) return;
+        for (const el of [sku, name, ...buttons]) el.disabled = !on;
+        sku.placeholder = on ? 'Cikkszám vagy EAN' : 'Előbb válassz ügyfelet';
+        name.placeholder = on ? 'Megnevezés' : '';
+      },
+      clear() { if (!sku.readOnly) { sku.value = ''; name.value = ''; has = false; } },
+    };
+  };
+
+  /* pickProduct({ partnerId, q, stock }) -> Promise<product | undefined>
+     The client's products in a list with a search field (starting with q). A double click picks
+     one; so do Enter and Kiválasztás on the highlighted row (arrow keys move it). stock: true adds
+     the on hand and available quantities and the earliest expiry in stock. */
+  ui.pickProduct = ({ partnerId, q = '', stock = false }) => {
+    const LIMIT = 200;
+    let items = [];
+    let sel = -1;
+    const dlg = ui.dialog({
+      title: 'Cikk kiválasztása',
+      size: stock ? 'wide' : undefined,
+      submitLabel: 'Kiválasztás',
+      footNote: 'Dupla kattintással is kiválaszthatod.',
+      body: html`<div class="field"><label for="pp-q-${++uid}">Keresés</label>
+          <input class="input" id="pp-q-${uid}" type="search" data-pp-q value="${q}" placeholder="Cikkszám, név vagy EAN" autocomplete="off"></div>
+        <div class="table-wrap pp-list" data-pp-list>${ui.loading()}</div>`,
+      onSubmit: () => {
+        if (sel >= 0) return items[sel];
+        ui.toast('Válassz cikket a listából.', 'error');
+        return false;
+      },
+      onOpen: (api) => {
+        const input = api.form.querySelector('[data-pp-q]');
+        const box = api.form.querySelector('[data-pp-list]');
+        const mark = () => box.querySelectorAll('tbody tr').forEach((tr, i) => {
+          tr.setAttribute('aria-selected', String(i === sel));
+          if (i === sel) tr.scrollIntoView({ block: 'nearest' });
+        });
+        const paint = () => {
+          box.innerHTML = String(items.length ? html`<table class="table">
+            <thead><tr><th>Cikkszám</th><th>Megnevezés</th><th>EAN</th>
+              ${stock ? html`<th class="r">Készleten</th><th class="r">Elérhető</th><th>Legkorábbi lejárat</th>` : html`<th>Követés</th>`}</tr></thead>
+            <tbody>${items.map((p, i) => html`<tr data-i="${i}" aria-selected="${i === sel}">
+              <td class="mono nowrap">${p.sku}</td><td>${p.name}</td><td class="mono">${p.ean}</td>
+              ${stock
+                ? html`<td class="r num">${FL.fmt.int(p.on_hand)} ${p.unit}</td><td class="r num ${p.available <= 0 ? 'diff-neg' : ''}">${FL.fmt.int(p.available)} ${p.unit}</td><td>${p.next_expiry ? FL.fmt.date(p.next_expiry) : ''}</td>`
+                : html`<td class="small">${[p.track_lot ? 'sarzs' : '', p.track_expiry ? 'lejárat' : ''].filter(Boolean).join(', ')}</td>`}
+            </tr>`)}</tbody></table>
+            ${items.length === LIMIT ? html`<p class="muted small">Az első ${LIMIT} találat látszik, szűkítsd a keresést.</p>` : ''}`
+            : ui.empty(input.value.trim() ? 'Nincs a keresésnek megfelelő cikk.' : 'Ennek az ügyfélnek nincs aktív cikke.'));
+        };
+        const load = async () => {
+          try {
+            items = (await FL.api.get('/api/lookup/products', { partner_id: partnerId, q: input.value.trim(), limit: LIMIT, stock: stock ? 1 : '' })).items;
+          } catch (err) {
+            items = [];
+            ui.toast(err.message, 'error');
+          }
+          sel = items.length ? 0 : -1;
+          paint();
+        };
+        input.addEventListener('input', FL.debounce(load, 200));
+        input.addEventListener('keydown', (e) => {
+          if (!items.length || !['ArrowDown', 'ArrowUp'].includes(e.key)) return;
+          e.preventDefault();
+          sel = Math.max(0, Math.min(items.length - 1, sel + (e.key === 'ArrowDown' ? 1 : -1)));
+          mark();
+        });
+        box.addEventListener('click', (e) => { const tr = e.target.closest('tr[data-i]'); if (tr) { sel = Number(tr.dataset.i); mark(); } });
+        box.addEventListener('dblclick', (e) => { const tr = e.target.closest('tr[data-i]'); if (tr) api.close(items[Number(tr.dataset.i)]); });
+        load();
+      },
+    });
+    return dlg.done.then((r) => (r && r !== true ? r : undefined));
+  };
 
   /* ------------------------------------------------------------ barcode scanning
      scan({ id, label, placeholder }) renders the input; bindScan(root, id, onScan) handles Enter.
