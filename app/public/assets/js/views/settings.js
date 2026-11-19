@@ -23,6 +23,7 @@
     root.innerHTML = String(html`
       ${ui.pageHead({ title: 'Beállítások', lead, actions })}
       ${body}`);
+    ui.formActionsToBar(root); // the forms' Mentés goes to the bottom bar
   }
 
   const readOnlyNotice = () => (can('edit') ? '' : ui.notice('Ezt a részt csak megtekintheted: a módosításhoz Beállítások módosítása jog kell.', 'info', 'lock-simple'));

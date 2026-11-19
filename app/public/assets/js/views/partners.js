@@ -232,6 +232,7 @@
     const reload = async () => {
       try {
         await tab.render(box, p, reload);
+        ui.formActionsToBar(root); // Mentés and Partner törlése go next to the page's buttons
       } catch (err) {
         if (err instanceof FL.ApiError && err.status === 401) return;
         box.innerHTML = String(ui.notice(err.message || 'Hiba történt a betöltéskor.', 'danger'));

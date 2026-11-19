@@ -48,55 +48,69 @@
   /* ------------------------------------------------------------ order form (new and edit) */
 
   let lineSeq = 0;
+  // One line of the form's table: Cikkszám and Megnevezés (typing searches, the magnifier lists the
+  // client's products with their stock), what is available, quantity. A line already being picked
+  // keeps its product.
   function lineRow(line = {}) {
     const n = ++lineSeq;
     const locked = line.picked_qty > 0;
-    return html`<div class="ol-line" data-line data-id="${line.id || ''}" data-product-id="${line.product_id || ''}">
-      <div class="field ol-line__product">
-        <label for="ol-p-${n}">Termék</label>
-        <input class="input" id="ol-p-${n}" data-product-input value="${line.product_id ? `${line.sku} ${line.name}` : ''}" placeholder="Cikkszám, név vagy EAN" autocomplete="off" aria-describedby="ol-p-${n}-err" ${locked ? raw('readonly') : ''}>
-        ${locked ? html`<span class="field__hint">Már ${fmt.int(line.picked_qty)} db kiszedve, a termék nem cserélhető.</span>` : ''}
-        <p class="field__error" id="ol-p-${n}-err" hidden></p>
-      </div>
-      <div class="field ol-line__qty">
-        <label for="ol-q-${n}">Mennyiség</label>
+    return html`<tr data-line data-id="${line.id || ''}" data-product-id="${line.product_id || ''}">
+      <td class="r lines-table__no" data-no></td>
+      <td class="lines-table__wide">${ui.productCell({ kind: 'sku', id: `ol-s-${n}`, value: line.sku || '', readonly: locked })}
+        ${locked ? html`<span class="field__hint">Már ${fmt.int(line.picked_qty)} db kiszedve, a termék nem cserélhető.</span>` : ''}</td>
+      <td class="lines-table__wide">${ui.productCell({ kind: 'name', id: `ol-n-${n}`, value: line.name || '', readonly: locked })}</td>
+      <td class="r lines-table__stock" data-stock></td>
+      <td><div class="field"><label class="lines-table__label" for="ol-q-${n}">Mennyiség</label>
         <input class="input input--num" id="ol-q-${n}" type="number" min="${locked ? line.picked_qty : 1}" step="1" data-qty value="${line.qty || 1}" aria-describedby="ol-q-${n}-err">
-        <p class="field__error" id="ol-q-${n}-err" hidden></p>
-      </div>
-      <button class="btn btn--ghost btn--icon ol-line__remove" type="button" data-remove-line aria-label="Tétel törlése" ${locked ? raw('disabled title="Kiszedett tétel nem törölhető"') : ''}>${FL.icon('trash')}</button>
-    </div>`;
+        <p class="field__error" id="ol-q-${n}-err" hidden></p></div></td>
+      <td class="w-actions"><button class="btn btn--ghost btn--icon btn--sm" type="button" data-remove-line aria-label="Tétel törlése" title="Tétel törlése" ${locked ? raw('disabled title="Kiszedett tétel nem törölhető"') : ''}>${FL.icon('trash')}</button></td>
+    </tr>`;
   }
 
-  // Wires the line editor: product autocomplete within the client, add and remove, field names
+  // Wires the line table: product cells within the client, add and remove, field names
   // "lines.N.product_id" / "lines.N.qty" so server errors land next to the right input.
   function bindLines(form, getPartner) {
     const box = form.querySelector('[data-lines]');
+    const showStock = (row, p) => {
+      row.querySelector('[data-stock]').innerHTML = p ? String(html`<span class="lines-table__label">Elérhető</span>
+        <span class="${p.available <= 0 ? 'diff-neg' : ''}">${fmt.int(p.available)} ${p.unit}</span>`) : '';
+    };
     const renumber = () => box.querySelectorAll('[data-line]').forEach((row, i) => {
-      row.querySelector('[data-product-input]').name = `lines.${i}.product_id`;
+      row.querySelector('[data-no]').textContent = `${i + 1}.`;
+      row.querySelector('[data-sku]').name = `lines.${i}.product_id`;
       row.querySelector('[data-qty]').name = `lines.${i}.qty`;
     });
     const wire = (row) => {
-      const input = row.querySelector('[data-product-input]');
-      if (input.readOnly) return;
-      input.disabled = !getPartner();
-      input.placeholder = getPartner() ? 'Cikkszám, név vagy EAN' : 'Előbb válassz ügyfelet';
-      ui.autocomplete(input, {
-        source: (q) => ui.sources.products(getPartner())(q),
-        label: ui.productLabel,
-        sub: (p) => (p.ean ? `EAN ${p.ean}` : p.partner_code),
-        onSelect: (p) => { row.dataset.productId = p.id; input.value = ui.productLabel(p); row.querySelector('[data-qty]').select(); },
-      });
-      input.addEventListener('input', () => { row.dataset.productId = ''; });
+      ui.productCells(row, {
+        partner: getPartner,
+        stock: true,
+        picked: !!row.dataset.productId,
+        onClear: () => { row.dataset.productId = ''; showStock(row, null); },
+        onSelect: (p) => { row.dataset.productId = p.id; showStock(row, p); row.querySelector('[data-qty]').select(); },
+      }).enable(!!getPartner());
+    };
+    // The stock of the lines the order has already.
+    const loadStock = async () => {
+      const rows = [...box.querySelectorAll('[data-line]')].filter((r) => r.dataset.productId);
+      if (!rows.length || !getPartner()) return;
+      try {
+        const { items } = await api.get('/api/lookup/products', { partner_id: getPartner(), stock: 1, limit: 500 });
+        const byId = new Map(items.map((p) => [p.id, p]));
+        for (const row of rows) showStock(row, byId.get(Number(row.dataset.productId)));
+      } catch {
+        // the column just stays empty
+      }
     };
     box.querySelectorAll('[data-line]').forEach(wire);
     renumber();
+    loadStock();
     form.addEventListener('click', (e) => {
       if (e.target.closest('[data-add-line]')) {
         box.insertAdjacentHTML('beforeend', String(lineRow()));
         const row = box.lastElementChild;
         wire(row);
         renumber();
-        row.querySelector('[data-product-input]').focus();
+        row.querySelector('[data-sku]').focus();
       }
       const rm = e.target.closest('[data-remove-line]');
       if (rm) {
@@ -165,7 +179,10 @@
           ${F({ name: 'pallets', label: 'Raklap', type: 'number', int: true, min: 0, hint: 'Teherautós fuvarnál a raklapok száma.' })}
         </div>
         <h3 class="ol-form__title">Tételek</h3>
-        <div class="ol-lines" data-lines>${(o.lines.length ? o.lines : [{}]).map((l) => lineRow(l))}</div>
+        <table class="lines-table ol-ltable">
+          <thead><tr><th class="r">#</th><th>Cikkszám</th><th>Megnevezés</th><th class="r">Elérhető</th><th>Mennyiség</th><th><span class="visually-hidden">Törlés</span></th></tr></thead>
+          <tbody data-lines>${(o.lines.length ? o.lines : [{}]).map((l) => lineRow(l))}</tbody>
+        </table>
         <div><button class="btn btn--sm" type="button" data-add-line>${FL.icon('plus')}Tétel hozzáadása</button></div>
         ${F({ name: 'note', label: 'Megjegyzés', type: 'textarea', rows: 2, optional: true })}`,
       onOpen: ({ form }) => {

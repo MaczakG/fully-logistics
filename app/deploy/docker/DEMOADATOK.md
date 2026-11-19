@@ -11,7 +11,10 @@ A `server/demo-history.mjs` a szerveren, az alkalmazás saját API-ján át rög
 a demóadatokat teszi fel úgy, ahogy fél éve álltak, aztán az azóta eltelt napokat egyenként
 végigjátssza:
 
-- **Rendelések:** minden nap érkeznek webshoprendelések, néhányat sztornóznak vagy felfüggesztenek.
+- **50 webshop-ügyfél**, mindegyik havonta 850 és 930 közötti rendeléssel (hétvégén kevesebb jön), így
+  minden teljes hónap 800 és 1000 rendelés közé esik. Néhányat sztornóznak vagy felfüggesztenek.
+- **Mindenkinek saját tarifája van**, és egy rendelés díja (kezelés, 2-3. termék, további termékek,
+  csomagolóanyag, utánvét) nettó 800 Ft alatt marad, a legnagyobb rendelésnél is.
 - **Raktári munka hétköznap:** komissió, csomagolás, majd átadás a GLS-nek, a DPD-nek és a Foxpostnak. A csomagot
   egy-két nap múlva kézbesítik, és néhány visszajön.
 - **Raklapos rendelések:** néhány ügyfél boltoknak és cégeknek is küld raklapon. Ezeket a
@@ -23,9 +26,10 @@ végigjátssza:
 - **A mai nap** délelőttje a futtatás előtti másfél órába kerül: új rendelések, egy félig kiszedett
   hullám, futárra váró csomagok és félig megtervezett teherautók.
 
-Eredmény: 30 partner (20 webshop-ügyfél 65 termékkel, 5 fuvarozó, 5 beszállító), 5 teherautó,
-körülbelül 7700 rendelés, 390 futárátadás, 230 betárolás és 120 jóváhagyott elszámolás. Futásidő:
-egy perc körül.
+Eredmény: 60 partner (50 webshop-ügyfél 155 termékkel, 5 fuvarozó, 5 beszállító), 5 teherautó,
+körülbelül 270 000 rendelés és 300 jóváhagyott elszámolás. **Futásidő: fél óra körül (lassabb gépen
+akár egy óra), az adatbázis körülbelül 1 GB lesz**, ezért előtte nézd meg, van-e elég hely
+(`df -h /var/lib/fully-wms`). Rövidebb időszakhoz: `--months 3` (fele annyi rendelés és idő).
 
 **Biztonság:**
 - Minden demóadat `DEMO-` kezdetű partnerkódot és cikkszámot kap. A valódi adatokhoz nem nyúl.

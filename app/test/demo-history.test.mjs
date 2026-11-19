@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { D1Database } from '../server/d1.mjs';
 import { migrate } from '../server/migrate.mjs';
 import { passwordHash, ENCRYPTION_KEY } from './helpers.mjs';
+import { orderFee } from '../server/demo-history.mjs';
 
 const APP = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -26,13 +27,26 @@ test('a week of demo history: every stage, nothing in the future, removable', as
       .bind('admin@example.com', 'Teszt Admin', 'admin', passwordHash('jelszo-12345')).run();
     const env = { ...process.env, DB_PATH: dbPath, FILES_DIR: join(dir, 'files'), ENCRYPTION_KEY, CRON: '0' };
     const started = new Date().toISOString();
-    execFileSync('node', ['server/demo-history.mjs', '--months', '0.25'], { cwd: APP, env, stdio: 'pipe' });
+    execFileSync('node', ['server/demo-history.mjs', '--months', '0.25', '--volume', '0.05'], { cwd: APP, env, stdio: 'pipe' });
 
     const statuses = (await DB.prepare("SELECT DISTINCT status FROM orders WHERE partner_id IN (SELECT id FROM partners WHERE code LIKE 'DEMO-%')").all()).results.map((r) => r.status);
     for (const s of ['delivered', 'picking']) assert.ok(statuses.includes(s), `${s} in ${statuses}`);
     assert.ok((await one('SELECT COUNT(*) AS n FROM orders')).n > 50);
     assert.ok((await one("SELECT COUNT(*) AS n FROM carrier_pickups WHERE status = 'closed'")).n >= 2);
     assert.ok((await one('SELECT COUNT(DISTINCT date) AS n FROM storage_snapshots')).n >= 6);
+    // 50 clients, each its own tariff, and no order costs more than 800 Ft net in fees
+    const rows = (await DB.prepare(`SELECT p.id, t.key, t.value FROM partners p JOIN partner_tariffs t ON t.partner_id = p.id
+      WHERE p.code LIKE 'DEMO-%' AND p.type = 'client'`).all()).results;
+    const tariffs = new Map();
+    for (const r of rows) tariffs.set(r.id, { ...tariffs.get(r.id), [r.key]: r.value });
+    assert.equal(tariffs.size, 50);
+    assert.equal(new Set([...tariffs.values()].map((t) => JSON.stringify(Object.entries(t).sort()))).size, 50, 'every tariff is different');
+    const pieces = new Map((await DB.prepare(`SELECT o.partner_id, MAX(n) AS n, MAX(o.cod_amount > 0) AS cod FROM orders o
+      JOIN (SELECT order_id, SUM(qty) AS n FROM order_lines GROUP BY order_id) l ON l.order_id = o.id GROUP BY o.partner_id`).all()).results.map((r) => [r.partner_id, r]));
+    for (const [id, t] of tariffs) {
+      const most = pieces.get(id) || { n: 1, cod: 0 };
+      assert.ok(orderFee(t, most.n, true) <= 800, `partner ${id}: ${orderFee(t, most.n, true)} Ft for ${most.n} pieces`);
+    }
     // pallets went out on trucks, and today's trucks are partly planned
     assert.equal((await one('SELECT COUNT(*) AS n FROM trucks')).n, 5);
     assert.ok((await one("SELECT COUNT(*) AS n FROM orders WHERE truck_id IS NOT NULL AND status IN ('shipped', 'delivered')")).n > 5);
